@@ -1,0 +1,464 @@
+/* edit-style.css - Styles for the Photo Editing Page */
+
+/* --- Root Variables for Consistent Theming --- */
+:root {
+    /* Brand Colors */
+    --primary-brand-color: #33A4C9; /* ODZ Blue */
+    --secondary-brand-color: #F0C27B; /* ODZ Orange-Yellow */
+    --accent-color: #FF69B4; /* Hot Pink - for interactive elements/buttons */
+    --text-dark: #333;
+    --text-light: #fff;
+
+    /* Backgrounds */
+    --bg-gradient-editor: linear-gradient(135deg, #B0E0E6, #FFD1DC); /* Lighter, soft gradient for editor page */
+    --panel-bg: #fdfdfd; /* Background for control panels and tool sections */
+
+    /* Shadows & Borders */
+    --border-radius-soft: 12px; /* Standard border radius for panels */
+    --shadow-light: rgba(0, 0, 0, 0.08); /* Subtle shadow */
+    --shadow-medium: rgba(0, 0, 0, 0.15); /* More prominent shadow */
+
+    /* Button Hover States */
+    --button-hover-accent: #e05cb0; /* Darker hot pink on hover */
+    --button-hover-primary: #2a8fb6; /* Darker primary blue on hover */
+    --button-hover-back: #5a6268; /* Darker grey on hover */
+
+    /* Fonts */
+    --font-poppins: 'Poppins', sans-serif; /* General body text */
+    --font-fredoka: 'Fredoka', cursive; /* For titles and headings (more playful) */
+}
+
+/* --- Global Resets & Base Body Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Include padding and border in element's total width/height */
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    background: var(--bg-gradient-editor); /* Apply background gradient */
+    font-family: var(--font-poppins); /* Set default font */
+    color: var(--text-dark); /* Default text color */
+    margin: 0;
+    padding: 20px; /* Overall page padding */
+    box-sizing: border-box;
+}
+
+/* --- Header Section --- */
+.editor-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 10px 0;
+}
+
+.editor-header .title {
+    font-family: var(--font-fredoka);
+    font-size: 3.5rem;
+    color: var(--primary-brand-color);
+    margin: 0;
+    line-height: 1; /* Adjust line height for better spacing */
+    text-shadow: 2px 2px 4px var(--shadow-medium);
+}
+
+.editor-header .title .booth {
+    color: var(--secondary-brand-color);
+}
+
+.editor-header p {
+    font-size: 1rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* --- Main Editor Wrapper Layout --- */
+.editor-wrapper {
+    display: flex;
+    flex-direction: column; /* Default to column layout for small screens */
+    gap: 30px; /* Space between the photo preview and tools panel */
+    align-items: flex-start; /* Align items to the top for larger screens */
+    width: 100%;
+    max-width: 1100px; /* Max width for the entire editor interface */
+    background: var(--panel-bg);
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 10px 30px var(--shadow-medium);
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+/* --- Photo Strip Preview Area --- */
+.photo-strip-preview {
+    width: 350px; /* Fixed display width of the preview container in the browser */
+    height: auto; /* IMPORTANT: Allow its height to adjust based on the canvas's JS-controlled height */
+    border: 3px solid #ccc; /* Border around the preview area */
+    display: flex; /* Use flexbox to center canvas */
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Prevents this container from shrinking too much */
+    overflow: hidden; /* Ensures anything drawn outside the canvas is clipped */
+    border-radius: var(--border-radius-soft);
+    background-color: var(--secondary-brand-color); /* Default background color behind canvas */
+    position: relative; /* Necessary for absolute positioning of info messages/spinners */
+}
+
+/* Canvas Element Styling */
+canvas {
+    display: block; /* Removes any extra space below the canvas */
+    border-radius: 8px; /* Slightly rounded corners for the drawn content */
+    max-width: 100%; /* Ensures the canvas doesn't overflow its parent container */
+    height: auto; /* Ensures the aspect ratio is visually maintained within its container */
+    /* NOTE: The actual pixel width and height (e.g., 400x950) are set directly by JavaScript */
+}
+
+/* Info Messages (e.g., "No photos found", error messages) */
+.info-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the message */
+    text-align: center;
+    color: var(--text-dark);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px var(--shadow-light);
+    z-index: 10; /* Ensure message is above other content */
+    width: 80%; /* Limit width on smaller screens for readability */
+}
+
+.info-message a {
+    color: var(--primary-brand-color);
+    text-decoration: none;
+    font-weight: 700;
+}
+.info-message a:hover {
+    text-decoration: underline;
+}
+
+/* Spinner Overlay Styles (copied from capture-style.css) */
+.spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 12; /* Above messages */
+    color: var(--primary-brand-color);
+    font-size: 1.2em;
+    gap: 10px;
+}
+
+.spinner-overlay.hidden-spinner {
+    display: none;
+}
+
+.spinner-overlay .fa-spinner {
+    color: var(--secondary-brand-color); /* Spinner color */
+}
+
+
+/* --- Editing Tools Panel --- */
+.tools-panel {
+    flex-grow: 1; /* Allows tools panel to take remaining horizontal space on large screens */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between individual tool sections */
+    padding: 25px;
+    background: var(--panel-bg);
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 5px 15px var(--shadow-medium);
+    max-width: 450px; /* Max width for the tools panel itself */
+    width: 100%; /* Take full width on smaller screens */
+    box-sizing: border-box;
+}
+
+.tools-panel h2 {
+    font-family: var(--font-fredoka);
+    color: var(--primary-brand-color);
+    margin-bottom: 20px;
+    font-size: 2.2rem;
+    text-align: center;
+}
+
+/* Individual Tool Sections (e.g., Add Stickers, Add Text) */
+.tool-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    border: 1px solid #eee; /* Subtle border */
+}
+
+.tool-section h3 {
+    font-family: var(--font-fredoka);
+    color: var(--text-dark);
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.5rem;
+    text-align: left;
+}
+
+.tool-tip {
+    font-size: 0.85em;
+    color: #777;
+    margin-top: 10px;
+    text-align: left;
+    line-height: 1.4;
+}
+
+/* --- Input Fields and Selects (Common Styling for dropdowns, text inputs, etc.) --- */
+select, input[type="text"], input[type="number"], input[type="color"] {
+    width: 100%; /* Take full width of parent */
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 10px; /* Space between inputs */
+    box-sizing: border-box;
+    background-color: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    /* Custom dropdown arrow for selects (removes default browser arrow) */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.3L159.5%2069.8c-4.7-4.7-12.3-4.7-17%200L5.4%20197.3c-4.7%204.7-4.7%2012.3%200%2017l19.8%2019.8c4.7%204.7%2012.3%204.7%2017%200l105.7-105.7L245.2%20234.1c4.7%204.7%2012.3%204.7%2017%200l19.8-19.8c4.7-4.7%204.7-12.3%200-17z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+}
+
+select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="color"]:focus, button:focus {
+    outline: none; /* Remove default focus outline */
+    border-color: var(--primary-brand-color); /* Highlight border on focus */
+    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.2); /* Soft glow on focus */
+}
+
+input[type="color"] {
+    height: 45px; /* Adjust height for color input to make it easier to click */
+    padding: 5px; /* Less internal padding for color input */
+    cursor: pointer;
+}
+
+/* Text Style Options Group */
+.text-style-options {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.text-style-options .style-toggle-btn {
+    flex-grow: 1; /* Allow buttons to grow */
+    min-width: 40px; /* Minimum width for buttons */
+    padding: 10px;
+    background-color: #eee;
+    color: #555;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    box-shadow: none; /* Remove default button shadow */
+}
+
+.text-style-options .style-toggle-btn:hover {
+    background-color: #e0e0e0;
+    color: var(--primary-brand-color);
+    border-color: var(--primary-brand-color);
+    transform: none; /* No lift effect for style buttons */
+}
+
+.text-style-options .style-toggle-btn.active {
+    background-color: var(--primary-brand-color);
+    color: var(--text-light);
+    border-color: var(--primary-brand-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.text-style-options select {
+    margin-bottom: 0; /* Remove bottom margin for select in this group */
+    width: auto; /* Allow select to size content */
+    flex-grow: 2; /* Allow select to take more space */
+}
+
+
+/* --- Buttons (Common Styling for all Action Buttons) --- */
+.action-btn, .download-btn, .back-btn {
+    width: 100%;
+    padding: 14px 20px;
+    background-color: var(--accent-color); /* Default background for action buttons */
+    color: var(--text-light);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions */
+    display: flex; /* Use flex for icon and text alignment */
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Space between icon and text */
+    box-shadow: 0 4px 10px var(--shadow-medium);
+}
+
+.action-btn:hover:enabled, .download-btn:hover:enabled {
+    background-color: var(--button-hover-accent);
+    transform: translateY(-2px); /* Lift effect on hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.back-btn:hover:enabled {
+    background-color: var(--button-hover-back);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+button:disabled {
+    background: #ccc; /* Grey out disabled buttons */
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none; /* No hover effect when disabled */
+}
+
+/* --- Specific Button Styles --- */
+.download-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px; /* Space from previous tool section */
+}
+
+/* Download Format Options */
+.download-format-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px; /* Space before download button */
+    flex-wrap: wrap; /* Allow wrapping of label and select */
+}
+.download-format-options label {
+    font-weight: 600;
+    color: var(--text-dark);
+    flex-shrink: 0; /* Prevent label from shrinking */
+}
+.download-format-options select {
+    /* REMOVED: width: auto; */ /* Let flexbox handle width */
+    flex-grow: 1; /* Take remaining space */
+    min-width: 0; /* Allow the select to shrink below its content size if needed */
+    margin-bottom: 0; /* Remove default margin */
+}
+
+
+.download-btn {
+    background-color: var(--primary-brand-color); /* Blue for download buttons */
+}
+.download-btn:hover:enabled {
+    background-color: var(--button-hover-primary);
+}
+
+.back-btn {
+    background-color: #6c757d; /* Muted grey for "back" button */
+    margin-top: 20px; /* Space from download buttons */
+}
+
+/* Delete Button Styling */
+.action-btn.delete-btn {
+    background-color: #dc3545; /* Red color for delete */
+    color: white;
+}
+
+.action-btn.delete-btn:hover:enabled {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+
+/* --- Responsive Adjustments for Editing Page --- */
+@media (min-width: 768px) {
+    .editor-wrapper {
+        flex-direction: row; /* Change to side-by-side layout on larger screens */
+        justify-content: center; /* Center the two main columns */
+        align-items: flex-start; /* Align content to the top of the wrapper */
+    }
+
+    .photo-strip-preview {
+        margin-right: 40px; /* Space between preview and tools panel */
+    }
+
+    .tools-panel {
+        padding: 30px;
+        max-width: 450px; /* Maintain max width for tools panel */
+        width: auto; /* Allow content to dictate width if needed, but respect max-width */
+    }
+}
+
+@media (max-width: 767px) {
+    /* Adjustments for smaller screens (e.g., mobile phones) */
+    .editor-header .title {
+        font-size: 2.8rem;
+    }
+
+    .editor-wrapper {
+        padding: 20px;
+        max-width: none; 
+    }
+
+    .photo-strip-preview {
+        width: 100%; /* Preview takes full width */
+        max-width: 300px; /* Limit max width for better fitting on small screens */
+        margin-bottom: 20px; /* Space below preview */
+    }
+
+    .info-message {
+        font-size: 0.9em;
+        padding: 10px 15px;
+    }
+
+    .tools-panel {
+        width: 100%; /* Tools panel takes full width */
+        max-width: none; /* No max width restriction on small screens */
+        padding: 20px;
+    }
+
+    .tools-panel h2 {
+        font-size: 1.8rem;
+    }
+
+    .tool-section h3 {
+        font-size: 1.3rem;
+    }
+
+    .action-btn, .download-btn, .back-btn {
+        font-size: 1rem;
+        padding: 12px 15px;
+    }
+    .text-style-options {
+        flex-direction: column; /* Stack text style buttons vertically */
+        gap: 10px;
+    }
+    .text-style-options .style-toggle-btn,
+    .text-style-options select {
+        width: 100%; /* Full width for text style buttons and select */
+        flex-grow: initial; /* Reset flex-grow */
+    }
+    .download-format-options {
+        flex-direction: column; /* Stack label and select vertically */
+        align-items: flex-start; /* Align stacked items to the left */
+    }
+    .download-format-options label {
+        margin-bottom: 5px; /* Add space below label when stacked */
+    }
+    .download-format-options select {
+        width: 100%; /* Full width for select when stacked */
+    }
+}

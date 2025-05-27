@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODZ Booth - Choose Your Layout</title>
+    <base href="/odzbooth-beta/"> 
+
+    <link rel="stylesheet" href="layout-selection/layout-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="layout-container">
+        <header class="layout-header">
+            <h1 class="title">ODZ <span class="booth">BOOTH</span></h1>
+            <h2>Choose Your Photo Strip Layout</h2>
+            <p>Select how many photos you want on your strip.</p>
+        </header>
+
+        <div class="layout-options">
+            <div class="layout-card" data-photo-count="6">
+                <img src="assets/strip-frame-6-photos.png" alt="6 Photos Layout Preview">
+                <div class="layout-info">
+                    <h3>6 Photos</h3>
+                    <p>Plenty of space with two columns of three shots!</p>
+                </div>
+            </div>
+            
+            <div class="layout-card" data-photo-count="2">
+                <img src="assets/strip-frame-2-photos.png" alt="2 Photos Layout Preview">
+                <div class="layout-info">
+                    <h3>2 Photos</h3>
+                    <p>Two distinct moments captured.</p>
+                </div>
+            </div>
+            <div class="layout-card" data-photo-count="3">
+                <img src="assets/strip-frame-3-photos.png" alt="3 Photos Layout Preview">
+                <div class="layout-info">
+                    <h3>3 Photos</h3>
+                    <p>Tell a story with three fun snaps.</p>
+                </div>
+            </div>
+            <div class="layout-card" data-photo-count="4">
+                <img src="assets/strip-frame-4-photos.png" alt="4 Photos Layout Preview">
+                <div class="layout-info">
+                    <h3>4 Photos</h3>
+                    <p>Capture more memories with four shots.</p>
+                </div>
+            </div>
+            </div>
+
+        <button id="proceedToCaptureBtn" class="action-btn" disabled>
+            Proceed to Capture <span id="selectedLayoutText"></span>
+        </button>
+         <button id="backToHomeBtn" class="back-btn">
+            Back to Home
+        </button>
+    </div>
+
+    <script src="layout-selection/layout-script.js"></script>
+</body>
+</html>
