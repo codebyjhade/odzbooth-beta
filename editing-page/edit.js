@@ -16,7 +16,6 @@ const textSizeInput = document.getElementById("textSize");
 const addTextBtn = document.getElementById("addTextBtn");
 const removeTextBtn = document.getElementById("removeTextBtn"); 
 
-// Text Style Option Buttons
 const textBoldBtn = document.getElementById('textBoldBtn');
 const textItalicBtn = document.getElementById('textItalicBtn');
 const textUnderlineBtn = document.getElementById('textUnderlineBtn');
@@ -28,19 +27,18 @@ const downloadFormatSelect = document.getElementById('downloadFormat');
 const retakeBtn = document.getElementById("retakeBtn");
 
 const noPhotosMessage = document.getElementById('no-photos-message');
-const downloadSpinner = document.getElementById('download-spinner');
+const downloadSpinner = document.getElementById('download-spinner'); // For strip download
+const gifSpinner = document.getElementById('gif-spinner'); // NEW: For GIF generation
 
 // --- Global State Variables ---
-let capturedPhotosBase64 = []; // Stores base64 image data
-let stickers = []; // Stores sticker objects
-let texts = []; // Stores text objects
+let capturedPhotosBase64 = []; 
+let stickers = []; 
+let texts = []; 
 
 let currentStripConfig = null; 
-let selectedDraggable = null; // Currently selected sticker/text for dragging/removal
+let selectedDraggable = null; 
 
-// --- Draggable State for Mouse/Touch ---
-let activeDraggable = null; // The item currently being dragged
-let dragStart = { x: 0, y: 0 }; // Mouse/touch position when drag started
+let activeDraggable = null; 
 
 // --- Configuration: Fixed Strip Dimensions and Photo Frame Coordinates ---
 const STRIP_COMMON_SETTINGS = {
@@ -51,7 +49,6 @@ const STRIP_COMMON_SETTINGS = {
     bottomSpaceForLogo: 150 
 };
 
-// All defaultBackgrounds set to a consistent gray, matching your strip-frame images
 const STRIP_CONFIGS = {
     '1': {
         stripWidth: 400,
@@ -112,19 +109,16 @@ const STRIP_CONFIGS = {
 };
 
 // --- Image Preloading Utility ---
-// Preloads all captured photos and stores Image objects for efficient rendering
 let preloadedCapturedImages = [];
 
 async function preloadAllCapturedImages() {
-    preloadedCapturedImages = []; // Clear previous images
+    preloadedCapturedImages = []; 
     const promises = capturedPhotosBase64.map(src => loadImage(src));
     try {
         preloadedCapturedImages = await Promise.all(promises);
         console.log("All captured photos preloaded for editing.");
     } catch (error) {
         console.error("Error preloading captured images:", error);
-        // Fallback: Continue with base64 strings if preloading fails
-        // drawPhotosOnStrip will attempt to load them individually if not preloaded.
     }
 }
 
@@ -162,7 +156,8 @@ function displayNoPhotosMessage(mainMsg, type = 'info', subMsg = '') {
     noPhotosMessage.className = `info-message ${type}`;
     noPhotosMessage.style.display = 'block';
     downloadSpinner.classList.add('hidden-spinner'); 
-    photoCanvas.style.display = 'none'; // Ensure canvas is hidden when message is shown
+    gifSpinner.classList.add('hidden-spinner'); // Ensure GIF spinner is hidden
+    photoCanvas.style.display = 'none'; 
 }
 
 /**
@@ -170,11 +165,11 @@ function displayNoPhotosMessage(mainMsg, type = 'info', subMsg = '') {
  */
 function hideNoPhotosMessage() {
     noPhotosMessage.style.display = 'none';
-    photoCanvas.style.display = 'block'; // Show canvas when message is hidden
+    photoCanvas.style.display = 'block'; 
 }
 
 /**
- * Shows/hides the download processing spinner.
+ * Shows/hides the download processing spinner for strip.
  * @param {boolean} show - True to show, false to hide.
  */
 function showDownloadSpinner(show) {
@@ -184,27 +179,42 @@ function showDownloadSpinner(show) {
         noPhotosMessage.style.display = 'none'; 
     } else {
         downloadSpinner.classList.add('hidden-spinner');
-        if (noPhotosMessage.style.display === 'none') { // Only show canvas if no other message is active
+        if (noPhotosMessage.style.display === 'none') { 
             photoCanvas.style.display = 'block';
         }
     }
 }
 
+/**
+ * Shows/hides the GIF generation spinner.
+ * @param {boolean} show - True to show, false to hide.
+ * @param {string} [message='Generating GIF...'] - Optional custom message.
+ */
+function showGifSpinner(show, message = 'Generating GIF...') {
+    if (show) {
+        gifSpinner.querySelector('p').textContent = message; // Update message
+        gifSpinner.classList.remove('hidden-spinner');
+        photoCanvas.style.display = 'none'; 
+        noPhotosMessage.style.display = 'none'; 
+    } else {
+        gifSpinner.classList.add('hidden-spinner');
+        if (noPhotosMessage.style.display === 'none') { 
+            photoCanvas.style.display = 'block';
+        }
+    }
+}
+
+
 // --- Canvas Drawing Functions (for the interactive editing canvas) ---
 
-/**
- * Renders all elements (background, frame, photos, stickers, text) onto the main editing canvas.
- */
 async function renderCanvas() {
     ctx.clearRect(0, 0, photoCanvas.width, photoCanvas.height);
 
-    // 1. Draw solid background color based on the selected configuration.
     if (currentStripConfig && currentStripConfig.defaultBackground) {
         ctx.fillStyle = currentStripConfig.defaultBackground;
         ctx.fillRect(0, 0, photoCanvas.width, photoCanvas.height);
     }
 
-    // 2. Draw the transparent strip frame overlay.
     const frameImgSrc = `assets/strip-frame-${currentStripConfig.frames.length}-photos.png`; 
     try {
         const frameImg = await loadImage(frameImgSrc);
@@ -213,16 +223,11 @@ async function renderCanvas() {
         console.warn(`WARNING: Could not load strip frame image: ${frameImgSrc}. Ensure it exists and is correct.`, error);
     }
 
-    // 3. Draw captured photos
-    drawPhotosOnStrip(ctx); // Pass context to generalized function
+    drawPhotosOnStrip(ctx); 
     drawStickersOnCanvas(ctx, stickers); 
     drawTextOnCanvas(ctx, texts); 
 }
 
-/**
- * Draws captured photos onto the given canvas context.
- * @param {CanvasRenderingContext2D} targetCtx - The context to draw on.
- */
 function drawPhotosOnStrip(targetCtx) {
     const numPhotosToDisplay = capturedPhotosBase64.length;
     const framesToUse = currentStripConfig ? currentStripConfig.frames : [];
@@ -234,17 +239,16 @@ function drawPhotosOnStrip(targetCtx) {
             continue;
         }
 
-        const img = preloadedCapturedImages[i]; // Use preloaded image if available
+        const img = preloadedCapturedImages[i]; 
 
-        if (img && img.complete) { // Check if image is loaded
+        if (img && img.complete) { 
             targetCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
         } else {
-            // Fallback for cases where image might not be preloaded or failed
             console.warn(`Preloaded image ${i} not ready. Attempting to load on demand.`);
             const imgSrc = capturedPhotosBase64[i];
             loadImage(imgSrc).then(loadedImg => {
                 targetCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
-                renderCanvas(); // Re-render once loaded to ensure proper placement
+                renderCanvas(); 
             }).catch(error => {
                 console.error(`ERROR: Failed to draw photo ${i + 1}. Image source might be corrupt. Details:`, error);
                 targetCtx.fillStyle = '#ccc';
@@ -269,11 +273,10 @@ function drawStickersOnCanvas(targetCtx, stickersData) {
                 return img;
             })(); 
             
-            // Ensure the image is loaded before drawing
             if (imgToDraw.complete) {
                 targetCtx.drawImage(imgToDraw, sticker.x, sticker.y, sticker.width, sticker.height);
             } else {
-                imgToDraw.onload = () => renderCanvas(); // Re-render once loaded
+                imgToDraw.onload = () => renderCanvas(); 
             }
 
             if (sticker.isDragging || (selectedDraggable === sticker)) { 
@@ -295,7 +298,7 @@ function drawTextOnCanvas(targetCtx, textsData) {
         if (textObj.isItalic) fontStyle += 'italic ';
         if (textObj.isBold) fontStyle += 'bold ';
         
-        targetCtx.font = `${fontStyle}${textObj.textSize}px ${textObj.font}`; // Use stored textSize and font family
+        targetCtx.font = `${fontStyle}${textObj.textSize}px ${textObj.font}`; 
         targetCtx.textAlign = textObj.align;
         
         const textX = textObj.x;
@@ -303,7 +306,6 @@ function drawTextOnCanvas(targetCtx, textsData) {
 
         targetCtx.fillText(textObj.text, textX, textY);
 
-        // Draw underline if enabled
         if (textObj.isUnderline) {
             const textMetrics = targetCtx.measureText(textObj.text);
             const underlineHeight = textObj.textSize / 15; 
@@ -340,7 +342,6 @@ function drawTextOnCanvas(targetCtx, textsData) {
 }
 
 
-// --- Update Canvas Dimensions and Render ---
 function updateCanvasAndRender() {
     const selectedPhotoCountStr = localStorage.getItem('selectedPhotoCount');
     const selectedPhotoCount = parseInt(selectedPhotoCountStr, 10);
@@ -364,173 +365,51 @@ function updateCanvasAndRender() {
 }
 
 
-// --- Initialization Function ---
+// --- Initialization ---
+
 async function initializeEditor() {
-    const savedPhotosJson = localStorage.getItem("capturedPhotos");
+    capturedPhotosBase64 = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
+    const selectedPhotoCount = localStorage.getItem('selectedPhotoCount');
 
-    if (savedPhotosJson) {
-        // FIX: Corrected variable name from capturedPhotosBase66 to capturedPhotosBase64
-        capturedPhotosBase64 = JSON.parse(savedPhotosJson); 
-    }
-
-    if (capturedPhotosBase64.length === 0) {
-        displayNoPhotosMessage(
-            'No photos found.',
-            'info',
-            'Please go back to <a href="capture-page/capture-page.html">capture photos</a> first.' 
-        );
-        // Disable all controls if no photos
-        downloadStripBtn.disabled = true;
-        downloadGifBtn.disabled = true;
-        addStickerBtn.disabled = true;
-        removeStickerBtn.disabled = true; 
-        addTextBtn.disabled = true;
-        removeTextBtn.disabled = true; 
+    if (capturedPhotosBase64.length === 0 || !selectedPhotoCount) {
+        displayNoPhotosMessage('No photos found.', 'info', 'Please go back to <a href="capture-page/capture-page.html">capture photos</a> first.');
         stickerSelect.disabled = true;
+        addStickerBtn.disabled = true;
+        removeStickerBtn.disabled = true;
         textInput.disabled = true;
         textColorInput.disabled = true;
         textFontSelect.disabled = true;
         textSizeInput.disabled = true;
-        textBoldBtn.disabled = true;
-        textItalicBtn.disabled = true;
-        textUnderlineBtn.disabled = true;
-        textAlignSelect.disabled = true;
-        downloadFormatSelect.disabled = true; 
-        return;
-    } else {
-        hideNoPhotosMessage(); 
-        // Enable controls if photos are present
-        downloadStripBtn.disabled = false;
-        // The GIF button is always disabled for now as per prior request
+        addTextBtn.disabled = true;
+        removeTextBtn.disabled = true;
+        downloadStripBtn.disabled = true;
         downloadGifBtn.disabled = true; 
-        addStickerBtn.disabled = false;
-        removeStickerBtn.disabled = false; 
-        addTextBtn.disabled = false;
-        removeTextBtn.disabled = false; 
-        stickerSelect.disabled = false;
-        textInput.disabled = false;
-        textColorInput.disabled = false;
-        textFontSelect.disabled = false;
-        textSizeInput.disabled = false;
-        textBoldBtn.disabled = false;
-        textItalicBtn.disabled = false;
-        textUnderlineBtn.disabled = false;
-        textAlignSelect.disabled = false;
-        downloadFormatSelect.disabled = false; 
+        return;
     }
 
-    await preloadAllCapturedImages(); // Preload images *before* rendering
+    currentStripConfig = STRIP_CONFIGS[selectedPhotoCount];
+    if (!currentStripConfig) {
+        displayNoPhotosMessage('Invalid layout selected.', 'error', 'The selected photo layout is not supported. Please <a href="layout-selection/layout-selection.html">choose another layout</a>.');
+        stickerSelect.disabled = true;
+        addStickerBtn.disabled = true;
+        removeStickerBtn.disabled = true;
+        textInput.disabled = true;
+        textColorInput.disabled = true;
+        textFontSelect.disabled = true;
+        textSizeInput.disabled = true;
+        addTextBtn.disabled = true;
+        removeTextBtn.disabled = true;
+        downloadStripBtn.disabled = true;
+        downloadGifBtn.disabled = true; 
+        return;
+    }
+
+    await preloadAllCapturedImages(); 
     updateCanvasAndRender();
 }
 
 
-// --- Final Strip Composition and Download ---
-downloadStripBtn.addEventListener("click", async function () { 
-    showDownloadSpinner(true); 
-
-    try {
-        const finalCanvas = document.createElement('canvas');
-        const finalCtx = finalCanvas.getContext('2d');
-
-        finalCanvas.width = currentStripConfig.stripWidth;
-        finalCanvas.height = currentStripConfig.stripHeight;
-
-        if (currentStripConfig && currentStripConfig.defaultBackground) {
-            finalCtx.fillStyle = currentStripConfig.defaultBackground;
-            finalCtx.fillRect(0, 0, finalCanvas.width, finalCtx.height); 
-        }
-
-        const frameImgSrc = `assets/strip-frame-${currentStripConfig.frames.length}-photos.png`;
-        try {
-            const frameImg = await loadImage(frameImgSrc);
-            finalCtx.drawImage(frameImg, 0, 0, finalCanvas.width, finalCanvas.height);
-        } catch (error) {
-            console.warn(`WARNING: Could not load strip frame image for final composite: ${frameImgSrc}.`, error);
-        }
-
-        // --- Draw captured photos onto the final canvas ---
-        const numPhotosToDisplay = capturedPhotosBase64.length;
-        const framesToUse = currentStripConfig ? currentStripConfig.frames : [];
-
-        for (let i = 0; i < Math.min(numPhotosToDisplay, framesToUse.length); i++) {
-            const frame = framesToUse[i];
-            if (!frame) continue; 
-
-            const img = preloadedCapturedImages[i]; // Use preloaded image
-
-            if (img && img.complete) {
-                finalCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
-            } else {
-                 console.warn(`Preloaded image ${i} not ready for final composite. Attempting on-demand load.`);
-                try {
-                    const loadedImg = await loadImage(capturedPhotosBase64[i]);
-                    finalCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
-                } catch (error) {
-                     console.error(`ERROR: Failed to draw photo ${i + 1} on final composite:`, error);
-                }
-            }
-        }
-
-        drawStickersOnCanvas(finalCtx, stickers); 
-        drawTextOnCanvas(finalCtx, texts); 
-
-        const strandStickerSrc = stickerSelect.value; 
-
-        if (strandStickerSrc) { 
-            try {
-                const strandStickerImage = await loadImage(strandStickerSrc);
-
-                const stickerWidth = 150; 
-                const stickerHeight = 150; 
-                const padding = 30; 
-
-                const xPos = padding;
-                const yPos = finalCanvas.height - stickerHeight - padding;
-
-                finalCtx.drawImage(strandStickerImage, xPos, yPos, stickerWidth, stickerHeight);
-            } catch (error) {
-                console.error("Failed to load bottom-left strand sticker for final composite:", strandStickerSrc, error);
-            }
-        }
-
-        const link = document.createElement("a");
-        const selectedFormat = downloadFormatSelect.value;
-        let mimeType = selectedFormat;
-        let quality = 1.0; 
-
-        if (selectedFormat.includes(';')) {
-            const parts = selectedFormat.split(';');
-            mimeType = parts[0];
-            quality = parseFloat(parts[1]);
-        }
-        
-        link.download = `odz-photo-strip.${mimeType.split('/')[1]}`; 
-        link.href = finalCanvas.toDataURL(mimeType, quality);
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-    } catch (error) {
-        console.error("Error during strip generation:", error);
-        alert("Failed to generate photo strip. Please try again. Check console for details.");
-    } finally {
-        showDownloadSpinner(false); 
-    }
-});
-
-downloadGifBtn.addEventListener("click", function () {
-    alert("GIF generation is a more advanced feature not fully implemented in this version. It typically requires a separate library (like gif.js) to create animated GIFs from multiple frames, or server-side processing.");
-});
-
-retakeBtn.addEventListener('click', () => {
-    localStorage.removeItem('capturedPhotos');
-    localStorage.removeItem('selectedPhotoCount'); 
-    window.location.href = 'layout-selection/layout-selection.html'; 
-});
-
-
-// --- Event Handlers for Editing Tools ---
+// --- Event Listeners ---
 
 addStickerBtn.addEventListener("click", async function() {
     const stickerSrc = stickerSelect.value;
@@ -628,11 +507,8 @@ textAlignSelect.addEventListener('change', () => { renderCanvas(); });
 
 
 // --- Interactive Dragging (Stickers and Text) ---
-// Using a single activeDraggable to manage both mouse and touch drag state
-// and a debounced render for performance during dragging.
-
 let debounceRenderTimeout;
-const DEBOUNCE_DELAY = 16; // Roughly 60 frames per second
+const DEBOUNCE_DELAY = 16; 
 
 function debouncedRenderCanvas() {
     clearTimeout(debounceRenderTimeout);
@@ -667,7 +543,6 @@ function handleDragStart(coords) {
         renderCanvas(); 
     }
 
-    // Check stickers first (top layer)
     for (let i = stickers.length - 1; i >= 0; i--) {
         const s = stickers[i];
         if (coords.x > s.x && coords.x < s.x + s.width &&
@@ -682,10 +557,8 @@ function handleDragStart(coords) {
         }
     }
 
-    // Then check text (below stickers)
     for (let i = texts.length - 1; i >= 0; i--) {
         const t = texts[i];
-        // Temporarily set font for accurate text measurement
         ctx.font = `${t.isBold ? 'bold ' : ''}${t.isItalic ? 'italic ' : ''}${t.textSize}px ${t.font}`;
         const metrics = ctx.measureText(t.text);
         const textWidth = metrics.width;
@@ -713,7 +586,7 @@ function handleDragMove(coords) {
     if (activeDraggable) {
         activeDraggable.x = coords.x - activeDraggable.offsetX;
         activeDraggable.y = coords.y - activeDraggable.offsetY;
-        debouncedRenderCanvas(); // Use debounced render for smoother dragging
+        debouncedRenderCanvas(); 
     }
 }
 
@@ -721,31 +594,165 @@ function handleDragEnd() {
     if (activeDraggable) {
         activeDraggable.isDragging = false; 
         activeDraggable = null; 
-        renderCanvas(); // Final render to ensure precise position and remove highlight
+        renderCanvas(); 
     }
 }
 
-// --- Event Listeners for Dragging (Unified) ---
 photoCanvas.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // Prevent default browser drag behavior
+    e.preventDefault(); 
     handleDragStart(getEventCoordinates(e));
 });
 photoCanvas.addEventListener('mousemove', (e) => {
-    if (activeDraggable) e.preventDefault(); // Prevent text selection/scrolling during drag
+    if (activeDraggable) e.preventDefault(); 
     handleDragMove(getEventCoordinates(e));
 });
 photoCanvas.addEventListener('mouseup', handleDragEnd);
-photoCanvas.addEventListener('mouseleave', handleDragEnd); // End drag if mouse leaves canvas
+photoCanvas.addEventListener('mouseleave', handleDragEnd); 
 
 photoCanvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Prevent scrolling/zooming on touch
+    e.preventDefault(); 
     handleDragStart(getEventCoordinates(e));
-}, { passive: false }); // `passive: false` is important for `preventDefault` in touchstart/touchmove
+}, { passive: false }); 
 photoCanvas.addEventListener('touchmove', (e) => {
     if (activeDraggable) e.preventDefault();
     handleDragMove(getEventCoordinates(e));
 }, { passive: false });
 photoCanvas.addEventListener('touchend', handleDragEnd);
 
-// --- Initial Load ---
+// --- GIF Generation Logic ---
+downloadGifBtn.addEventListener("click", function () {
+    if (capturedPhotosBase64.length === 0) {
+        alert("Please capture photos first to create a GIF.");
+        return;
+    }
+    if (typeof GIF === 'undefined') {
+        alert("GIF.js library not loaded. Please ensure 'editing-page/lib/gif.js' is correctly linked.");
+        console.error("GIF.js not found. Check script tag and file path.");
+        return;
+    }
+
+    showGifSpinner(true); // Show GIF specific spinner
+
+    // Determine the ideal size for the GIF frames.
+    // Using the dimensions of the first photo frame as a reference for consistency.
+    const gifFrameWidth = currentStripConfig.frames[0].width;
+    const gifFrameHeight = currentStripConfig.frames[0].height;
+
+    const gif = new GIF({
+        workers: 4, // More workers can speed up generation. Adjust based on user's CPU cores.
+        workerScript: 'editing-page/lib/gif.worker.js', // Path to the worker script
+        quality: 15, // Higher number = lower quality, smaller file. Range 1-100.
+        repeat: 0,   // 0 = no repeat, -1 = infinite repeat.
+        delay: 750, // Delay between frames in milliseconds (e.g., 750ms = 0.75 seconds per frame)
+        width: gifFrameWidth,
+        height: gifFrameHeight,
+        // transparent: '#FFFFFF' // Use if your frames have a consistent single-color background to make transparent
+    });
+
+    let framesAddedCount = 0; // To track when all frames are ready
+
+    capturedPhotosBase64.forEach((photoData) => {
+        const img = new Image();
+        img.onload = () => {
+            const frameCanvas = document.createElement('canvas');
+            const frameCtx = frameCanvas.getContext('2d');
+
+            frameCanvas.width = gifFrameWidth;
+            frameCanvas.height = gifFrameHeight;
+
+            // Draw a white background for the GIF frame
+            frameCtx.fillStyle = '#FFFFFF';
+            frameCtx.fillRect(0, 0, frameCanvas.width, frameCanvas.height);
+
+            // Calculate aspect ratio to fit the image into the GIF frame
+            const imgAspectRatio = img.width / img.height;
+            const frameAspectRatio = frameCanvas.width / frameCanvas.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imgAspectRatio > frameAspectRatio) {
+                drawWidth = frameCanvas.width;
+                drawHeight = frameCanvas.width / imgAspectRatio;
+                offsetX = 0;
+                offsetY = (frameCanvas.height - drawHeight) / 2; // Center vertically
+            } else {
+                drawHeight = frameCanvas.height;
+                drawWidth = frameCanvas.height * imgAspectRatio;
+                offsetY = 0;
+                offsetX = (frameCanvas.width - drawWidth) / 2; // Center horizontally
+            }
+            
+            frameCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+            // IMPORTANT: If you want stickers/text on the GIF, this is where it gets complex.
+            // You would need to filter `stickers` and `texts` arrays to only include
+            // items that would appear *on this specific photo frame* within the strip,
+            // and then calculate their positions relative to this `frameCanvas`.
+            // This is non-trivial and often skipped for initial GIF features.
+            // drawStickersOnCanvas(frameCtx, relevantStickersForThisFrame);
+            // drawTextOnCanvas(frameCtx, relevantTextsForThisFrame);
+
+            gif.addFrame(frameCanvas, { delay: gif.options.delay }); 
+
+            framesAddedCount++;
+            // Start rendering only after all image frames have been loaded and added
+            if (framesAddedCount === capturedPhotosBase64.length) {
+                gif.render();
+            }
+        };
+        img.onerror = (e) => {
+            console.error("Error loading image for GIF frame:", photoData, e);
+            // Even if an image fails, try to proceed if possible or show error
+            framesAddedCount++;
+            if (framesAddedCount === capturedPhotosBase64.length) {
+                 gif.render(); // Attempt to render even if one fails
+            }
+            // You might add a placeholder frame or skip this frame
+        };
+        img.src = photoData;
+    });
+
+    gif.on('start', function() {
+        console.log('GIF generation started...');
+        showGifSpinner(true, 'Starting GIF...');
+    });
+
+    gif.on('progress', function(p) {
+        showGifSpinner(true, `Generating GIF: ${Math.round(p * 100)}%`);
+        console.log(`GIF progress: ${Math.round(p * 100)}%`);
+    });
+
+    gif.on('finished', function(blob) {
+        console.log('GIF generation finished.');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'odz_animated.gif';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url); // Clean up the URL
+
+        showGifSpinner(false); // Hide spinner
+        downloadGifBtn.disabled = false; // Re-enable button
+        downloadGifBtn.textContent = 'Download GIF';
+    });
+
+    gif.on('error', function(error) {
+        console.error('GIF generation error:', error);
+        alert('Failed to generate GIF. See console for details.');
+        showGifSpinner(false); // Hide spinner
+        downloadGifBtn.disabled = false; // Re-enable button
+        downloadGifBtn.textContent = 'Download GIF';
+    });
+});
+
+
+retakeBtn.addEventListener('click', () => {
+    localStorage.removeItem('capturedPhotos');
+    localStorage.removeItem('selectedPhotoCount'); 
+    window.location.href = 'layout-selection/layout-selection.html'; 
+});
+
+
 document.addEventListener('DOMContentLoaded', initializeEditor);
