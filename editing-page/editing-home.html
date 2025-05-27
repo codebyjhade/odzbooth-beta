@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ODZ Booth</title>
+    <title>ODZ Booth - Edit Your Masterpiece</title>
     <base href="/odzbooth-beta/"> 
 
-    <link rel="stylesheet" href="editing-page/edit-style.css">
+    <link rel="stylesheet" href="editing-page/edit-style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script defer src="editing-page/edit.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <script src="editing-page/lib/gif.js"></script> 
+    
+    <script defer src="editing-page/edit.js"></script> 
 </head>
 <body>
 
@@ -29,6 +30,10 @@
             <div id="download-spinner" class="spinner-overlay hidden-spinner">
                 <i class="fas fa-spinner fa-spin fa-3x"></i>
                 <p>Generating Strip...</p>
+            </div>
+            <div id="gif-spinner" class="spinner-overlay hidden-spinner">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Generating GIF...</p>
             </div>
         </div>
 
@@ -95,8 +100,8 @@
                 <button id="downloadStripBtn" class="download-btn">
                     <i class='bx bxs-download'></i> Download Strip
                 </button>
-                <button id="downloadGifBtn" class="download-btn" disabled title="GIF feature coming soon!">
-                    <i class='bx bxs-file-gif'></i> Download GIF (Coming Soon!)
+                <button id="downloadGifBtn" class="download-btn" title="Generate an animated GIF from your photos!">
+                    <i class='bx bxs-file-gif'></i> Download GIF
                 </button>
             </div>
 
