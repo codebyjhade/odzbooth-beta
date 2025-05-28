@@ -93,9 +93,9 @@ const STRIP_CONFIGS = {
         defaultBackground: '#CCCCCC', 
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Original Triple' },
-            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Simple Border' },
-            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Modern Style' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'balik-eskwela' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'option-3' }
         ]
     },
     '4': { 
