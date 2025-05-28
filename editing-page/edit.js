@@ -77,9 +77,9 @@ const STRIP_CONFIGS = {
         defaultBackground: '#CCCCCC', 
         frameAspectRatio: 320 / 240,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Double' },
-            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Lines' },
-            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Decorative Duo' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'option-3' }
         ]
     },
     '3': { 
