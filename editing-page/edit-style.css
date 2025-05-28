@@ -353,10 +353,35 @@ button:disabled {
     flex-shrink: 0; /* Prevent label from shrinking */
 }
 .download-format-options select {
-    /* REMOVED: width: auto; */ /* Let flexbox handle width */
     flex-grow: 1; /* Take remaining space */
     min-width: 0; /* Allow the select to shrink below its content size if needed */
     margin-bottom: 0; /* Remove default margin */
+}
+
+/* NEW: Frame Selection Dropdown Style */
+.tool-section select#frameSelect {
+    width: 100%; /* Make it full width */
+    padding: 10px;
+    margin-bottom: 15px; /* Space below the select */
+    border: 1px solid #ddd; /* Match other inputs */
+    border-radius: var(--border-radius-soft);
+    background-color: var(--panel-bg);
+    color: var(--text-dark);
+    font-size: 1rem;
+    cursor: pointer;
+    appearance: none; /* Remove default dropdown arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23333' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); /* Custom arrow, adjust fill color to --text-dark */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 24px;
+}
+
+.tool-section select#frameSelect:focus {
+    outline: none;
+    border-color: var(--primary-brand-color);
+    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.4);
 }
 
 
