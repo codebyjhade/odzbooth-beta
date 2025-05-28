@@ -9,22 +9,24 @@ const frameSelect = document.getElementById("frameSelect");
 
 const stickerSelect = document.getElementById("stickerSelect");
 const addStickerBtn = document.getElementById("addStickerBtn");
-const removeStickerBtn = document.getElementById("removeStickerBtn");
+const removeStickerBtn = document.getElementById("removeStickerBtn"); // Re-added if it exists in HTML
 
 const textInput = document.getElementById("textInput");
 const textColorInput = document.getElementById("textColor");
 const textFontSelect = document.getElementById("textFont");
 const textSizeInput = document.getElementById("textSize");
 const addTextBtn = document.getElementById("addTextBtn");
-const removeTextBtn = document.getElementById("removeTextBtn");
+const removeTextBtn = document.getElementById("removeTextBtn"); // Re-added if it exists in HTML
 
 const textBoldBtn = document.getElementById('textBoldBtn');
 const textItalicBtn = document.getElementById('textItalicBtn');
-const textUnderlineBtn = document('textUnderlineBtn'); // Corrected typo here
+const textUnderlineBtn = document.getElementById('textUnderlineBtn'); // <--- FIX IS HERE
 const textAlignSelect = document.getElementById('textAlignSelect');
 
 const downloadStripBtn = document.getElementById("downloadStripBtn");
-const downloadFormatSelect = document.getElementById('downloadFormat');
+// Removed downloadGifBtn as it's not implemented
+// const downloadGifBtn = document.getElementById("downloadGifBtn"); 
+const downloadFormatSelect = document.getElementById('downloadFormat'); // Added from previous working versions
 const retakeBtn = document.getElementById("retakeBtn");
 
 const noPhotosMessage = document.getElementById('no-photos-message');
@@ -541,7 +543,7 @@ addTextBtn.addEventListener("click", function() {
         align: textAlignSelect.value,
         isBold: textBoldBtn.classList.contains('active'),
         isItalic: textItalicBtn.classList.contains('active'),
-        isUnderline: textUnderlineBtn.classList.contains('active'), // Corrected to use 'classList.contains'
+        isUnderline: textUnderlineBtn.classList.contains('active'), 
         width: textWidth, // Store calculated width
         height: textHeight, // Store approximate height
     };
@@ -564,7 +566,6 @@ removeTextBtn.addEventListener("click", () => {
 
 textBoldBtn.addEventListener('click', () => { textBoldBtn.classList.toggle('active'); renderCanvas(); });
 textItalicBtn.addEventListener('click', () => { textItalicBtn.classList.toggle('active'); renderCanvas(); });
-// Corrected to use 'classList.toggle'
 textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.toggle('active'); renderCanvas(); });
 textAlignSelect.addEventListener('change', () => { renderCanvas(); });
 
@@ -817,7 +818,7 @@ frameSelect.addEventListener('change', (event) => {
 retakeBtn.addEventListener('click', () => {
     localStorage.removeItem('capturedPhotos');
     localStorage.removeItem('selectedPhotoCount');
-    window.location.href = 'layout-selection/layout-selection.html';
+    window.location.href = 'layout-selection/layout-selection.html'; // Path is relative to base href
 });
 
 document.addEventListener('DOMContentLoaded', initializeEditor);
