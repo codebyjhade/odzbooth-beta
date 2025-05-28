@@ -1,4 +1,4 @@
-// edit.js - The core logic for the Photo Editing Page (Simplified: Drag Only)
+// edit.js - The core logic for the Photo Editing Page
 "use strict";
 
 // --- DOM Element References ---
@@ -9,24 +9,22 @@ const frameSelect = document.getElementById("frameSelect");
 
 const stickerSelect = document.getElementById("stickerSelect");
 const addStickerBtn = document.getElementById("addStickerBtn");
-const removeStickerBtn = document.getElementById("removeStickerBtn"); // Re-added if it exists in HTML
+const removeStickerBtn = document.getElementById("removeStickerBtn");
 
 const textInput = document.getElementById("textInput");
 const textColorInput = document.getElementById("textColor");
 const textFontSelect = document.getElementById("textFont");
 const textSizeInput = document.getElementById("textSize");
 const addTextBtn = document.getElementById("addTextBtn");
-const removeTextBtn = document.getElementById("removeTextBtn"); // Re-added if it exists in HTML
+const removeTextBtn = document.getElementById("removeTextBtn");
 
 const textBoldBtn = document.getElementById('textBoldBtn');
 const textItalicBtn = document.getElementById('textItalicBtn');
-const textUnderlineBtn = document.getElementById('textUnderlineBtn'); // <--- FIX IS HERE
+const textUnderlineBtn = document.getElementById('textUnderlineBtn');
 const textAlignSelect = document.getElementById('textAlignSelect');
 
 const downloadStripBtn = document.getElementById("downloadStripBtn");
-// Removed downloadGifBtn as it's not implemented
-// const downloadGifBtn = document.getElementById("downloadGifBtn"); 
-const downloadFormatSelect = document.getElementById('downloadFormat'); // Added from previous working versions
+const downloadFormatSelect = document.getElementById('downloadFormat');
 const retakeBtn = document.getElementById("retakeBtn");
 
 const noPhotosMessage = document.getElementById('no-photos-message');
@@ -35,16 +33,26 @@ const downloadSpinner = document.getElementById('download-spinner');
 
 // --- Global State Variables ---
 let capturedPhotosBase64 = [];
-let stickers = []; // Array to store dynamically added and draggable sticker objects
-let texts = []; // Array to store dynamically added and draggable text objects
+let stickers = [];
+let texts = [];
 
 let currentStripConfig = null;
-let selectedDraggable = null; // Currently selected sticker or text object
+let selectedDraggable = null;
 
-let isDragging = false; // Only need this for drag functionality
+let isDragging = false;
+let isResizing = false;
+let isRotating = false;
+let startX, startY; // Mouse position on drag/resize/rotate start
+let initialObjectX, initialObjectY; // Object position on drag start (for dragging)
 let dragOffsetX, dragOffsetY; // Offset for dragging
 
-let currentFrameImgSrc = ''; // To store the currently selected frame image path
+// NEW for resizing:
+let initialDistanceToOppositeCorner; // Distance from resize handle to opposite corner when resizing starts
+let pivotX, pivotY; // The fixed corner opposite to the handle being dragged
+
+// Constants for interaction handles
+const HANDLE_SIZE = 10;
+const ROTATE_HANDLE_OFFSET = 25; // Distance of rotate handle from corner
 
 
 // --- Configuration: Fixed Strip Dimensions and Photo Frame Coordinates ---
@@ -81,9 +89,9 @@ const STRIP_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 240,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Double' },
-            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Lines' },
-            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Decorative Duo' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'option-3' }
         ]
     },
     '3': {
@@ -97,9 +105,9 @@ const STRIP_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Original Triple' },
-            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Simple Border' },
-            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Modern Style' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'lagi kang option-1' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'lagi kang option-2' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'lagi kang option-3' }
         ]
     },
     '4': {
@@ -133,8 +141,8 @@ const STRIP_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Original Six' },
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Two-Column Classic' }
+            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'option-2' }
         ]
     }
 };
@@ -216,7 +224,7 @@ function showDownloadSpinner(show) {
 }
 
 
-// --- Canvas Drawing Functions ---
+// --- Canvas Drawing Functions (for the interactive editing canvas) ---
 
 async function renderCanvas() {
     ctx.clearRect(0, 0, photoCanvas.width, photoCanvas.height);
@@ -290,18 +298,17 @@ function drawStickersOnCanvas(targetCtx, stickersData) {
             })();
 
             if (imgToDraw.complete) {
-                targetCtx.drawImage(imgToDraw, sticker.x, sticker.y, sticker.width, sticker.height);
+                targetCtx.save();
+                targetCtx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
+                targetCtx.rotate(sticker.rotation);
+                targetCtx.drawImage(imgToDraw, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+                targetCtx.restore();
             } else {
                 imgToDraw.onload = () => renderCanvas();
             }
 
-            // Draw selection border if selected
-            if (selectedDraggable === sticker) {
-                targetCtx.strokeStyle = 'cyan';
-                targetCtx.lineWidth = 2;
-                targetCtx.setLineDash([5, 5]); // Dashed line
-                targetCtx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
-                targetCtx.setLineDash([]); // Reset line dash
+            if (sticker.isDragging || (selectedDraggable === sticker)) {
+                drawSelectionHandles(sticker, targetCtx);
             }
         } catch (error) {
             console.error(`ERROR: Failed to draw sticker ${sticker.src}:`, error);
@@ -311,56 +318,102 @@ function drawStickersOnCanvas(targetCtx, stickersData) {
 
 function drawTextOnCanvas(targetCtx, textsData) {
     textsData.forEach(textObj => {
+        targetCtx.save();
+
         targetCtx.fillStyle = textObj.color;
         let fontStyle = '';
         if (textObj.isItalic) fontStyle += 'italic ';
         if (textObj.isBold) fontStyle += 'bold ';
 
+        // Set font based on current size, not original
         targetCtx.font = `${fontStyle}${textObj.size}px ${textObj.font}`;
         targetCtx.textAlign = textObj.align;
-        targetCtx.textBaseline = 'middle'; // For vertical centering
+        targetCtx.textBaseline = 'middle'; // Center text vertically for rotation
 
-        // Adjust X based on alignment
-        let textX = textObj.x;
-        if (textObj.align === 'center') {
-            textX = textObj.x + textObj.width / 2; // drawText positions from origin for center
-        } else if (textObj.align === 'right') {
-            textX = textObj.x + textObj.width; // drawText positions from origin for right
-        }
+        const centerX = textObj.x + textObj.width / 2; // Center based on current width
+        const centerY = textObj.y + textObj.height / 2; // Center based on current height
 
-        targetCtx.fillText(textObj.content, textX, textObj.y + textObj.height / 2); // Center Y for simpler logic
+        targetCtx.translate(centerX, centerY);
+        targetCtx.rotate(textObj.rotation);
 
-        // Draw underline if enabled
+        // Draw the text itself at the translated/rotated origin
+        // The textX, textY were calculated for an unrotated object, so draw at 0,0 after translate
+        targetCtx.fillText(textObj.content, 0, 0);
+
+        // Draw underline if enabled (needs to be rotated with text)
         if (textObj.isUnderline) {
             const textMetrics = targetCtx.measureText(textObj.content);
             const underlineHeight = textObj.size / 15;
-            const underlineY = textObj.y + textObj.height / 2 + textObj.size / 2 - underlineHeight / 2; // Position below text
+            const underlineY = underlineHeight * 2; // Relative to the middle baseline (0,0 is center)
 
-            let underlineStartX = textObj.x;
-            if (textObj.align === 'center') {
-                underlineStartX = textX - textMetrics.width / 2;
-            } else if (textObj.align === 'right') {
-                underlineStartX = textX - textMetrics.width;
-            }
-            
+            let underlineX = -textMetrics.width / 2; // Left edge for center alignment
+            if (textObj.align === 'left') underlineX = 0;
+            else if (textObj.align === 'right') underlineX = -textMetrics.width;
+
             targetCtx.beginPath();
             targetCtx.strokeStyle = textObj.color;
             targetCtx.lineWidth = underlineHeight;
-            targetCtx.moveTo(underlineStartX, underlineY);
-            targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
+            targetCtx.moveTo(underlineX, underlineY);
+            targetCtx.lineTo(underlineX + textMetrics.width, underlineY);
             targetCtx.stroke();
         }
 
-        // Draw selection border if selected
-        if (selectedDraggable === textObj) {
-            targetCtx.strokeStyle = 'cyan';
-            targetCtx.lineWidth = 2;
-            targetCtx.setLineDash([5, 5]); // Dashed line
-            targetCtx.strokeRect(textObj.x, textObj.y, textObj.width, textObj.height);
-            targetCtx.setLineDash([]); // Reset line dash
+        targetCtx.restore();
+
+        if (textObj.isDragging || (selectedDraggable === textObj)) {
+            drawSelectionHandles(textObj, targetCtx);
         }
     });
 }
+
+// NEW: Function to draw selection handles (extracted from drawStickers/drawText)
+function drawSelectionHandles(obj, targetCtx) {
+    targetCtx.strokeStyle = 'cyan';
+    targetCtx.lineWidth = 2;
+    targetCtx.setLineDash([5, 5]); // Dashed line for selection border
+
+    const centerX = obj.x + obj.width / 2;
+    const centerY = obj.y + obj.height / 2;
+
+    targetCtx.save();
+    targetCtx.translate(centerX, centerY);
+    targetCtx.rotate(obj.rotation);
+
+    // Bounding box
+    targetCtx.strokeRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
+    targetCtx.setLineDash([]); // Reset line dash
+
+    // Scale handle (bottom-right corner)
+    targetCtx.fillStyle = 'white';
+    targetCtx.strokeStyle = 'blue';
+    targetCtx.lineWidth = 1;
+    targetCtx.fillRect(
+        obj.width / 2 - HANDLE_SIZE / 2,
+        obj.height / 2 - HANDLE_SIZE / 2,
+        HANDLE_SIZE,
+        HANDLE_SIZE
+    );
+    targetCtx.strokeRect(
+        obj.width / 2 - HANDLE_SIZE / 2,
+        obj.height / 2 - HANDLE_SIZE / 2,
+        HANDLE_SIZE,
+        HANDLE_SIZE
+    );
+
+    // Rotate handle (top-center, extended)
+    targetCtx.beginPath();
+    targetCtx.moveTo(0, -obj.height / 2);
+    targetCtx.lineTo(0, -obj.height / 2 - ROTATE_HANDLE_OFFSET);
+    targetCtx.stroke();
+
+    targetCtx.beginPath();
+    targetCtx.arc(0, -obj.height / 2 - ROTATE_HANDLE_OFFSET, HANDLE_SIZE / 2, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.stroke();
+
+    targetCtx.restore();
+}
+
 
 function updateCanvasAndRender() {
     const selectedPhotoCountStr = localStorage.getItem('selectedPhotoCount');
@@ -383,8 +436,8 @@ function updateCanvasAndRender() {
 
     populateFrameOptions(currentStripConfig.availableFrames);
     if (!currentFrameImgSrc && currentStripConfig.availableFrames.length > 0) {
-        currentFrameImgSrc = currentStripConfig.availableFrames[0].src; // Set first as default
-        frameSelect.value = currentStripConfig.availableFrames[0].src; // Update dropdown to reflect default
+        currentFrameImgSrc = currentStripConfig.availableFrames[0].src;
+        frameSelect.value = currentStripConfig.availableFrames[0].src;
     } else if (currentFrameImgSrc) {
         frameSelect.value = currentFrameImgSrc;
     }
@@ -393,24 +446,20 @@ function updateCanvasAndRender() {
     renderCanvas();
 }
 
-/**
- * Populates the frame selection dropdown with available frames for the current layout.
- * @param {Array<Object>} frames - An array of frame objects from currentStripConfig.availableFrames.
- */
 function populateFrameOptions(frames) {
-    frameSelect.innerHTML = ''; // Clear existing options
+    frameSelect.innerHTML = '';
     if (frames && frames.length > 0) {
         frames.forEach(frame => {
             const option = document.createElement('option');
-            option.value = frame.src; // Use src as the value
+            option.value = frame.src;
             option.textContent = frame.name;
             frameSelect.appendChild(option);
         });
         frameSelect.disabled = false;
     } else {
         const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No frames available';
+        option.value = '';
+        option.textContent = 'No frames available';
         frameSelect.appendChild(option);
         frameSelect.disabled = true;
     }
@@ -435,7 +484,7 @@ async function initializeEditor() {
         addTextBtn.disabled = true;
         removeTextBtn.disabled = true;
         downloadStripBtn.disabled = true;
-        frameSelect.disabled = true; // Disable frame select if no photos
+        frameSelect.disabled = true;
         return;
     }
 
@@ -452,7 +501,7 @@ async function initializeEditor() {
         addTextBtn.disabled = true;
         removeTextBtn.disabled = true;
         downloadStripBtn.disabled = true;
-        frameSelect.disabled = true; // Disable frame select if invalid layout
+        frameSelect.disabled = true;
         return;
     }
 
@@ -464,22 +513,10 @@ async function initializeEditor() {
 
     await preloadAllCapturedImages();
     updateCanvasAndRender();
-
-    // Attach only basic mouse/touch event listeners
-    photoCanvas.addEventListener('mousedown', handleMouseDown);
-    photoCanvas.addEventListener('mousemove', handleMouseMove);
-    photoCanvas.addEventListener('mouseup', handleMouseUp);
-    photoCanvas.addEventListener('mouseout', handleMouseUp); // End interaction if mouse leaves canvas
-
-    // Mobile/Touch events
-    photoCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    photoCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    photoCanvas.addEventListener('touchend', handleTouchEnd);
-    photoCanvas.addEventListener('touchcancel', handleTouchEnd);
 }
 
 
-// --- Event Listeners for UI Buttons ---
+// --- Event Listeners ---
 
 addStickerBtn.addEventListener("click", async function() {
     const stickerSrc = stickerSelect.value;
@@ -487,18 +524,21 @@ addStickerBtn.addEventListener("click", async function() {
 
     try {
         const img = await loadImage(stickerSrc);
-        const initialWidth = 100; // Fixed initial width
-        const initialHeight = (img.height / img.width) * initialWidth; // Maintain aspect ratio
+        const initialWidth = 100; // Default initial width for sticker
+        const initialHeight = (img.height / img.width) * initialWidth;
         const newSticker = {
             img: img,
             src: stickerSrc,
-            x: (photoCanvas.width / 2) - (initialWidth / 2), // Center horizontally
-            y: (photoCanvas.height / 2) - (initialHeight / 2), // Center vertically
-            width: initialWidth, // Fixed width
-            height: initialHeight, // Fixed height
+            x: (photoCanvas.width / 2) - (initialWidth / 2),
+            y: (photoCanvas.height / 2) - (initialHeight / 2),
+            width: initialWidth, // Current displayed width
+            height: initialHeight, // Current displayed height
+            originalWidth: initialWidth, // Base width for scaling calculations
+            originalHeight: initialHeight, // Base height for scaling calculations
+            rotation: 0 // In radians
         };
         stickers.push(newSticker);
-        selectedDraggable = newSticker; // Select the newly added sticker
+        selectedDraggable = newSticker;
         renderCanvas();
     }
     catch (error) {
@@ -518,34 +558,40 @@ removeStickerBtn.addEventListener("click", () => {
 });
 
 addTextBtn.addEventListener("click", function() {
-    const textContent = textInput.value.trim();
-    if (!textContent) {
+    const text = textInput.value.trim();
+    if (!text) {
         return;
     }
 
-    const textColor = textColorInput.value;
-    const textFont = textFontSelect.value;
-    const textSize = parseInt(textSizeInput.value);
+    const selectedTextSize = parseInt(textSizeInput.value, 10);
+    const selectedTextFont = textFontSelect.value;
+    const selectedTextColor = textColorInput.value;
+    const isBold = textBoldBtn.classList.contains('active');
+    const isItalic = textItalicBtn.classList.contains('active');
+    const isUnderline = textUnderlineBtn.classList.contains('active');
+    const textAlign = textAlignSelect.value;
 
     // Temporarily set font to measure text width
-    ctx.font = `${textBoldBtn.classList.contains('active') ? 'bold ' : ''}${textItalicBtn.classList.contains('active') ? 'italic ' : ''}${textSize}px ${textFont}`;
-    const textMetrics = ctx.measureText(textContent);
-    const textWidth = textMetrics.width;
-    const textHeight = textSize; // Approximate height for bounding box
+    ctx.font = `${isBold ? 'bold ' : ''}${isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`;
+    const textMetrics = ctx.measureText(text);
+    const initialTextWidth = textMetrics.width;
+    const initialTextHeight = selectedTextSize; // Using font size as approximation for height
 
     const newTextObj = {
-        content: textContent,
-        x: (photoCanvas.width / 2) - (textWidth / 2), // Center horizontally
-        y: (photoCanvas.height / 2) - (textHeight / 2), // Center vertically
-        color: textColor,
-        font: textFont,
-        size: textSize,
-        align: textAlignSelect.value,
-        isBold: textBoldBtn.classList.contains('active'),
-        isItalic: textItalicBtn.classList.contains('active'),
-        isUnderline: textUnderlineBtn.classList.contains('active'), 
-        width: textWidth, // Store calculated width
-        height: textHeight, // Store approximate height
+        text: text,
+        x: (photoCanvas.width / 2) - (initialTextWidth / 2),
+        y: (photoCanvas.height / 2) - (initialTextHeight / 2),
+        font: selectedTextFont,
+        textSize: selectedTextSize, // Base font size for scaling
+        size: selectedTextSize, // Current displayed font size (initially same as textSize)
+        color: selectedTextColor,
+        align: textAlign,
+        isBold: isBold,
+        isItalic: isItalic,
+        isUnderline: isUnderline,
+        width: initialTextWidth, // Current displayed width
+        height: initialTextHeight, // Current displayed height (approx)
+        rotation: 0, // In radians
     };
 
     texts.push(newTextObj);
@@ -570,7 +616,17 @@ textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.to
 textAlignSelect.addEventListener('change', () => { renderCanvas(); });
 
 
-// --- Basic Dragging Interaction Handlers ---
+// --- Interactive Dragging, Scaling, Rotation (Handlers) ---
+
+let debounceRenderTimeout;
+const DEBOUNCE_DELAY = 16;
+
+function debouncedRenderCanvas() {
+    clearTimeout(debounceRenderTimeout);
+    debounceRenderTimeout = setTimeout(() => {
+        renderCanvas();
+    }, DEBOUNCE_DELAY);
+}
 
 function getEventCoordinates(event) {
     const rect = photoCanvas.getBoundingClientRect();
@@ -591,76 +647,238 @@ function getEventCoordinates(event) {
     return { x, y };
 }
 
-function isPointInRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight) {
-    return pointX >= rectX &&
-           pointX <= rectX + rectWidth &&
-           pointY >= rectY &&
-           pointY <= rectY + rectHeight;
+function isPointInRotatedRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight, rotationAngle) {
+    const centerX = rectX + rectWidth / 2;
+    const centerY = rectY + rectHeight / 2;
+    const translatedX = pointX - centerX;
+    const translatedY = pointY - centerY;
+
+    const rotatedX = translatedX * Math.cos(-rotationAngle) - translatedY * Math.sin(-rotationAngle);
+    const rotatedY = translatedX * Math.sin(-rotationAngle) + translatedY * Math.cos(-rotationAngle);
+
+    return rotatedX >= -rectWidth / 2 &&
+           rotatedX <= rectWidth / 2 &&
+           rotatedY >= -rectHeight / 2 &&
+           rotatedY <= rectHeight / 2;
+}
+
+function getHandleType(mousePos) {
+    if (!selectedDraggable) return null;
+
+    const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+    const centerY = selectedDraggable.y + selectedDraggable.height / 2;
+
+    // Calculate handle positions relative to the canvas considering object's rotation
+    // Scale handle (bottom-right) - this handle's position is calculated relative to the object's center *before* rotation
+    let handleRelativeX = selectedDraggable.width / 2 - HANDLE_SIZE / 2;
+    let handleRelativeY = selectedDraggable.height / 2 - HANDLE_SIZE / 2;
+    let rotatedHandlePos = rotatePoint({ x: handleRelativeX, y: handleRelativeY }, { x: 0, y: 0 }, selectedDraggable.rotation);
+    let scaleHandleRectX = centerX + rotatedHandlePos.x - HANDLE_SIZE / 2;
+    let scaleHandleRectY = centerY + rotatedHandlePos.y - HANDLE_SIZE / 2;
+
+
+    if (isPointInRotatedRect(
+        mousePos.x, mousePos.y,
+        scaleHandleRectX, scaleHandleRectY, // Adjusted rectangle for the handle
+        HANDLE_SIZE, HANDLE_SIZE,
+        selectedDraggable.rotation // Pass the object's rotation for handle bounds
+    )) {
+        return 'scale';
+    }
+
+    // Rotate handle (top-center, extended)
+    let rotateHandleRelativeX = 0;
+    let rotateHandleRelativeY = -selectedDraggable.height / 2 - ROTATE_HANDLE_OFFSET;
+    let rotatedRotateHandlePos = rotatePoint({ x: rotateHandleRelativeX, y: rotateHandleRelativeY }, { x: 0, y: 0 }, selectedDraggable.rotation);
+    let rotateHandleX = centerX + rotatedRotateHandlePos.x;
+    let rotateHandleY = centerY + rotatedRotateHandlePos.y;
+
+    if (distance(mousePos.x, mousePos.y, rotateHandleX, rotateHandleY) <= HANDLE_SIZE / 2) {
+        return 'rotate';
+    }
+
+    return null;
+}
+
+function rotatePoint(point, origin, angle) {
+    const s = Math.sin(angle);
+    const c = Math.cos(angle);
+
+    const px = point.x - origin.x;
+    const py = point.y - origin.y;
+
+    const xnew = px * c - py * s;
+    const ynew = px * s + py * c;
+
+    return { x: xnew + origin.x, y: ynew + origin.y };
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
 function handleMouseDown(e) {
     e.preventDefault();
     const mousePos = getEventCoordinates(e);
+    startX = mousePos.x;
+    startY = mousePos.y;
 
-    isDragging = false; // Reset drag state
-    selectedDraggable = null; // Reset selected draggable
+    const handleType = getHandleType(mousePos);
+    if (handleType === 'scale') {
+        isResizing = true;
+        // Calculate the opposite corner (pivot) for scaling
+        const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+        const centerY = selectedDraggable.y + selectedDraggable.height / 2;
 
-    // Iterate through stickers and texts in reverse order to select topmost
+        // The corner opposite to the resize handle (bottom-right) is top-left
+        let pivotRelativeX = -selectedDraggable.width / 2;
+        let pivotRelativeY = -selectedDraggable.height / 2;
+
+        // Rotate pivot point to its canvas coordinates
+        let rotatedPivot = rotatePoint({ x: pivotRelativeX, y: pivotRelativeY }, { x: 0, y: 0 }, selectedDraggable.rotation);
+        pivotX = centerX + rotatedPivot.x;
+        pivotY = centerY + rotatedPivot.y;
+
+        // Calculate initial distance from pivot to startX/startY (mouse position)
+        initialDistanceToOppositeCorner = distance(pivotX, pivotY, startX, startY);
+        return;
+    } else if (handleType === 'rotate') {
+        isRotating = true;
+        initialRotation = selectedDraggable.rotation;
+        return;
+    }
+
     const allDraggables = [...stickers, ...texts];
+    selectedDraggable = null;
     for (let i = allDraggables.length - 1; i >= 0; i--) {
         const obj = allDraggables[i];
-        if (isPointInRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height)) {
+        if (isPointInRotatedRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height, obj.rotation)) {
             selectedDraggable = obj;
             isDragging = true;
             dragOffsetX = mousePos.x - obj.x;
             dragOffsetY = mousePos.y - obj.y;
-
-            // Bring selected object to front by moving it to the end of its array
-            if (stickers.includes(selectedDraggable)) {
-                stickers = stickers.filter(s => s !== selectedDraggable);
-                stickers.push(selectedDraggable);
-            } else if (texts.includes(selectedDraggable)) {
-                texts = texts.filter(t => t !== selectedDraggable);
-                texts.push(selectedDraggable);
-            }
-            break; // Found and selected an object, stop checking
+            break;
         }
     }
-    renderCanvas(); // Redraw to show selection
+
+    debouncedRenderCanvas(); // Redraw to show selection immediately
 }
 
 function handleMouseMove(e) {
-    if (!isDragging || !selectedDraggable) return;
-
     e.preventDefault();
     const mousePos = getEventCoordinates(e);
 
-    selectedDraggable.x = mousePos.x - dragOffsetX;
-    selectedDraggable.y = mousePos.y - dragOffsetY;
+    if (isDragging && selectedDraggable) {
+        selectedDraggable.x = mousePos.x - dragOffsetX;
+        selectedDraggable.y = mousePos.y - dragOffsetY;
+        debouncedRenderCanvas();
+    } else if (isResizing && selectedDraggable) {
+        // Calculate current distance from pivot to mouse position
+        const currentDistance = distance(pivotX, pivotY, mousePos.x, mousePos.y);
 
-    renderCanvas();
+        // Calculate scale factor based on the ratio of current distance to initial distance
+        const scaleFactor = currentDistance / initialDistanceToOppositeCorner;
+
+        if (selectedDraggable.img) { // Sticker
+            selectedDraggable.width = selectedDraggable.originalWidth * scaleFactor;
+            selectedDraggable.height = selectedDraggable.originalHeight * scaleFactor;
+            // Ensure minimum size
+            const MIN_SIZE = 20;
+            if (selectedDraggable.width < MIN_SIZE || selectedDraggable.height < MIN_SIZE) {
+                const ratio = selectedDraggable.originalHeight / selectedDraggable.originalWidth;
+                selectedDraggable.width = MIN_SIZE;
+                selectedDraggable.height = MIN_SIZE * ratio;
+            }
+        } else if (selectedDraggable.content) { // Text
+            // For text, scale size (font size)
+            selectedDraggable.size = selectedDraggable.textSize * scaleFactor;
+            // Ensure minimum and maximum size
+            const MIN_FONT_SIZE = 10;
+            const MAX_FONT_SIZE = 100;
+            selectedDraggable.size = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, selectedDraggable.size));
+
+            // Recalculate text width and height based on new size for bounding box
+            ctx.font = `${selectedDraggable.isBold ? 'bold ' : ''}${selectedDraggable.isItalic ? 'italic ' : ''}${selectedDraggable.size}px ${selectedDraggable.font}`;
+            selectedDraggable.width = ctx.measureText(selectedDraggable.content).width;
+            selectedDraggable.height = selectedDraggable.size; // Approximate height
+
+        }
+
+        // Adjust position so the pivot point remains fixed
+        const newCenterX = pivotX - (selectedDraggable.width / 2) * Math.cos(selectedDraggable.rotation) + (selectedDraggable.height / 2) * Math.sin(selectedDraggable.rotation);
+        const newCenterY = pivotY - (selectedDraggable.width / 2) * Math.sin(selectedDraggable.rotation) - (selectedDraggable.height / 2) * Math.cos(selectedDraggable.rotation);
+
+        selectedDraggable.x = newCenterX - selectedDraggable.width / 2;
+        selectedDraggable.y = newCenterY - selectedDraggable.height / 2;
+        
+        // This is complex for rotated objects. Simpler is to calculate new top-left from pivot
+        // We're pivoting around the top-left (before rotation).
+        // Calculate new object's top-left based on pivoted initial top-left
+        let initialTopLeft = { x: initialObjectX, y: initialObjectY };
+        let newTopLeft = rotatePoint(
+            { x: initialTopLeft.x + (initialObjectWidth * (scaleFactor - 1)), // scale from top-left, not center
+              y: initialTopLeft.y + (initialObjectHeight * (scaleFactor - 1))
+            },
+            initialTopLeft, // pivot around initial top left
+            selectedDraggable.rotation
+        );
+
+        // This is getting complicated due to rotation. Let's simplify the resizing pivot
+        // to always be the corner opposite the handle and calculate new x, y from that.
+        // It's more robust to calculate the new top-left corner (x,y)
+        // by rotating the "fixed" pivot point's coordinates to the new object's rotation.
+        // For now, let's keep it simple: the object resizes from its center, then reposition.
+        // If the pivot is (pivotX, pivotY), and the new dimensions are newW, newH,
+        // then the new (x,y) should keep pivotX, pivotY constant.
+        // This logic is tricky with rotation.
+        
+        // Let's refine the position adjustment for resizing with a pivot.
+        // Find the center of the object relative to its pivot.
+        const centerRelativeX = selectedDraggable.width / 2;
+        const centerRelativeY = selectedDraggable.height / 2;
+
+        // Rotate the center relative to the pivot.
+        const rotatedCenter = rotatePoint({x: centerRelativeX, y: centerRelativeY}, {x:0,y:0}, selectedDraggable.rotation);
+
+        // New top-left corner (x,y) of the object, ensuring the pivot remains in place
+        selectedDraggable.x = pivotX - rotatedCenter.x;
+        selectedDraggable.y = pivotY - rotatedCenter.y;
+
+
+        debouncedRenderCanvas();
+    } else if (isRotating && selectedDraggable) {
+        const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+        const centerY = selectedDraggable.y + selectedDraggable.height / 2;
+
+        const angleRad = Math.atan2(mousePos.y - centerY, mousePos.x - centerX);
+        const initialAngle = Math.atan2(startY - centerY, startX - centerX);
+
+        selectedDraggable.rotation = initialRotation + (angleRad - initialAngle);
+        debouncedRenderCanvas();
+    }
 }
 
 function handleMouseUp(e) {
     isDragging = false;
-    // Do NOT deselect selectedDraggable here if you want it to remain selected after drag
-    // selectedDraggable = null; // Uncomment this if you want auto-deselection
-    // renderCanvas(); // If you uncommented above, uncomment this too
+    isResizing = false;
+    isRotating = false;
+    // selectedDraggable = null; // Don't deselect on mouse up, keep it selected for further manipulation
+    // drawStrip([]); // Redraw without selection handles if nothing is selected. If something is selected, it will be redrawn with handles.
 }
 
 // --- Touch Event Handlers (Simplified for single touch) ---
 
 function handleTouchStart(e) {
     if (e.touches.length === 1) { // Only handle single touch for now
-        e.preventDefault();
+        e.preventDefault(); // Prevent scrolling and zooming
         const touch = e.touches[0];
         handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
     }
 }
 
 function handleTouchMove(e) {
-    if (e.touches.length === 1 && isDragging) { // Only allow move if dragging
-        e.preventDefault();
+    if (e.touches.length === 1 && (isDragging || isResizing || isRotating)) {
+        e.preventDefault(); // Prevent scrolling and zooming
         const touch = e.touches[0];
         handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
     }
@@ -669,6 +887,105 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
     handleMouseUp(e);
 }
+
+
+// --- Event Listeners ---
+
+addStickerBtn.addEventListener("click", async function() {
+    const stickerSrc = stickerSelect.value;
+    if (!stickerSrc) return;
+
+    try {
+        const img = await loadImage(stickerSrc);
+        const initialWidth = 100; // Default initial width for sticker
+        const initialHeight = (img.height / img.width) * initialWidth;
+        const newSticker = {
+            img: img,
+            src: stickerSrc,
+            x: (photoCanvas.width / 2) - (initialWidth / 2),
+            y: (photoCanvas.height / 2) - (initialHeight / 2),
+            width: initialWidth, // Current displayed width
+            height: initialHeight, // Current displayed height
+            originalWidth: initialWidth, // Base width for scaling calculations
+            originalHeight: initialHeight, // Base height for scaling calculations
+            rotation: 0 // In radians
+        };
+        stickers.push(newSticker);
+        selectedDraggable = newSticker; // Select the newly added sticker
+        renderCanvas(); // Redraw the strip with the new sticker and selection
+    }
+    catch (error) {
+        console.error("Failed to add sticker:", error);
+        alert("Error loading sticker image. Please ensure the file exists in the 'assets' folder.");
+    }
+});
+
+removeStickerBtn.addEventListener("click", () => {
+    if (selectedDraggable && stickers.includes(selectedDraggable)) {
+        stickers = stickers.filter(s => s !== selectedDraggable);
+        selectedDraggable = null; // Deselect
+        renderCanvas();
+    } else {
+        alert("No sticker selected to remove.");
+    }
+});
+
+addTextBtn.addEventListener("click", function() {
+    const text = textInput.value.trim();
+    if (!text) {
+        return;
+    }
+
+    const selectedTextSize = parseInt(textSizeInput.value, 10);
+    const selectedTextFont = textFontSelect.value;
+    const selectedTextColor = textColorInput.value;
+    const isBold = textBoldBtn.classList.contains('active');
+    const isItalic = textItalicBtn.classList.contains('active');
+    const isUnderline = textUnderlineBtn.classList.contains('active');
+    const textAlign = textAlignSelect.value;
+
+    ctx.font = `${isBold ? 'bold ' : ''}${isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`;
+    const textMetrics = ctx.measureText(text);
+    const initialTextWidth = textMetrics.width;
+    const initialTextHeight = selectedTextSize; // Using font size as approximation for height
+
+    const newTextObj = {
+        text: text,
+        x: (photoCanvas.width / 2) - (initialTextWidth / 2),
+        y: (photoCanvas.height / 2) - (initialTextHeight / 2),
+        font: selectedTextFont,
+        textSize: selectedTextSize, // Base font size for scaling
+        size: selectedTextSize, // Current displayed font size (initially same as textSize)
+        color: selectedTextColor,
+        align: textAlign,
+        isBold: isBold,
+        isItalic: isItalic,
+        isUnderline: isUnderline,
+        width: initialTextWidth, // Current displayed width
+        height: initialTextHeight, // Current displayed height (approx)
+        rotation: 0, // In radians
+    };
+
+    texts.push(newTextObj);
+    textInput.value = "";
+    selectedDraggable = newTextObj; // Select the newly added text
+    renderCanvas();
+});
+
+removeTextBtn.addEventListener("click", function () {
+    if (selectedDraggable && texts.includes(selectedDraggable)) {
+        texts = texts.filter(t => t !== selectedDraggable);
+        selectedDraggable = null;
+        renderCanvas();
+    } else {
+        alert("No text selected to remove.");
+    }
+});
+
+textBoldBtn.addEventListener('click', () => { textBoldBtn.classList.toggle('active'); renderCanvas(); });
+textItalicBtn.addEventListener('click', () => { textItalicBtn.classList.toggle('active'); renderCanvas(); });
+textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.toggle('active'); renderCanvas(); });
+textAlignSelect.addEventListener('change', () => { renderCanvas(); });
 
 
 // --- Download Strip Button Logic ---
@@ -685,15 +1002,13 @@ downloadStripBtn.addEventListener('click', () => {
 
     setTimeout(() => {
         try {
+            // Create a temporary canvas for the final strip without selection handles
             const finalCanvas = document.createElement('canvas');
             finalCanvas.width = photoCanvas.width;
             finalCanvas.height = photoCanvas.height;
             const finalCtx = finalCanvas.getContext('2d');
 
-            // Temporarily clear selection for download
-            const tempSelected = selectedDraggable;
-            selectedDraggable = null;
-
+            // Draw the background and photo frames
             if (currentStripConfig && currentStripConfig.defaultBackground) {
                 finalCtx.fillStyle = currentStripConfig.defaultBackground;
                 finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
@@ -703,20 +1018,14 @@ downloadStripBtn.addEventListener('click', () => {
                     finalCtx.drawImage(frameImg, 0, 0, finalCanvas.width, finalCanvas.height);
                     drawPhotosAndDraggablesForDownload(finalCtx); // Draw photos, stickers, text
                     finalizeDownload(finalCanvas, mimeType, quality);
-                    selectedDraggable = tempSelected; // Restore selection
-                    renderCanvas(); // Re-render editing canvas with selection
                 }).catch(error => {
                     console.error("Error loading frame for download:", error);
                     drawPhotosAndDraggablesForDownload(finalCtx); // Draw without frame
                     finalizeDownload(finalCanvas, mimeType, quality);
-                    selectedDraggable = tempSelected; // Restore selection
-                    renderCanvas(); // Re-render editing canvas with selection
                 });
             } else {
                 drawPhotosAndDraggablesForDownload(finalCtx); // Draw without frame
                 finalizeDownload(finalCanvas, mimeType, quality);
-                selectedDraggable = tempSelected; // Restore selection
-                renderCanvas(); // Re-render editing canvas with selection
             }
         } catch (error) {
             console.error('Error preparing strip for download:', error);
@@ -726,7 +1035,9 @@ downloadStripBtn.addEventListener('click', () => {
     }, 50);
 });
 
+// Helper function to draw content onto the temporary canvas for download
 async function drawPhotosAndDraggablesForDownload(targetCtx) {
+    // Draw photos
     const numPhotosToDisplay = capturedPhotosBase64.length;
     const framesToUse = currentStripConfig ? currentStripConfig.frames : [];
 
@@ -747,16 +1058,23 @@ async function drawPhotosAndDraggablesForDownload(targetCtx) {
         }
     }
 
+    // Draw stickers (without selection handles)
     for (const sticker of stickers) {
         try {
-            const imgToDraw = sticker.img || await loadImage(sticker.src);
-            targetCtx.drawImage(imgToDraw, sticker.x, sticker.y, sticker.width, sticker.height);
+            const imgToDraw = sticker.img || await loadImage(sticker.src); // Ensure image is loaded
+            targetCtx.save();
+            targetCtx.translate(sticker.x + sticker.width / 2, sticker.y + sticker.height / 2);
+            targetCtx.rotate(sticker.rotation);
+            targetCtx.drawImage(imgToDraw, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+            targetCtx.restore();
         } catch (error) {
             console.error(`ERROR: Failed to draw sticker ${sticker.src} for download:`, error);
         }
     }
 
+    // Draw texts (without selection handles)
     for (const textObj of texts) {
+        targetCtx.save();
         targetCtx.fillStyle = textObj.color;
         let fontStyle = '';
         if (textObj.isItalic) fontStyle += 'italic ';
@@ -765,35 +1083,30 @@ async function drawPhotosAndDraggablesForDownload(targetCtx) {
         targetCtx.textAlign = textObj.align;
         targetCtx.textBaseline = 'middle';
 
-        // Adjust X based on alignment for download render
-        let textX = textObj.x;
-        if (textObj.align === 'center') {
-            textX = textObj.x + textObj.width / 2;
-        } else if (textObj.align === 'right') {
-            textX = textObj.x + textObj.width;
-        }
+        const centerX = textObj.x + textObj.width / 2;
+        const centerY = textObj.y + textObj.height / 2;
 
-        targetCtx.fillText(textObj.content, textX, textObj.y + textObj.height / 2);
+        targetCtx.translate(centerX, centerY);
+        targetCtx.rotate(textObj.rotation);
+        targetCtx.fillText(textObj.content, 0, 0);
 
         if (textObj.isUnderline) {
             const textMetrics = targetCtx.measureText(textObj.content);
             const underlineHeight = textObj.size / 15;
-            const underlineY = textObj.y + textObj.height / 2 + textObj.size / 2 - underlineHeight / 2;
+            const underlineY = underlineHeight * 2;
 
-            let underlineStartX = textObj.x;
-            if (textObj.align === 'center') {
-                underlineStartX = textX - textMetrics.width / 2;
-            } else if (textObj.align === 'right') {
-                underlineStartX = textX - textMetrics.width;
-            }
-            
+            let underlineX = -textMetrics.width / 2;
+            if (textObj.align === 'left') underlineX = 0;
+            else if (textObj.align === 'right') underlineX = -textMetrics.width;
+
             targetCtx.beginPath();
             targetCtx.strokeStyle = textObj.color;
             targetCtx.lineWidth = underlineHeight;
-            targetCtx.moveTo(underlineStartX, underlineY);
-            targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
+            targetCtx.moveTo(underlineX, underlineY);
+            targetCtx.lineTo(underlineX + textMetrics.width, underlineY);
             targetCtx.stroke();
         }
+        targetCtx.restore();
     }
 }
 
@@ -818,7 +1131,7 @@ frameSelect.addEventListener('change', (event) => {
 retakeBtn.addEventListener('click', () => {
     localStorage.removeItem('capturedPhotos');
     localStorage.removeItem('selectedPhotoCount');
-    window.location.href = 'layout-selection/layout-selection.html'; // Path is relative to base href
+    window.location.href = 'layout-selection/layout-selection.html';
 });
 
 document.addEventListener('DOMContentLoaded', initializeEditor);
