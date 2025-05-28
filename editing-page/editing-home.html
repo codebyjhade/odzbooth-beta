@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ODZ Booth</title>
+    <title>ODZ Booth - Edit Your Masterpiece</title>
     <base href="/odzbooth-beta/"> 
 
-    <link rel="stylesheet" href="editing-page/edit-style.css">
+    <link rel="stylesheet" href="editing-page/edit-style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script defer src="editing-page/edit.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <script defer src="editing-page/edit.js"></script> 
 </head>
 <body>
 
@@ -34,6 +33,13 @@
 
         <div class="tools-panel">
             <h2>Customize Your Strip</h2>
+
+            <div class="tool-section">
+                <h3>Choose Frame</h3>
+                <select id="frameSelect" title="Select a frame design">
+                    </select>
+                <p class="tool-tip">Select a different frame design for your photo strip.</p>
+            </div>
 
             <div class="tool-section">
                 <h3>Add Stickers</h3>
@@ -94,9 +100,6 @@
                 </div>
                 <button id="downloadStripBtn" class="download-btn">
                     <i class='bx bxs-download'></i> Download Strip
-                </button>
-                <button id="downloadGifBtn" class="download-btn" disabled title="GIF feature coming soon!">
-                    <i class='bx bxs-file-gif'></i> Download GIF (Coming Soon!)
                 </button>
             </div>
 
