@@ -5,7 +5,7 @@
 const photoCanvas = document.getElementById("photoCanvas");
 const ctx = photoCanvas.getContext("2d");
 
-const frameSelect = document.getElementById("frameSelect");
+const frameSelect = document.getElementById("frameSelect"); // NEW: Frame selection dropdown
 
 const stickerSelect = document.getElementById("stickerSelect");
 const addStickerBtn = document.getElementById("addStickerBtn");
@@ -543,372 +543,12 @@ addStickerBtn.addEventListener("click", async function() {
         };
         stickers.push(newSticker);
         selectedDraggable = newSticker; // Select the newly added sticker
-        renderCanvas();
-    }
-    catch (error) {
-        console.error("Failed to add sticker:", error);
-        alert("Error loading sticker image. Please ensure the file exists in the 'assets' folder.");
-    }
-});
-
-removeStickerBtn.addEventListener("click", () => {
-    if (selectedDraggable && stickers.includes(selectedDraggable)) {
-        stickers = stickers.filter(s => s !== selectedDraggable);
-        selectedDraggable = null;
-        renderCanvas();
-    } else {
-        alert("No sticker selected to remove. Click on a sticker on the canvas first to select it.");
-    }
-});
-
-addTextBtn.addEventListener("click", function() {
-    const text = textInput.value.trim();
-    if (!text) {
-        return;
-    }
-
-    const selectedTextSize = parseInt(textSizeInput.value, 10);
-    const selectedTextFont = textFontSelect.value;
-    const selectedTextColor = textColorInput.value;
-    const isBold = textBoldBtn.classList.contains('active');
-    const isItalic = textItalicBtn.classList.contains('active');
-    const isUnderline = textUnderlineBtn.classList.contains('active');
-    const textAlign = textAlignSelect.value;
-
-    ctx.font = `${isBold ? 'bold ' : ''}${isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`;
-    const textMetrics = ctx.measureText(text);
-    const initialTextWidth = textMetrics.width;
-    const initialTextHeight = selectedTextSize;
-
-    const newTextObj = {
-        text: text,
-        x: (photoCanvas.width / 2) - (initialTextWidth / 2),
-        y: (photoCanvas.height / 2) - (initialTextHeight / 2),
-        font: selectedTextFont,
-        textSize: selectedTextSize, // Base font size for scaling
-        size: selectedTextSize, // Current displayed font size (initially same as textSize)
-        color: selectedTextColor,
-        align: textAlign,
-        isBold: isBold,
-        isItalic: isItalic,
-        isUnderline: isUnderline,
-        width: initialTextWidth,
-        height: initialTextHeight,
-        rotation: 0,
-    };
-
-    texts.push(newTextObj);
-    textInput.value = "";
-    selectedDraggable = newTextObj; // Select the newly added text
-    renderCanvas();
-});
-
-removeTextBtn.addEventListener("click", () => {
-    if (selectedDraggable && texts.includes(selectedDraggable)) {
-        texts = texts.filter(t => t !== selectedDraggable);
-        selectedDraggable = null;
-        renderCanvas();
-    } else {
-        alert("No text selected to remove. Click on a text element on the canvas first to select it.");
-    }
-});
-
-textBoldBtn.addEventListener('click', () => { textBoldBtn.classList.toggle('active'); renderCanvas(); });
-textItalicBtn.addEventListener('click', () => { textItalicBtn.classList.toggle('active'); renderCanvas(); });
-textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.toggle('active'); renderCanvas(); });
-textAlignSelect.addEventListener('change', () => { renderCanvas(); });
-
-
-// --- Interactive Dragging, Scaling, Rotation (Handlers) ---
-
-let debounceRenderTimeout;
-const DEBOUNCE_DELAY = 16;
-
-function debouncedRenderCanvas() {
-    clearTimeout(debounceRenderTimeout);
-    debounceRenderTimeout = setTimeout(() => {
-        renderCanvas();
-    }, DEBOUNCE_DELAY);
-}
-
-function getEventCoordinates(event) {
-    const rect = photoCanvas.getBoundingClientRect();
-    const scaleX = photoCanvas.width / rect.width;
-    const scaleY = photoCanvas.height / rect.height;
-
-    let clientX, clientY;
-    if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-    }
-
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-    return { x, y };
-}
-
-function isPointInRotatedRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight, rotationAngle) {
-    const centerX = rectX + rectWidth / 2;
-    const centerY = rectY + rectHeight / 2;
-    const translatedX = pointX - centerX;
-    const translatedY = pointY - centerY;
-
-    const rotatedX = translatedX * Math.cos(-rotationAngle) - translatedY * Math.sin(-rotationAngle);
-    const rotatedY = translatedX * Math.sin(-rotationAngle) + translatedY * Math.cos(-rotationAngle);
-
-    return rotatedX >= -rectWidth / 2 &&
-           rotatedX <= rectWidth / 2 &&
-           rotatedY >= -rectHeight / 2 &&
-           rotatedY <= rectHeight / 2;
-}
-
-function getHandleType(mousePos) {
-    if (!selectedDraggable) return null;
-
-    const centerX = selectedDraggable.x + selectedDraggable.width / 2;
-    const centerY = selectedDraggable.y + selectedDraggable.height / 2;
-
-    // Scale handle (bottom-right corner)
-    // Position of the handle relative to the object's center (before rotation)
-    let handleRelativeX_Scale = selectedDraggable.width / 2;
-    let handleRelativeY_Scale = selectedDraggable.height / 2;
-    
-    // Rotate this relative position to account for object's rotation
-    let rotatedHandlePos_Scale = rotatePoint({ x: handleRelativeX_Scale, y: handleRelativeY_Scale }, { x: 0, y: 0 }, selectedDraggable.rotation);
-    
-    // Get actual canvas coordinates of the handle's center
-    let scaleHandleCenterX_Canvas = centerX + rotatedHandlePos_Scale.x;
-    let scaleHandleCenterY_Canvas = centerY + rotatedHandlePos_Scale.y;
-
-    // Check if mouse is within the scale handle's bounding box (square handle)
-    if (distance(mousePos.x, mousePos.y, scaleHandleCenterX_Canvas, scaleHandleCenterY_Canvas) <= HANDLE_SIZE / 2) {
-         return 'scale';
-    }
-
-
-    // Rotate handle (top-center, extended)
-    // Position of the handle relative to the object's center (before rotation)
-    let handleRelativeX_Rotate = 0;
-    let handleRelativeY_Rotate = -selectedDraggable.height / 2 - ROTATE_HANDLE_OFFSET;
-
-    // Rotate this relative position to account for object's rotation
-    let rotatedHandlePos_Rotate = rotatePoint({ x: handleRelativeX_Rotate, y: handleRelativeY_Rotate }, { x: 0, y: 0 }, selectedDraggable.rotation);
-
-    // Get actual canvas coordinates of the handle's center
-    let rotateHandleCenterX_Canvas = centerX + rotatedHandlePos_Rotate.x;
-    let rotateHandleCenterY_Canvas = centerY + rotatedHandlePos_Rotate.y;
-
-    // Check if mouse is within the rotate handle's circle
-    if (distance(mousePos.x, mousePos.y, rotateHandleCenterX_Canvas, rotateHandleCenterY_Canvas) <= HANDLE_SIZE / 2) {
-        return 'rotate';
-    }
-
-    return null;
-}
-
-function rotatePoint(point, origin, angle) {
-    const s = Math.sin(angle);
-    const c = Math.cos(angle);
-
-    const px = point.x - origin.x;
-    const py = point.y - origin.y;
-
-    const xnew = px * c - py * s;
-    const ynew = px * s + py * c;
-
-    return { x: xnew + origin.x, y: ynew + origin.y };
-}
-
-function distance(x1, y1, x2, y2) {
-    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-}
-
-function handleMouseDown(e) {
-    e.preventDefault();
-    const mousePos = getEventCoordinates(e);
-    startX = mousePos.x;
-    startY = mousePos.y;
-
-    // 1. Check if an existing draggable is selected and a handle is clicked
-    if (selectedDraggable) {
-        const handleType = getHandleType(mousePos);
-        if (handleType === 'scale') {
-            currentInteractionType = 'resize';
-            const centerX = selectedDraggable.x + selectedDraggable.width / 2;
-            const centerY = selectedDraggable.y + selectedDraggable.height / 2;
-
-            // Pivot is the top-left corner of the object in its *unrotated* state,
-            // then translated and rotated to canvas coordinates.
-            let pivotRelativeX = -selectedDraggable.width / 2;
-            let pivotRelativeY = -selectedDraggable.height / 2;
-
-            let rotatedPivot = rotatePoint({ x: pivotRelativeX, y: pivotRelativeY }, { x: 0, y: 0 }, selectedDraggable.rotation);
-            pivotX = centerX + rotatedPivot.x;
-            pivotY = centerY + rotatedPivot.y;
-
-            initialDistanceToOppositeCorner = distance(pivotX, pivotY, startX, startY);
-            return; // Interaction started, stop here
-        } else if (handleType === 'rotate') {
-            currentInteractionType = 'rotate';
-            initialRotation = selectedDraggable.rotation;
-            return; // Interaction started, stop here
-        }
-    }
-
-    // 2. If no handle, check if any existing draggable object is clicked for dragging
-    // Iterate in reverse to select the topmost object
-    const allDraggables = [...stickers, ...texts];
-    let newSelected = null;
-    for (let i = allDraggables.length - 1; i >= 0; i--) {
-        const obj = allDraggables[i];
-        if (isPointInRotatedRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height, obj.rotation)) {
-            newSelected = obj;
-            currentInteractionType = 'drag';
-            dragOffsetX = mousePos.x - obj.x;
-            dragOffsetY = mousePos.y - obj.y;
-            break; // Stop after finding the topmost object
-        }
-    }
-
-    // 3. Update selectedDraggable (deselect if nothing clicked or new object clicked)
-    if (newSelected !== selectedDraggable) {
-        selectedDraggable = newSelected;
-        // If a new object was selected, ensure it's brought to the front for interaction
-        if (selectedDraggable) {
-            if (stickers.includes(selectedDraggable)) {
-                stickers = stickers.filter(s => s !== selectedDraggable);
-                stickers.push(selectedDraggable);
-            } else if (texts.includes(selectedDraggable)) {
-                texts = texts.filter(t => t !== selectedDraggable);
-                texts.push(selectedDraggable);
-            }
-        }
-    } else if (!newSelected) {
-        // If nothing was clicked, and nothing was selected, deselect current
-        selectedDraggable = null;
-    }
-
-    debouncedRenderCanvas(); // Redraw to reflect selection or interaction state
-}
-
-function handleMouseMove(e) {
-    e.preventDefault();
-    const mousePos = getEventCoordinates(e);
-
-    if (!selectedDraggable || !currentInteractionType) return; // No active interaction
-
-    if (currentInteractionType === 'drag') {
-        selectedDraggable.x = mousePos.x - dragOffsetX;
-        selectedDraggable.y = mousePos.y - dragOffsetY;
-        debouncedRenderCanvas();
-    } else if (currentInteractionType === 'resize') {
-        const currentDistance = distance(pivotX, pivotY, mousePos.x, mousePos.y);
-        // Ensure initialDistanceToOppositeCorner is not zero to prevent division by zero
-        if (initialDistanceToOppositeCorner === 0) initialDistanceToOppositeCorner = 1; // Prevent error
-        const scaleFactor = currentDistance / initialDistanceToOppositeCorner;
-
-        if (selectedDraggable.img) { // Sticker
-            selectedDraggable.width = selectedDraggable.originalWidth * scaleFactor;
-            selectedDraggable.height = selectedDraggable.originalHeight * scaleFactor;
-            const MIN_SIZE = 20;
-            if (selectedDraggable.width < MIN_SIZE || selectedDraggable.height < MIN_SIZE) {
-                const ratio = selectedDraggable.originalHeight / selectedDraggable.originalWidth;
-                selectedDraggable.width = MIN_SIZE;
-                selectedDraggable.height = MIN_SIZE * ratio;
-            }
-        } else if (selectedDraggable.content) { // Text
-            selectedDraggable.size = selectedDraggable.textSize * scaleFactor;
-            const MIN_FONT_SIZE = 10;
-            const MAX_FONT_SIZE = 100;
-            selectedDraggable.size = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, selectedDraggable.size));
-
-            // To get accurate width/height for bounding box with new size:
-            // Temporarily set font for measurement using current object properties
-            ctx.font = `${selectedDraggable.isBold ? 'bold ' : ''}${selectedDraggable.isItalic ? 'italic ' : ''}${selectedDraggable.size}px ${selectedDraggable.font}`;
-            selectedDraggable.width = ctx.measureText(selectedDraggable.content).width;
-            selectedDraggable.height = selectedDraggable.size; // Approximate height
-
-        }
-
-        // Adjust position so the pivot point remains fixed
-        // Calculate the vector from pivot to object's center with new dimensions
-        const newCenterX = pivotX + (selectedDraggable.width / 2 * Math.cos(selectedDraggable.rotation)) - (selectedDraggable.height / 2 * Math.sin(selectedDraggable.rotation));
-        const newCenterY = pivotY + (selectedDraggable.width / 2 * Math.sin(selectedDraggable.rotation)) + (selectedDraggable.height / 2 * Math.cos(selectedDraggable.rotation));
-
-        selectedDraggable.x = newCenterX - selectedDraggable.width / 2;
-        selectedDraggable.y = newCenterY - selectedDraggable.height / 2;
-
-        debouncedRenderCanvas();
-    } else if (currentInteractionType === 'rotate') {
-        const centerX = selectedDraggable.x + selectedDraggable.width / 2;
-        const centerY = selectedDraggable.y + selectedDraggable.height / 2;
-
-        const angleRad = Math.atan2(mousePos.y - centerY, mousePos.x - centerX);
-        const initialAngle = Math.atan2(startY - centerY, startX - centerX);
-
-        selectedDraggable.rotation = initialRotation + (angleRad - initialAngle);
-        debouncedRenderCanvas();
-    }
-}
-
-function handleMouseUp(e) {
-    currentInteractionType = null; // Reset interaction type
-    // selectedDraggable = null; // Can uncomment if you want objects to deselect on mouse up
-    // debouncedRenderCanvas(); // Re-render for final state if not already debounced
-}
-
-// --- Touch Event Handlers (Simplified for single touch) ---
-
-function handleTouchStart(e) {
-    if (e.touches.length === 1) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
-    }
-}
-
-function handleTouchMove(e) {
-    if (e.touches.length === 1 && currentInteractionType) { // Only allow move if an interaction is active
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
-    }
-}
-
-function handleTouchEnd(e) {
-    handleMouseUp(e);
-}
-
-
-// --- Event Listeners ---
-
-addStickerBtn.addEventListener("click", async function() {
-    const stickerSrc = stickerSelect.value;
-    if (!stickerSrc) return;
-
-    try {
-        const img = await loadImage(stickerSrc);
-        const initialWidth = 100;
-        const initialHeight = (img.height / img.width) * initialWidth;
-        const newSticker = {
-            img: img,
-            src: stickerSrc,
-            x: (photoCanvas.width / 2) - (initialWidth / 2),
-            y: (photoCanvas.height / 2) - (initialHeight / 2),
-            width: initialWidth,
-            height: initialHeight,
-            originalWidth: initialWidth, // Base width for scaling calculations
-            originalHeight: initialHeight, // Base height for scaling calculations
-            rotation: 0 // In radians
-        };
-        stickers.push(newSticker);
-        selectedDraggable = newSticker; // Select the newly added sticker
         currentInteractionType = 'drag'; // Automatically start dragging new sticker
-        dragOffsetX = (photoCanvas.width / 2) - (initialWidth / 2); // Assume drag starts from center
-        dragOffsetY = (photoCanvas.height / 2) - (initialHeight / 2);
+        // The dragOffsetX/Y for a newly added object makes it follow the mouse center initially
+        // This is an approximation since no actual mouse click triggered it
+        dragOffsetX = initialWidth / 2;
+        dragOffsetY = initialHeight / 2;
+
         renderCanvas();
     }
     catch (error) {
@@ -967,8 +607,397 @@ addTextBtn.addEventListener("click", function() {
     textInput.value = "";
     selectedDraggable = newTextObj; // Select the newly added text
     currentInteractionType = 'drag'; // Automatically start dragging new text
-    dragOffsetX = (photoCanvas.width / 2) - (initialTextWidth / 2); // Assume drag starts from center
-    dragOffsetY = (photoCanvas.height / 2) - (initialTextHeight / 2);
+    // For a newly added object, assume drag starts from its center
+    dragOffsetX = initialTextWidth / 2;
+    dragOffsetY = initialTextHeight / 2;
+    renderCanvas();
+});
+
+removeTextBtn.addEventListener("click", () => {
+    if (selectedDraggable && texts.includes(selectedDraggable)) {
+        texts = texts.filter(t => t !== selectedDraggable);
+        selectedDraggable = null;
+        renderCanvas();
+    } else {
+        alert("No text selected to remove. Click on a text element on the canvas first to select it.");
+    }
+});
+
+textBoldBtn.addEventListener('click', () => { textBoldBtn.classList.toggle('active'); renderCanvas(); });
+textItalicBtn.addEventListener('click', () => { textItalicBtn.classList.toggle('active'); renderCanvas(); });
+textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.toggle('active'); renderCanvas(); });
+textAlignSelect.addEventListener('change', () => { renderCanvas(); });
+
+
+// --- Interactive Dragging, Scaling, Rotation (Handlers) ---
+
+let debounceRenderTimeout;
+const DEBOUNCE_DELAY = 16;
+
+function debouncedRenderCanvas() {
+    clearTimeout(debounceRenderTimeout);
+    debounceRenderTimeout = setTimeout(() => {
+        renderCanvas();
+    }, DEBOUNCE_DELAY);
+}
+
+function getEventCoordinates(event) {
+    const rect = photoCanvas.getBoundingClientRect();
+    const scaleX = photoCanvas.width / rect.width;
+    const scaleY = photoCanvas.height / rect.height;
+
+    let clientX, clientY;
+    if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    return { x, y };
+}
+
+function isPointInRotatedRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight, rotationAngle) {
+    console.log(`[isPointInRotatedRect] Checking point (${pointX.toFixed(2)}, ${pointY.toFixed(2)}) against rect at (${rectX.toFixed(2)}, ${rectY.toFixed(2)}) w:${rectWidth.toFixed(2)} h:${rectHeight.toFixed(2)} rot:${(rotationAngle * 180 / Math.PI).toFixed(2)}deg`);
+    const centerX = rectX + rectWidth / 2;
+    const centerY = rectY + rectHeight / 2;
+    const translatedX = pointX - centerX;
+    const translatedY = pointY - centerY;
+
+    const rotatedX = translatedX * Math.cos(-rotationAngle) - translatedY * Math.sin(-rotationAngle);
+    const rotatedY = translatedX * Math.sin(-rotationAngle) + translatedY * Math.cos(-rotationAngle);
+
+    const isInRect = rotatedX >= -rectWidth / 2 &&
+                     rotatedX <= rectWidth / 2 &&
+                     rotatedY >= -rectHeight / 2 &&
+                     rotatedY <= rectHeight / 2;
+    console.log(`[isPointInRotatedRect] Rotated point: (${rotatedX.toFixed(2)}, ${rotatedY.toFixed(2)}), In Rect: ${isInRect}`);
+    return isInRect;
+}
+
+function getHandleType(mousePos) {
+    if (!selectedDraggable) return null;
+    console.log(`[getHandleType] Checking handles for selectedDraggable.`);
+
+    const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+    const centerY = selectedDraggable.y + selectedDraggable.height / 2;
+
+    // Scale handle (bottom-right corner)
+    let handleRelativeX_Scale = selectedDraggable.width / 2;
+    let handleRelativeY_Scale = selectedDraggable.height / 2;
+
+    let rotatedHandlePos_Scale = rotatePoint({ x: handleRelativeX_Scale, y: handleRelativeY_Scale }, { x: 0, y: 0 }, selectedDraggable.rotation);
+
+    let scaleHandleCenterX_Canvas = centerX + rotatedHandlePos_Scale.x;
+    let scaleHandleCenterY_Canvas = centerY + rotatedHandlePos_Scale.y;
+
+    if (distance(mousePos.x, mousePos.y, scaleHandleCenterX_Canvas, scaleHandleCenterY_Canvas) <= HANDLE_SIZE / 2 + 5) {
+        console.log("[getHandleType] Detected 'scale' handle.");
+        return 'scale';
+    }
+
+
+    // Rotate handle (top-center, extended)
+    let handleRelativeX_Rotate = 0;
+    let handleRelativeY_Rotate = -selectedDraggable.height / 2 - ROTATE_HANDLE_OFFSET;
+
+    let rotatedHandlePos_Rotate = rotatePoint({ x: handleRelativeX_Rotate, y: handleRelativeY_Rotate }, { x: 0, y: 0 }, selectedDraggable.rotation);
+
+    let rotateHandleCenterX_Canvas = centerX + rotatedHandlePos_Rotate.x;
+    let rotateHandleCenterY_Canvas = centerY + rotatedHandlePos_Rotate.y;
+
+    if (distance(mousePos.x, mousePos.y, rotateHandleCenterX_Canvas, rotateHandleCenterY_Canvas) <= HANDLE_SIZE / 2 + 5) {
+        console.log("[getHandleType] Detected 'rotate' handle.");
+        return 'rotate';
+    }
+
+    console.log("[getHandleType] No handle detected.");
+    return null;
+}
+
+function rotatePoint(point, origin, angle) {
+    const s = Math.sin(angle);
+    const c = Math.cos(angle);
+
+    const px = point.x - origin.x;
+    const py = point.y - origin.y;
+
+    const xnew = px * c - py * s;
+    const ynew = px * s + py * c;
+
+    return { x: xnew + origin.x, y: ynew + origin.y };
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
+
+function handleMouseDown(e) {
+    e.preventDefault();
+    const mousePos = getEventCoordinates(e);
+    startX = mousePos.x;
+    startY = mousePos.y;
+    currentInteractionType = null; // Reset interaction type at start of new click
+
+    console.log(`--- Mouse Down at (${startX.toFixed(2)}, ${startY.toFixed(2)}) ---`);
+
+    // 1. If an existing draggable is selected, check if a handle is clicked on IT
+    if (selectedDraggable) {
+        const handleType = getHandleType(mousePos);
+        if (handleType === 'scale') {
+            currentInteractionType = 'resize';
+            const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+            const centerY = selectedDraggable.y + selectedDraggable.height / 2;
+
+            let pivotRelativeX = -selectedDraggable.width / 2;
+            let pivotRelativeY = -selectedDraggable.height / 2;
+
+            let rotatedPivot = rotatePoint({ x: pivotRelativeX, y: pivotRelativeY }, { x: 0, y: 0 }, selectedDraggable.rotation);
+            pivotX = centerX + rotatedPivot.x;
+            pivotY = centerY + rotatedPivot.y;
+
+            initialDistanceToOppositeCorner = distance(pivotX, pivotY, startX, startY);
+            console.log(`Interaction: RESIZE for selectedDraggable. Pivot: (${pivotX.toFixed(2)}, ${pivotY.toFixed(2)})`);
+            debouncedRenderCanvas(); // Re-render to ensure handles are prominent
+            return; // Interaction started, stop here
+        } else if (handleType === 'rotate') {
+            currentInteractionType = 'rotate';
+            initialRotation = selectedDraggable.rotation;
+            console.log(`Interaction: ROTATE for selectedDraggable. Initial rotation: ${initialRotation.toFixed(2)}rad`);
+            debouncedRenderCanvas();
+            return; // Interaction started, stop here
+        }
+    }
+
+    // 2. If no handle on current selected, or nothing selected, check if any draggable object is clicked for dragging
+    // Iterate in reverse to select the topmost object
+    const allDraggables = [...stickers, ...texts];
+    let newSelected = null;
+    console.log(`Checking ${allDraggables.length} draggables for click...`);
+    for (let i = allDraggables.length - 1; i >= 0; i--) {
+        const obj = allDraggables[i];
+        console.log(`  - Checking object: ${obj.img ? 'sticker' : 'text'}, Content: ${obj.img ? obj.src.substring(obj.src.lastIndexOf('/')+1) : obj.text}, Pos: (${obj.x.toFixed(2)}, ${obj.y.toFixed(2)}), Size: (${obj.width.toFixed(2)}, ${obj.height.toFixed(2)}), Rot: ${(obj.rotation * 180 / Math.PI).toFixed(2)}deg`);
+        if (isPointInRotatedRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height, obj.rotation)) {
+            newSelected = obj;
+            currentInteractionType = 'drag';
+            dragOffsetX = mousePos.x - obj.x;
+            dragOffsetY = mousePos.y - obj.y;
+            console.log(`  -> Found draggable! Interaction: DRAG for object type: ${obj.img ? 'sticker' : 'text'}, Content: ${obj.img ? obj.src.substring(obj.src.lastIndexOf('/')+1) : obj.text}`);
+            break; // Stop after finding the topmost object
+        }
+    }
+
+    // 3. Update selectedDraggable (deselect if nothing clicked or new object clicked)
+    if (newSelected !== selectedDraggable) {
+        selectedDraggable = newSelected;
+        // If a new object was selected, ensure it's brought to the front for interaction
+        if (selectedDraggable) {
+            if (stickers.includes(selectedDraggable)) {
+                stickers = stickers.filter(s => s !== selectedDraggable);
+                stickers.push(selectedDraggable);
+            } else if (texts.includes(selectedDraggable)) {
+                texts = texts.filter(t => t !== selectedDraggable);
+                texts.push(selectedDraggable);
+            }
+            console.log(`New object selected. Total stickers: ${stickers.length}, Total texts: ${texts.length}`);
+        } else {
+            console.log("No object clicked. Deselecting current object.");
+        }
+    } else if (!newSelected && selectedDraggable) { // If nothing was clicked, and something was previously selected
+        selectedDraggable = null; // Deselect
+        console.log("Clicked outside active object. Deselecting current object.");
+    }
+
+    debouncedRenderCanvas(); // Re-render to reflect selection or interaction state
+}
+
+function handleMouseMove(e) {
+    e.preventDefault();
+    const mousePos = getEventCoordinates(e);
+
+    // console.log(`Mouse Move. Interaction Type: ${currentInteractionType}, Selected: ${selectedDraggable ? 'Yes' : 'No'}`);
+
+    if (!selectedDraggable || !currentInteractionType) return; // No active interaction
+
+    if (currentInteractionType === 'drag') {
+        selectedDraggable.x = mousePos.x - dragOffsetX;
+        selectedDraggable.y = mousePos.y - dragOffsetY;
+        debouncedRenderCanvas();
+    } else if (currentInteractionType === 'resize') {
+        const currentDistance = distance(pivotX, pivotY, mousePos.x, mousePos.y);
+        // Ensure initialDistanceToOppositeCorner is not zero to prevent division by zero
+        if (initialDistanceToOppositeCorner === 0) initialDistanceToOppositeCorner = 1; // Prevent error
+        const scaleFactor = currentDistance / initialDistanceToOppositeCorner;
+
+        if (selectedDraggable.img) { // Sticker
+            selectedDraggable.width = selectedDraggable.originalWidth * scaleFactor;
+            selectedDraggable.height = selectedDraggable.originalHeight * scaleFactor;
+            const MIN_SIZE = 20;
+            if (selectedDraggable.width < MIN_SIZE || selectedDraggable.height < MIN_SIZE) {
+                const ratio = selectedDraggable.originalHeight / selectedDraggable.originalWidth;
+                selectedDraggable.width = MIN_SIZE;
+                selectedDraggable.height = MIN_SIZE * ratio;
+            }
+        } else if (selectedDraggable.content) { // Text
+            selectedDraggable.size = selectedDraggable.textSize * scaleFactor;
+            const MIN_FONT_SIZE = 10;
+            const MAX_FONT_SIZE = 100;
+            selectedDraggable.size = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, selectedDraggable.size));
+
+            // To get accurate width/height for bounding box with new size:
+            // Temporarily set font for measurement using current object properties
+            ctx.font = `${selectedDraggable.isBold ? 'bold ' : ''}${selectedDraggable.isItalic ? 'italic ' : ''}${selectedDraggable.size}px ${selectedDraggable.font}`;
+            selectedDraggable.width = ctx.measureText(selectedDraggable.content).width;
+            selectedDraggable.height = selectedDraggable.size; // Text height approximation
+        }
+
+        const centerOffsetFromPivotX = selectedDraggable.width / 2;
+        const centerOffsetFromPivotY = selectedDraggable.height / 2;
+
+        const rotatedCenterRelativeToPivot = rotatePoint({x: centerOffsetFromPivotX, y: centerOffsetFromPivotY}, {x:0,y:0}, selectedDraggable.rotation);
+
+        selectedDraggable.x = pivotX - rotatedCenterRelativeToPivot.x;
+        selectedDraggable.y = pivotY - rotatedCenterRelativeToPivot.y;
+
+
+        debouncedRenderCanvas();
+    } else if (currentInteractionType === 'rotate') {
+        const centerX = selectedDraggable.x + selectedDraggable.width / 2;
+        const centerY = selectedDraggable.y + selectedDraggable.height / 2;
+
+        const angleRad = Math.atan2(mousePos.y - centerY, mousePos.x - centerX);
+        const initialAngle = Math.atan2(startY - centerY, startX - centerX);
+
+        selectedDraggable.rotation = initialRotation + (angleRad - initialAngle);
+        debouncedRenderCanvas();
+    }
+}
+
+function handleMouseUp(e) {
+    if (currentInteractionType) { // Only log if there was an active interaction
+        console.log(`--- Mouse Up. Interaction Type: ${currentInteractionType} ---`);
+    }
+    currentInteractionType = null; // Reset interaction type
+    // selectedDraggable = null; // Can uncomment if you want objects to deselect on mouse up
+    // debouncedRenderCanvas(); // Re-render for final state if not already debounced
+}
+
+// --- Touch Event Handlers (Simplified for single touch) ---
+
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+    }
+}
+
+function handleTouchMove(e) {
+    if (e.touches.length === 1 && currentInteractionType) { // Only allow move if an interaction is active
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+    }
+}
+
+function handleTouchEnd(e) {
+    handleMouseUp(e);
+}
+
+
+// --- Event Listeners ---
+
+addStickerBtn.addEventListener("click", async function() {
+    const stickerSrc = stickerSelect.value;
+    if (!stickerSrc) return;
+
+    try {
+        const img = await loadImage(stickerSrc);
+        const initialWidth = 100;
+        const initialHeight = (img.height / img.width) * initialWidth;
+        const newSticker = {
+            img: img,
+            src: stickerSrc,
+            x: (photoCanvas.width / 2) - (initialWidth / 2),
+            y: (photoCanvas.height / 2) - (initialHeight / 2),
+            width: initialWidth,
+            height: initialHeight,
+            originalWidth: initialWidth, // Base width for scaling calculations
+            originalHeight: initialHeight, // Base height for scaling calculations
+            rotation: 0 // In radians
+        };
+        stickers.push(newSticker);
+        selectedDraggable = newSticker; // Select the newly added sticker
+        currentInteractionType = 'drag'; // Automatically start dragging new sticker
+        // The dragOffsetX/Y for a newly added object makes it follow the mouse center initially
+        // This is an approximation since no actual mouse click triggered it
+        dragOffsetX = initialWidth / 2;
+        dragOffsetY = initialHeight / 2;
+
+        renderCanvas();
+    }
+    catch (error) {
+        console.error("Failed to add sticker:", error);
+        alert("Error loading sticker image. Please ensure the file exists in the 'assets' folder.");
+    }
+});
+
+removeStickerBtn.addEventListener("click", () => {
+    if (selectedDraggable && stickers.includes(selectedDraggable)) {
+        stickers = stickers.filter(s => s !== selectedDraggable);
+        selectedDraggable = null;
+        renderCanvas();
+    } else {
+        alert("No sticker selected to remove. Click on a sticker on the canvas first to select it.");
+    }
+});
+
+addTextBtn.addEventListener("click", function() {
+    const text = textInput.value.trim();
+    if (!text) {
+        return;
+    }
+
+    const selectedTextSize = parseInt(textSizeInput.value, 10);
+    const selectedTextFont = textFontSelect.value;
+    const selectedTextColor = textColorInput.value;
+    const isBold = textBoldBtn.classList.contains('active');
+    const isItalic = textItalicBtn.classList.contains('active');
+    const isUnderline = textUnderlineBtn.classList.contains('active');
+    const textAlign = textAlignSelect.value;
+
+    ctx.font = `${isBold ? 'bold ' : ''}${isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`;
+    const textMetrics = ctx.measureText(text);
+    const initialTextWidth = textMetrics.width;
+    const initialTextHeight = selectedTextSize;
+
+    const newTextObj = {
+        text: text,
+        x: (photoCanvas.width / 2) - (initialTextWidth / 2),
+        y: (photoCanvas.height / 2) - (initialTextHeight / 2),
+        font: selectedTextFont,
+        textSize: selectedTextSize, // Base font size for scaling
+        size: selectedTextSize, // Current displayed font size (initially same as textSize)
+        color: selectedTextColor,
+        align: textAlign,
+        isBold: isBold,
+        isItalic: isItalic,
+        isUnderline: isUnderline,
+        width: initialTextWidth,
+        height: initialTextHeight,
+        rotation: 0,
+    };
+
+    texts.push(newTextObj);
+    textInput.value = "";
+    selectedDraggable = newTextObj; // Select the newly added text
+    currentInteractionType = 'drag'; // Automatically start dragging new text
+    // For a newly added object, assume drag starts from its center
+    dragOffsetX = initialTextWidth / 2;
+    dragOffsetY = initialTextHeight / 2;
     renderCanvas();
 });
 
@@ -1125,7 +1154,7 @@ frameSelect.addEventListener('change', (event) => {
 retakeBtn.addEventListener('click', () => {
     localStorage.removeItem('capturedPhotos');
     localStorage.removeItem('selectedPhotoCount');
-    window.location.href = 'layout-selection/layout-selection.html';
+    window.location.href = 'layout-selection/layout-selection.html'; // Corrected path relative to base href
 });
 
 document.addEventListener('DOMContentLoaded', initializeEditor);
