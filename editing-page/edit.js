@@ -54,6 +54,7 @@ let pivotX, pivotY; // The fixed corner opposite to the handle being dragged
 const HANDLE_SIZE = 10;
 const ROTATE_HANDLE_OFFSET = 25; // Distance of rotate handle from corner
 
+// THIS IS THE LINE THAT WAS CAUSING THE "NOT DEFINED" ERROR IF MISSING OR MISPLACED:
 let currentFrameImgSrc = ''; // To store the currently selected frame image path
 
 
@@ -365,7 +366,7 @@ function drawTextOnCanvas(targetCtx, textsData) {
     });
 }
 
-// NEW: Function to draw selection handles (extracted from drawStickers/drawText)
+// Function to draw selection handles (extracted from drawStickers/drawText)
 function drawSelectionHandles(obj, targetCtx) {
     targetCtx.strokeStyle = 'cyan';
     targetCtx.lineWidth = 2;
@@ -509,7 +510,7 @@ async function initializeEditor() {
     }
 
     if (currentStripConfig.availableFrames && currentStripConfig.availableFrames.length > 0) {
-        if (!currentFrameImgSrc) {
+        if (!currentFrameImgSrc) { // Only set if not already set (e.g., from a previous session or direct link)
             currentFrameImgSrc = currentStripConfig.availableFrames[0].src;
         }
     }
@@ -527,21 +528,21 @@ addStickerBtn.addEventListener("click", async function() {
 
     try {
         const img = await loadImage(stickerSrc);
-        const initialWidth = 100; // Default initial width for sticker
+        const initialWidth = 100;
         const initialHeight = (img.height / img.width) * initialWidth;
         const newSticker = {
             img: img,
             src: stickerSrc,
             x: (photoCanvas.width / 2) - (initialWidth / 2),
             y: (photoCanvas.height / 2) - (initialHeight / 2),
-            width: initialWidth, // Current displayed width
-            height: initialHeight, // Current displayed height
-            originalWidth: initialWidth, // Base width for scaling calculations
-            originalHeight: initialHeight, // Base height for scaling calculations
-            rotation: 0 // In radians
+            width: initialWidth,
+            height: initialHeight,
+            originalWidth: initialWidth,
+            originalHeight: initialHeight,
+            rotation: 0
         };
         stickers.push(newSticker);
-        selectedDraggable = newSticker; // Select the newly added sticker
+        selectedDraggable = newSticker;
         renderCanvas();
     }
     catch (error) {
@@ -577,28 +578,28 @@ addTextBtn.addEventListener("click", function() {
     ctx.font = `${isBold ? 'bold ' : ''}${isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`;
     const textMetrics = ctx.measureText(text);
     const initialTextWidth = textMetrics.width;
-    const initialTextHeight = selectedTextSize; // Using font size as approximation for height
+    const initialTextHeight = selectedTextSize;
 
     const newTextObj = {
         text: text,
         x: (photoCanvas.width / 2) - (initialTextWidth / 2),
         y: (photoCanvas.height / 2) - (initialTextHeight / 2),
         font: selectedTextFont,
-        textSize: selectedTextSize, // Base font size for scaling
-        size: selectedTextSize, // Current displayed font size (initially same as textSize)
+        textSize: selectedTextSize,
+        size: selectedTextSize,
         color: selectedTextColor,
         align: textAlign,
         isBold: isBold,
         isItalic: isItalic,
         isUnderline: isUnderline,
-        width: initialTextWidth, // Current displayed width
-        height: initialTextHeight, // Current displayed height (approx)
-        rotation: 0, // In radians
+        width: initialTextWidth,
+        height: initialTextHeight,
+        rotation: 0,
     };
 
     texts.push(newTextObj);
     textInput.value = "";
-    selectedDraggable = newTextObj; // Select the newly added text
+    selectedDraggable = newTextObj;
     renderCanvas();
 });
 
@@ -744,7 +745,7 @@ function handleMouseDown(e) {
     }
 
     const allDraggables = [...stickers, ...texts];
-    selectedDraggable = null;
+    selectedDraggable = null; // Reset selection
     for (let i = allDraggables.length - 1; i >= 0; i--) {
         const obj = allDraggables[i];
         if (isPointInRotatedRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height, obj.rotation)) {
@@ -786,13 +787,13 @@ function handleMouseMove(e) {
             const MAX_FONT_SIZE = 100;
             selectedDraggable.size = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, selectedDraggable.size));
 
-            ctx.font = `${selectedDraggable.isBold ? 'bold ' : ''}${selectedDraggable.isItalic ? 'italic ' : ''}${selectedDraggable.size}px ${selectedDraggable.font}`;
+            ctx.font = `${selectedDraggable.isBold ? 'bold ' : ''}${selectedDraggable.isItalic ? 'italic ' : ''}${selectedTextSize}px ${selectedTextFont}`; // Use selectedTextSize for measuring text based on original
             selectedDraggable.width = ctx.measureText(selectedDraggable.content).width;
-            selectedDraggable.height = selectedDraggable.size;
+            selectedDraggable.height = selectedTextSize; // Text height remains based on initial size for bounding box
+
+
         }
 
-        // Adjust position so the pivot point remains fixed
-        // This recalculates the object's top-left (x, y) based on the fixed pivot and new dimensions
         const centerOffsetFromPivotX = selectedDraggable.width / 2;
         const centerOffsetFromPivotY = selectedDraggable.height / 2;
 
