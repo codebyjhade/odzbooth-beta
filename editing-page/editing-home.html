@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="editing-page/edit-style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <script defer src="editing-page/edit.js"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+    <script defer src="utilities/config.js"></script> 
+    <script defer src="editing-page/edit.js"></script> 
 </head>
 <body>
 
@@ -35,30 +37,30 @@
             <h2>Customize Your Strip</h2>
 
             <div class="tool-section">
-                <h3>Choose Frame</h3>
-                <select id="frameSelect" title="Select a frame design">
-                    </select>
+                <h3><i class='bx bx-border-all'></i> Choose Frame</h3>
+                <select id="frameSelect" title="Select a frame design"></select>
                 <p class="tool-tip">Select a different frame design for your photo strip.</p>
             </div>
 
             <div class="tool-section">
-                <h3>Add Stickers</h3>
+                <h3><i class='bx bxs-sticker'></i> Add Stickers</h3>
                  <select id="stickerSelect" title="Select a high school strand sticker">
-                    <option value="">Select a strand sticker</option>
+                    <option value="">Select a sticker</option>
                     <option value="assets/stickers/stem.png">STEM Student</option>
                     <option value="assets/stickers/humss.png">HUMSS Student</option>
                     <option value="assets/stickers/abm.png">ABM Student</option>
                     </select>
                 <button id="addStickerBtn" class="action-btn">
-                    <i class='bx bxs-sticker'></i> Add Sticker
+                    <i class='bx bx-plus'></i> Add Sticker
                 </button>
-                <button id="removeStickerBtn" class="action-btn delete-btn" style="margin-top: 10px;"> <i class='bx bx-trash'></i> Remove Selected Sticker
+                <button id="removeStickerBtn" class="action-btn delete-btn" style="margin-top: 10px;"> 
+                    <i class='bx bx-trash'></i> Remove Selected Sticker
                 </button>
-                <p class="tool-tip">Select a sticker from the list and click 'Add Sticker'. Click on a sticker on the canvas to select it, then click 'Remove Selected Sticker' to delete it.</p>
+                <p class="tool-tip">Select a sticker from the list and click 'Add Sticker'. Click on a sticker on the canvas to select it, then click 'Remove Selected Sticker' to delete it. Drag to reposition.</p>
             </div>
 
             <div class="tool-section">
-                <h3>Add Text</h3>
+                <h3><i class='bx bx-text'></i> Add Text</h3>
                 <input type="text" id="textInput" placeholder="Enter text here">
                 <input type="color" id="textColor" value="#333333" title="Text Color">
                 <select id="textFont">
@@ -66,6 +68,7 @@
                     <option value="'Fredoka', cursive">Fredoka</option>
                     <option value="Arial, sans-serif">Arial</option>
                     <option value="Impact, sans-serif">Impact</option>
+                    <option value="Courier New, monospace">Courier New</option>
                 </select>
                 <input type="number" id="textSize" value="30" min="10" max="100" title="Text Size">
                 
@@ -81,15 +84,16 @@
                 </div>
 
                 <button id="addTextBtn" class="action-btn">
-                        <i class='bx bx-text'></i> Add Text
+                        <i class='bx bx-plus'></i> Add Text
                 </button>
-                <button id="removeTextBtn" class="action-btn delete-btn" style="margin-top: 10px;"> <i class='bx bx-trash'></i> Remove Selected Text
+                <button id="removeTextBtn" class="action-btn delete-btn" style="margin-top: 10px;"> 
+                    <i class='bx bx-trash'></i> Remove Selected Text
                 </button>
-                <p class="tool-tip">Type your message, choose style, then add! Click on text on the canvas to select it, then click 'Remove Selected Text' to delete it.</p>
+                <p class="tool-tip">Type your message, choose style, then add! Click on text on the canvas to select it, then click 'Remove Selected Text' to delete it. Drag to reposition.</p>
             </div>
 
             <div class="tool-section download-section">
-                <h3>Download Options</h3>
+                <h3><i class='bx bxs-download'></i> Download Options</h3>
                 <div class="download-format-options">
                     <label for="downloadFormat">Format:</label>
                     <select id="downloadFormat">
