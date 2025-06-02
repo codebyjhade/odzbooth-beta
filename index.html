@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ODZ Booth</title>
-    <base href="/odzbooth-beta/"> 
+    <base href="/odzbooth-beta-2.0/"> 
     
-    <link rel="stylesheet" href="main-page/style.css"> 
+    <link rel="stylesheet" href="/main-page/style.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script defer src="main-page/main.js"></script> 
 </head>
 <body>
 
@@ -19,9 +21,12 @@
                 <h1 class="title">ODZ <span class="booth">BOOTH</span></h1>
             </div>
             <nav class="main-nav">
-                <a href="#about" class="nav-link">About</a>
-                <a href="#contact" class="nav-link">Contact</a>
+                <a href="#about-section" class="nav-link">About</a>
+                <a href="#contact-section" class="nav-link">Contact</a>
             </nav>
+            <button id="fullscreenToggle" class="fullscreen-btn" title="Toggle Fullscreen">
+                <i class='bx bx-fullscreen'></i>
+            </button>
         </div>
     </header>
 
@@ -32,15 +37,34 @@
             <p class="hero-subtitle">Capture, Customize, Create! Your ultimate digital photo booth experience.</p>
 
             <div class="buttons">
-                <button onclick="window.location.href='layout-selection/layout-selection.html';" class="start-btn"> <i class='bx bx-camera'></i> Start Your Session
+                <button id="startSessionBtn" class="start-btn">
+                    <i class='bx bx-camera'></i> Start Your Session
                 </button>
             </div>
         </div>
     </main>
 
+    <section id="about-section" class="info-section about-section">
+        <div class="container">
+            <h2>About ODZ Booth</h2>
+            <p>ODZ Booth is a fun and interactive digital photo booth experience designed to capture your special moments. From quick snaps to creative edits, we provide all the tools you need to create unique photo strips you'll love. Get ready to express yourself and make unforgettable memories!</p>
+            <p>We believe in simple, accessible fun for everyone. No complicated setups, just pure creativity at your fingertips.</p>
+        </div>
+    </section>
+
+    <section id="contact-section" class="info-section contact-section">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <p>Have questions or feedback? We'd love to hear from you!</p>
+            <p>Email: <a href="mailto:info@odzbooth.com">info@odzbooth.com</a></p>
+            <p>Follow us on social media: [Link to Facebook] [Link to Instagram]</p>
+            <p>Location: Pan Philippine Highway, Alicia, San Antonio, 3306, Isabela</p>
+        </div>
+    </section>
+
     <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2025 ODZ Booth. All rights reserved. Developed by @itsmebryanjhade</p>
+            <p>&copy; 2024 ODZ Booth. All rights reserved. Developed by @itsbryanjhade</p>
         </div>
     </footer>
 
