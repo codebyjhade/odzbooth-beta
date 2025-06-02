@@ -1,0 +1,258 @@
+:root {
+    --primary-brand-color: #33A4C9; /* ODZ Blue */
+    --secondary-brand-color: #F0C27B; /* ODZ Orange-Yellow */
+    --accent-color: #E5A24A; /* Darker Orange */
+    --text-dark: #333;
+    --text-light: #fff;
+    --bg-gradient: linear-gradient(to bottom, var(--accent-color) 0%, var(--secondary-brand-color) 30%, var(--primary-brand-color) 100%);
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.2);
+    --border-radius-soft: 8px;
+    --font-poppins: 'Poppins', sans-serif;
+    --font-fredoka: 'Fredoka', cursive; /* For titles/logos */
+}
+
+/* Global Reset & Body Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-poppins);
+    background: var(--bg-gradient);
+    color: var(--text-dark); /* Default text color */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-attachment: fixed; /* Ensures gradient covers full height */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* Header */
+.main-header {
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent background */
+    padding: 15px 0;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    position: sticky; /* Keeps header at top */
+    top: 0;
+    z-index: 1000; /* Ensures it's above other content */
+}
+
+.main-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header .logo .title {
+    font-family: var(--font-fredoka);
+    font-size: 2.5rem;
+    color: var(--primary-brand-color);
+    margin: 0;
+    line-height: 1;
+}
+
+.main-header .logo .booth {
+    color: var(--secondary-brand-color);
+}
+
+.main-nav .nav-link {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 30px;
+    transition: color 0.3s ease;
+}
+
+.main-nav .nav-link:hover {
+    color: var(--primary-brand-color);
+}
+
+/* NEW: Fullscreen Button */
+.fullscreen-btn {
+    background: none;
+    border: none;
+    color: var(--primary-brand-color);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+    padding: 5px;
+}
+
+.fullscreen-btn:hover {
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+/* Hero Section */
+.hero-section {
+    flex-grow: 1; /* Allows it to take up available space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.hero-section .welcome {
+    font-size: 1.5rem;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.hero-section .hero-title {
+    font-family: var(--font-fredoka);
+    font-size: 5rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    line-height: 1;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.hero-section .hero-title .booth {
+    color: var(--primary-brand-color);
+}
+
+.hero-section .hero-subtitle {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 600px;
+    margin: 0 auto 40px auto;
+}
+
+.start-btn {
+    background-color: var(--primary-brand-color);
+    color: var(--text-light);
+    border: none;
+    padding: 18px 40px;
+    border-radius: 50px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 15px var(--shadow-medium);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.start-btn i {
+    font-size: 1.8rem;
+}
+
+.start-btn:hover {
+    background-color: var(--button-hover-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+.start-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 5px 10px var(--shadow-medium);
+}
+
+/* NEW: Info Sections (About & Contact) */
+.info-section {
+    background-color: #fff;
+    padding: 60px 20px;
+    margin-top: 30px;
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 5px 15px var(--shadow-medium);
+    text-align: center;
+}
+
+.info-section h2 {
+    font-family: var(--font-fredoka);
+    font-size: 3rem;
+    color: var(--primary-brand-color);
+    margin-bottom: 25px;
+}
+
+.info-section p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #555;
+    max-width: 800px;
+    margin: 0 auto 15px auto;
+}
+
+.info-section a {
+    color: var(--primary-brand-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.info-section a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+.main-footer {
+    background-color: var(--primary-brand-color);
+    color: var(--text-light);
+    padding: 20px 0;
+    text-align: center;
+    margin-top: auto; /* Pushes footer to the bottom */
+}
+
+.main-footer p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Responsive Adjustments for Main Page */
+@media (max-width: 768px) {
+    .main-header .container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .main-nav {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .main-nav .nav-link {
+        margin: 0 15px;
+    }
+
+    .hero-section .hero-title {
+        font-size: 3.5rem;
+    }
+
+    .hero-section .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .start-btn {
+        font-size: 1.2rem;
+        padding: 15px 30px;
+    }
+
+    .start-btn i {
+        font-size: 1.5rem;
+    }
+
+    .info-section {
+        padding: 40px 15px;
+    }
+
+    .info-section h2 {
+        font-size: 2.2rem;
+    }
+    .info-section p {
+        font-size: 1em;
+    }
+}
