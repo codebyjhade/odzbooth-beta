@@ -448,7 +448,6 @@ function updateTextControlsFromSelection() {
     DOMElements.textInput.value = isTextSelected ? textObj.content : '';
     DOMElements.textInput.disabled = false; // Always enable for new input
 
-    // Set values of other controls based on selection, or default values if nothing is selected
     DOMElements.textColorInput.value = textObj.color;
     DOMElements.textFontSelect.value = textObj.font;
     DOMElements.textSizeInput.value = textObj.size;
@@ -664,7 +663,7 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
             targetCtx.shadowBlur = 0;
             targetCtx.shadowOffsetX = 0;
             targetCtx.shadowOffsetY = 0;
-            targetCtx.lineWidth = 0; // Clear outline
+            targetCtx.lineWidth = 0; // Clear outline properties from previous draws
 
             // Draw filled text
             targetCtx.fillStyle = obj.color;
@@ -1119,8 +1118,7 @@ function handleCanvasPointerMove(e) {
         if (obj.type === 'sticker' && obj.originalWidth && obj.originalHeight) {
             const aspectRatio = obj.originalWidth / obj.originalHeight;
             
-            // Determine which dimension is being changed more to maintain aspect ratio correctly
-            // This prevents "squishing" or "stretching" when dragging diagonally.
+            // Prioritize change in the larger dimension to calculate the other, preventing extreme stretching
             if (Math.abs(newWidth - appState.initialObjWidth) > Math.abs(newHeight - appState.initialObjHeight)) {
                 newHeight = newWidth / aspectRatio;
             } else {
@@ -1201,9 +1199,7 @@ function handleCanvasPointerUp(e) {
 function handleTouchStart(e) {
     if (e.touches.length === 1) { // Only handle single touch for now
         e.preventDefault(); // Prevent default browser actions (like scrolling/zooming)
-        const touch = e.touches[0];
-        // Create a fake MouseEvent-like object to pass to handleCanvasPointerDown
-        // We pass the raw Touch object because getEventCoordinates can handle it.
+        // Pass the raw Touch event object directly to handleCanvasPointerDown
         handleCanvasPointerDown(e); 
     }
 }
@@ -1211,8 +1207,7 @@ function handleTouchStart(e) {
 function handleTouchMove(e) {
     if (e.touches.length === 1 && appState.isDragging) { // Only allow move if dragging
         e.preventDefault(); // Prevent scrolling
-        const touch = e.touches[0];
-        // Pass the raw Touch event directly
+        // Pass the raw Touch event object directly to handleCanvasPointerMove
         handleCanvasPointerMove(e);
     }
 }
@@ -1241,7 +1236,7 @@ function updateSelectedTextProperty(property, value) {
             const tempFontStyle = `${currentTextObj.isBold ? 'bold ' : ''}${currentTextObj.isItalic ? 'italic ' : ''}`;
             DOMElements.ctx.font = `${tempFontStyle}${currentTextObj.size}px ${currentTextObj.font}`;
             currentTextObj.width = DOMElements.ctx.measureText(currentTextObj.content).width;
-            currentTextObj.height = currentTextObj.size; // Simple approximation
+            currentTextObj.height = currentTextObj.size; // Simple approximation for height based on font size
         }
         renderCanvas(); // Re-render to apply changes
         logAnalytics('Text_Property_Updated', { property: property, value: value });
@@ -1395,7 +1390,6 @@ async function printStrip() {
         `);
         printWindow.document.write('</style>');
         printWindow.document.write('</head><body>');
-        // Embed the generated photo strip image.
         printWindow.document.write(`<img src="${dataURL}" alt="ODZ Booth Photo Strip">`);
         printWindow.document.close(); // Close the document stream.
 
@@ -1488,6 +1482,9 @@ function setupEventListeners() {
         DOMElements.textUnderlineBtn.classList.toggle('active');
         updateSelectedTextProperty('isUnderline', DOMElements.textUnderlineBtn.classList.contains('active'));
     });
+
+    DOMElements.addTextBtn.addEventListener("click", addText);
+    DOMElements.removeTextBtn.addEventListener("click", removeSelectedText);
 
     // Drawing tool controls
     DOMElements.brushColorInput.addEventListener('input', () => {
