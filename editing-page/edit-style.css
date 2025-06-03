@@ -5,13 +5,15 @@
     /* Brand Colors */
     --primary-brand-color: #33A4C9; /* ODZ Blue */
     --secondary-brand-color: #F0C27B; /* ODZ Orange-Yellow */
-    --accent-color: #FF69B4; /* Hot Pink - for interactive elements/buttons */
+    --accent-color: #E5A24A; /* Darker Orange - for action buttons/highlights */
     --text-dark: #333;
     --text-light: #fff;
 
     /* Backgrounds */
     --bg-gradient-editor: linear-gradient(135deg, #B0E0E6, #FFD1DC); /* Lighter, soft gradient for editor page */
     --panel-bg: #fdfdfd; /* Background for control panels and tool sections */
+    --tool-section-gradient: linear-gradient(45deg, #eaf6ff, #ffffff); /* Subtle gradient for tool sections */
+
 
     /* Shadows & Borders */
     --border-radius-soft: 12px; /* Standard border radius for panels */
@@ -19,7 +21,7 @@
     --shadow-medium: rgba(0, 0, 0, 0.15); /* More prominent shadow */
 
     /* Button Hover States */
-    --button-hover-accent: #e05cb0; /* Darker hot pink on hover */
+    --button-hover-accent: #c2883e; /* Darker accent on hover */
     --button-hover-primary: #2a8fb6; /* Darker primary blue on hover */
     --button-hover-back: #5a6268; /* Darker grey on hover */
 
@@ -40,7 +42,7 @@ body {
     flex-direction: column;
     align-items: center; /* Center content horizontally */
     min-height: 100vh; /* Ensure body takes full viewport height */
-    background: var(--bg-gradient-editor); /* Apply background gradient */
+    background: var(--bg-gradient-editor); /* Apply editor-specific background gradient */
     font-family: var(--font-poppins); /* Set default font */
     color: var(--text-dark); /* Default text color */
     margin: 0;
@@ -53,6 +55,12 @@ body {
     text-align: center;
     margin-bottom: 30px;
     padding: 10px 0;
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: center; /* Center title */
+    align-items: center;
+    position: relative; /* For positioning header action buttons */
 }
 
 .editor-header .title {
@@ -74,6 +82,33 @@ body {
     margin-top: 5px;
 }
 
+/* Header Action Button (e.g., New Session - currently removed but style kept for future) */
+.header-action-btn {
+    position: absolute; /* Position relative to header */
+    right: 0; /* Align to the right */
+    top: 50%; /* Vertically center */
+    transform: translateY(-50%);
+    background-color: #6c757d; /* Muted grey */
+    color: var(--text-light);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 5px var(--shadow-light);
+}
+.header-action-btn:hover {
+    background-color: var(--button-hover-back);
+    transform: translateY(-50%) scale(1.05); /* Slight scale on hover */
+    box-shadow: 0 4px 10px var(--shadow-medium);
+}
+
+
 /* --- Main Editor Wrapper Layout --- */
 .editor-wrapper {
     display: flex;
@@ -92,24 +127,35 @@ body {
 /* --- Photo Strip Preview Area --- */
 .photo-strip-preview {
     width: 350px; /* Fixed display width of the preview container in the browser */
-    height: auto; /* IMPORTANT: Allow its height to adjust based on the canvas's JS-controlled height */
-    border: 3px solid #ccc; /* Border around the preview area */
-    display: flex; /* Use flexbox to center canvas */
+    height: auto;
+    border: 3px solid var(--primary-brand-color); /* Border around the preview area */
+    display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0; /* Prevents this container from shrinking too much */
-    overflow: hidden; /* Ensures anything drawn outside the canvas is clipped */
+    flex-shrink: 0;
+    overflow: hidden;
     border-radius: var(--border-radius-soft);
-    background-color: var(--secondary-brand-color); /* Default background color behind canvas */
+    background-color: var(--secondary-brand-color);
     position: relative; /* Necessary for absolute positioning of info messages/spinners */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Canvas Container for cursor management */
+.canvas-container {
+    position: relative; /* For relative positioning of canvas and cursors */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Canvas Element Styling */
 canvas {
-    display: block; /* Removes any extra space below the canvas */
-    border-radius: 8px; /* Slightly rounded corners for the drawn content */
-    max-width: 100%; /* Ensures the canvas doesn't overflow its parent container */
-    height: auto; /* Ensures the aspect ratio is visually maintained within its container */
+    display: block;
+    border-radius: 8px;
+    max-width: 100%;
+    height: auto;
     /* NOTE: The actual pixel width and height (e.g., 400x950) are set directly by JavaScript */
 }
 
@@ -118,16 +164,16 @@ canvas {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Center the message */
+    transform: translate(-50%, -50%);
     text-align: center;
     color: var(--text-dark);
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    background: rgba(255, 255, 255, 0.9);
     padding: 15px 25px;
     border-radius: 10px;
     box-shadow: 0 2px 5px var(--shadow-light);
-    z-index: 10; /* Ensure message is above other content */
-    width: 80%; /* Limit width on smaller screens for readability */
+    z-index: 10;
+    width: 80%;
 }
 
 .info-message a {
@@ -139,7 +185,7 @@ canvas {
     text-decoration: underline;
 }
 
-/* Spinner Overlay Styles (copied from capture-style.css) */
+/* Spinner Overlay Styles */
 .spinner-overlay {
     position: absolute;
     top: 0;
@@ -151,7 +197,7 @@ canvas {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 12; /* Above messages */
+    z-index: 12;
     color: var(--primary-brand-color);
     font-size: 1.2em;
     gap: 10px;
@@ -162,22 +208,24 @@ canvas {
 }
 
 .spinner-overlay .fa-spinner {
-    color: var(--secondary-brand-color); /* Spinner color */
+    color: var(--secondary-brand-color);
 }
+
+/* Removed QR Code Overlay styles */
 
 
 /* --- Editing Tools Panel --- */
 .tools-panel {
-    flex-grow: 1; /* Allows tools panel to take remaining horizontal space on large screens */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Space between individual tool sections */
+    gap: 20px;
     padding: 25px;
-    background: var(--panel-bg);
+    background: var(--tool-section-gradient); /* Apply subtle gradient */
     border-radius: var(--border-radius-soft);
     box-shadow: 0 5px 15px var(--shadow-medium);
-    max-width: 450px; /* Max width for the tools panel itself */
-    width: 100%; /* Take full width on smaller screens */
+    max-width: 450px;
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -189,13 +237,13 @@ canvas {
     text-align: center;
 }
 
-/* Individual Tool Sections (e.g., Add Stickers, Add Text) */
+/* Individual Tool Sections */
 .tool-section {
     background: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 8px var(--shadow-light);
-    border: 1px solid #eee; /* Subtle border */
+    border: 1px solid #eee;
 }
 
 .tool-section h3 {
@@ -215,19 +263,19 @@ canvas {
     line-height: 1.4;
 }
 
-/* --- Input Fields and Selects (Common Styling for dropdowns, text inputs, etc.) --- */
+/* --- Input Fields and Selects (Common Styling) --- */
 select, input[type="text"], input[type="number"], input[type="color"] {
-    width: 100%; /* Take full width of parent */
+    width: 100%;
     padding: 12px 15px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 1rem;
-    margin-bottom: 10px; /* Space between inputs */
+    margin-bottom: 10px;
     box-sizing: border-box;
     background-color: white;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-    /* Custom dropdown arrow for selects (removes default browser arrow) */
+    /* Custom dropdown arrow */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -238,29 +286,62 @@ select, input[type="text"], input[type="number"], input[type="color"] {
 }
 
 select:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="color"]:focus, button:focus {
-    outline: none; /* Remove default focus outline */
-    border-color: var(--primary-brand-color); /* Highlight border on focus */
-    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.2); /* Soft glow on focus */
+    outline: none;
+    border-color: var(--primary-brand-color);
+    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.2);
 }
 
 input[type="color"] {
-    height: 45px; /* Adjust height for color input to make it easier to click */
-    padding: 5px; /* Less internal padding for color input */
+    height: 45px;
+    padding: 5px;
     cursor: pointer;
 }
 
 /* Text Style Options Group */
-.text-style-options {
+.text-style-options, .text-effect-options, .drawing-controls {
     display: flex;
     gap: 8px;
     margin-bottom: 15px;
     align-items: center;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    flex-wrap: wrap;
+}
+.text-effect-options {
+    margin-bottom: 5px; /* Tighter spacing for effects */
+    padding: 5px 0;
+    border-top: 1px dashed #eee;
+    padding-top: 10px;
+}
+.text-effect-options label {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap; /* Prevent label wrapping */
+    flex-shrink: 0;
+}
+.text-effect-options input[type="color"] {
+    flex-grow: 0;
+    width: 40px; /* Smaller for color swatches */
+    margin-bottom: 0;
+    height: 30px;
+    padding: 2px;
+}
+.text-effect-options input[type="number"], .drawing-controls input[type="number"] {
+    flex-grow: 1;
+    max-width: 60px; /* Limit width for number inputs */
+    margin-bottom: 0;
+    text-align: center;
+    padding: 8px;
+}
+.drawing-controls input[type="range"] {
+    flex-grow: 1;
+    margin-bottom: 0;
+    padding: 8px;
 }
 
-.text-style-options .style-toggle-btn {
-    flex-grow: 1; /* Allow buttons to grow */
-    min-width: 40px; /* Minimum width for buttons */
+
+.text-style-options .style-toggle-btn, .text-effect-options .style-toggle-btn {
+    flex-grow: 1;
+    min-width: 40px;
     padding: 10px;
     background-color: #eee;
     color: #555;
@@ -269,14 +350,21 @@ input[type="color"] {
     font-size: 1.1em;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    box-shadow: none; /* Remove default button shadow */
+    box-shadow: none;
+}
+.text-effect-options .style-toggle-btn.small-btn {
+    padding: 8px; /* Slightly smaller for effect clear buttons */
+    font-size: 0.9em;
+    width: auto;
+    flex-grow: 0;
 }
 
-.text-style-options .style-toggle-btn:hover {
+
+.text-style-options .style-toggle-btn:hover:enabled, .text-effect-options .style-toggle-btn:hover:enabled {
     background-color: #e0e0e0;
     color: var(--primary-brand-color);
     border-color: var(--primary-brand-color);
-    transform: none; /* No lift effect for style buttons */
+    transform: none;
 }
 
 .text-style-options .style-toggle-btn.active {
@@ -287,9 +375,9 @@ input[type="color"] {
 }
 
 .text-style-options select {
-    margin-bottom: 0; /* Remove bottom margin for select in this group */
-    width: auto; /* Allow select to size content */
-    flex-grow: 2; /* Allow select to take more space */
+    margin-bottom: 0;
+    width: auto;
+    flex-grow: 2;
 }
 
 
@@ -297,38 +385,38 @@ input[type="color"] {
 .action-btn, .download-btn, .back-btn {
     width: 100%;
     padding: 14px 20px;
-    background-color: var(--accent-color); /* Default background for action buttons */
+    background-color: var(--accent-color);
     color: var(--text-light);
     border: none;
     border-radius: 8px;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions */
-    display: flex; /* Use flex for icon and text alignment */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px; /* Space between icon and text */
+    gap: 10px;
     box-shadow: 0 4px 10px var(--shadow-medium);
 }
 
-.action-btn:hover:enabled, .download-btn:hover:enabled {
+.action-btn:hover:enabled, .download-btn:hover:enabled, .back-btn:hover:enabled {
     background-color: var(--button-hover-accent);
-    transform: translateY(-2px); /* Lift effect on hover */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-}
-
-.back-btn:hover:enabled {
-    background-color: var(--button-hover-back);
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
 }
 
+/* Specific hover for back button if needed */
+.back-btn:hover:enabled {
+    background-color: var(--button-hover-back);
+}
+
 button:disabled {
-    background: #ccc; /* Grey out disabled buttons */
+    background: #ccc !important; /* Use !important to override other button styles */
+    color: #888;
     cursor: not-allowed;
     box-shadow: none;
-    transform: none; /* No hover effect when disabled */
+    transform: none;
 }
 
 /* --- Specific Button Styles --- */
@@ -336,7 +424,7 @@ button:disabled {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 20px; /* Space from previous tool section */
+    margin-top: 20px;
 }
 
 /* Download Format Options */
@@ -344,91 +432,86 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px; /* Space before download button */
-    flex-wrap: wrap; /* Allow wrapping of label and select */
+    margin-bottom: 10px;
+    flex-wrap: wrap;
 }
 .download-format-options label {
     font-weight: 600;
     color: var(--text-dark);
-    flex-shrink: 0; /* Prevent label from shrinking */
+    flex-shrink: 0;
 }
 .download-format-options select {
-    flex-grow: 1; /* Take remaining space */
-    min-width: 0; /* Allow the select to shrink below its content size if needed */
-    margin-bottom: 0; /* Remove default margin */
-}
-
-/* NEW: Frame Selection Dropdown Style */
-.tool-section select#frameSelect {
-    width: 100%; /* Make it full width */
-    padding: 10px;
-    margin-bottom: 15px; /* Space below the select */
-    border: 1px solid #ddd; /* Match other inputs */
-    border-radius: var(--border-radius-soft);
-    background-color: var(--panel-bg);
-    color: var(--text-dark);
-    font-size: 1rem;
-    cursor: pointer;
-    appearance: none; /* Remove default dropdown arrow */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23333' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); /* Custom arrow, adjust fill color to --text-dark */
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 24px;
-}
-
-.tool-section select#frameSelect:focus {
-    outline: none;
-    border-color: var(--primary-brand-color);
-    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.4);
+    flex-grow: 1;
+    min-width: 0;
+    margin-bottom: 0;
 }
 
 
 .download-btn {
-    background-color: var(--primary-brand-color); /* Blue for download buttons */
+    background-color: var(--primary-brand-color);
 }
 .download-btn:hover:enabled {
     background-color: var(--button-hover-primary);
 }
 
 .back-btn {
-    background-color: #6c757d; /* Muted grey for "back" button */
-    margin-top: 20px; /* Space from download buttons */
+    background-color: #6c757d;
+    margin-top: 20px;
 }
 
 /* Delete Button Styling */
 .action-btn.delete-btn {
-    background-color: #dc3545; /* Red color for delete */
+    background-color: #dc3545;
     color: white;
 }
 
 .action-btn.delete-btn:hover:enabled {
-    background-color: #c82333; /* Darker red on hover */
+    background-color: #c82333;
 }
+
+
+/* --- Canvas Cursors --- */
+/* These classes are added to #canvasContainer by JavaScript */
+.canvas-container.default { cursor: default; }
+.canvas-container.grab { cursor: grab; }
+.canvas-container.grabbing { cursor: grabbing; }
+.canvas-container.resize-nwse { cursor: nwse-resize; } /* Top-left/Bottom-right */
+.canvas-container.resize-nesw { cursor: nesw-resize; } /* Top-right/Bottom-left */
+.canvas-container.rotate { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><path fill="%23333" d="M15 2c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8zm-7 8c0 3.866 3.134 7 7 7s7-3.134 7-7-3.134-7-7-7-7 3.134-7 7zm8 0h4l-6 6-6-6h4v-4h4v4z"/></svg>') 15 15, auto; } /* Custom rotate cursor */
+.canvas-container.draw-mode { cursor: crosshair; } /* For drawing */
 
 
 /* --- Responsive Adjustments for Editing Page --- */
 @media (min-width: 768px) {
     .editor-wrapper {
-        flex-direction: row; /* Change to side-by-side layout on larger screens */
-        justify-content: center; /* Center the two main columns */
-        align-items: flex-start; /* Align content to the top of the wrapper */
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
     }
 
     .photo-strip-preview {
-        margin-right: 40px; /* Space between preview and tools panel */
+        margin-right: 40px;
     }
 
     .tools-panel {
         padding: 30px;
-        max-width: 450px; /* Maintain max width for tools panel */
-        width: auto; /* Allow content to dictate width if needed, but respect max-width */
+        max-width: 450px;
+        width: auto;
     }
 }
 
 @media (max-width: 767px) {
-    /* Adjustments for smaller screens (e.g., mobile phones) */
+    .editor-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .header-action-btn {
+        position: static; /* Remove absolute positioning on small screens */
+        transform: none;
+        width: 100%;
+        margin-top: 10px;
+    }
+
     .editor-header .title {
         font-size: 2.8rem;
     }
@@ -439,9 +522,9 @@ button:disabled {
     }
 
     .photo-strip-preview {
-        width: 100%; /* Preview takes full width */
-        max-width: 300px; /* Limit max width for better fitting on small screens */
-        margin-bottom: 20px; /* Space below preview */
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 20px;
     }
 
     .info-message {
@@ -450,8 +533,8 @@ button:disabled {
     }
 
     .tools-panel {
-        width: 100%; /* Tools panel takes full width */
-        max-width: none; /* No max width restriction on small screens */
+        width: 100%;
+        max-width: none;
         padding: 20px;
     }
 
@@ -467,23 +550,41 @@ button:disabled {
         font-size: 1rem;
         padding: 12px 15px;
     }
-    .text-style-options {
-        flex-direction: column; /* Stack text style buttons vertically */
+    .text-style-options, .text-effect-options, .drawing-controls {
+        flex-direction: column;
         gap: 10px;
+        align-items: stretch; /* Stretch items to fill width */
     }
     .text-style-options .style-toggle-btn,
-    .text-style-options select {
-        width: 100%; /* Full width for text style buttons and select */
-        flex-grow: initial; /* Reset flex-grow */
+    .text-style-options select,
+    .text-effect-options input,
+    .text-effect-options select,
+    .text-effect-options label,
+    .drawing-controls input,
+    .drawing-controls label {
+        width: 100%; /* Full width for stacked items */
+        flex-grow: initial;
+        margin-bottom: 5px;
+        text-align: left; /* Align text inputs left */
+    }
+    .text-effect-options label, .drawing-controls label {
+        margin-bottom: 0; /* Adjust spacing for labels */
+    }
+    .text-effect-options input[type="color"] {
+        width: 100%; /* Make color picker full width too */
+    }
+    .text-effect-options .style-toggle-btn.small-btn {
+        width: 100%; /* Full width for small buttons in stacked layout */
+        flex-grow: 1; /* Allow them to grow */
     }
     .download-format-options {
-        flex-direction: column; /* Stack label and select vertically */
-        align-items: flex-start; /* Align stacked items to the left */
+        flex-direction: column;
+        align-items: flex-start;
     }
     .download-format-options label {
-        margin-bottom: 5px; /* Add space below label when stacked */
+        margin-bottom: 5px;
     }
     .download-format-options select {
-        width: 100%; /* Full width for select when stacked */
+        width: 100%;
     }
 }
