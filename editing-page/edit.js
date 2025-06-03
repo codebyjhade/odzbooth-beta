@@ -138,10 +138,6 @@ const DOMElements = {
     textUnderlineBtn: document.getElementById('textUnderlineBtn'),
     textAlignSelect: document.getElementById('textAlignSelect'),
 
-    // Removed: textOutlineColorInput, textOutlineWidthInput, clearTextOutlineBtn
-    // Removed: textShadowColorInput, textShadowOffsetXInput, textShadowOffsetYInput, textShadowBlurInput, clearTextShadowBtn
-
-    // Added Drawing tool elements
     brushColorInput: document.getElementById('brushColorInput'),
     brushSizeInput: document.getElementById('brushSizeInput'),
     toggleDrawModeBtn: document.getElementById('toggleDrawModeBtn'),
@@ -151,10 +147,7 @@ const DOMElements = {
     downloadFormatSelect: document.getElementById('downloadFormatSelect'),
     printStripBtn: document.getElementById('printStripBtn'),
     
-    // Removed: showQrCodeBtn, closeQrBtn, qrCodeOverlay, qrcodeCanvas from HTML and JS
-
     retakeBtn: document.getElementById("retakeBtn"),
-    // Removed: newSessionBtn from HTML and JS
 
     noPhotosMessage: document.getElementById('noPhotosMessage'),
     downloadSpinner: document.getElementById('downloadSpinner'),
@@ -234,11 +227,12 @@ async function preloadCapturedPhotos() {
 
 /**
  * Gets mouse or touch coordinates relative to the canvas.
+ * Accounts for canvas scaling (display size vs. internal resolution).
  * @param {MouseEvent | TouchEvent} event - The mouse or touch event.
  * @returns {{x: number, y: number}} - Coordinates {x, y} on the canvas.
  */
 function getEventCoordinates(event) {
-    const rect = DOMElements.photoCanvas.getBoundingClientRect(); // Get canvas size and position
+    const rect = DOMElements.photoCanvas.getBoundingClientRect(); // Get canvas size and position in viewport
     const canvasActualWidth = DOMElements.photoCanvas.width;    // Actual canvas resolution
     const canvasActualHeight = DOMElements.photoCanvas.height;
 
@@ -298,14 +292,17 @@ function isPointInRotatedRect(px, py, obj) {
 
 /**
  * Checks if a point (px, py) is within any of the draggable object's handles (resize or rotate).
+ * Uses a larger hit area for touch friendliness.
  * @param {number} px - X coordinate of the point.
  * @param {number} py - Y coordinate of the point.
  * @param {object} obj - The draggable object ({x, y, width, height, angle}).
  * @returns {string|null} The type of handle ('resize-tl', 'rotate', etc.) or null if no handle is hit.
  */
 function checkHandleClick(px, py, obj) {
-    const handleSize = 12; // Size of the interactive handles
+    // Increased handle size for better touch usability
+    const handleSize = 30; // Original was 12
     const halfHandleSize = handleSize / 2;
+    const rotateHandleOffset = 30; // Distance of rotate handle from object top edge
 
     // Calculate object's center for rotation
     const centerX = obj.x + obj.width / 2;
@@ -327,12 +324,13 @@ function checkHandleClick(px, py, obj) {
     const localPy = rotatedPy + obj.height / 2;
 
     // Define the bounding boxes for each handle in local coordinates
+    // Increased hit area by adjusting x/y offsets for handles for more forgiving taps.
     const handles = {
         'resize-tl': { x: -halfHandleSize, y: -halfHandleSize, width: handleSize, height: handleSize },
         'resize-tr': { x: obj.width - halfHandleSize, y: -halfHandleSize, width: handleSize, height: handleSize },
         'resize-bl': { x: -halfHandleSize, y: obj.height - halfHandleSize, width: handleSize, height: handleSize },
         'resize-br': { x: obj.width - halfHandleSize, y: obj.height - halfHandleSize, width: handleSize, height: handleSize },
-        'rotate': { x: obj.width / 2 - halfHandleSize, y: -20 - halfHandleSize, width: handleSize, height: handleSize } // Rotate handle is typically above center
+        'rotate': { x: obj.width / 2 - halfHandleSize, y: -rotateHandleOffset - halfHandleSize, width: handleSize, height: handleSize }
     };
 
     // Check if the local point hits any handle
@@ -345,8 +343,6 @@ function checkHandleClick(px, py, obj) {
     }
     return null; // No handle hit
 }
-
-// Removed: startNewSession function as button was removed from HTML
 
 
 // --- UI Feedback & State Update Functions ---
@@ -362,7 +358,6 @@ function displayCanvasMessage(mainMsg, type = 'info', subMsg = '') {
     DOMElements.noPhotosMessage.style.display = 'block';
     DOMElements.photoCanvas.style.display = 'none'; // Hide canvas if message is showing
     DOMElements.downloadSpinner.classList.add('hidden-spinner'); // Hide spinner if message is showing
-    // DOMElements.qrCodeOverlay.classList.remove('visible'); // Removed QR overlay
     
     DOMElements.noPhotosMessage.className = `info-message ${type}`; // Apply styling class
 
@@ -389,8 +384,6 @@ function displayCanvasMessage(mainMsg, type = 'info', subMsg = '') {
  */
 function hideCanvasMessage() {
     DOMElements.noPhotosMessage.style.display = 'none';
-    // Only show canvas if neither spinner nor QR overlay is visible
-    // Removed QR overlay check: if (DOMElements.downloadSpinner.classList.contains('hidden-spinner') && !DOMElements.qrCodeOverlay.classList.contains('visible')) {
     if (DOMElements.downloadSpinner.classList.contains('hidden-spinner')) {
         DOMElements.photoCanvas.style.display = 'block';
     }
@@ -405,11 +398,8 @@ function toggleDownloadSpinner(show) {
         DOMElements.downloadSpinner.classList.remove('hidden-spinner');
         DOMElements.photoCanvas.style.display = 'none';
         DOMElements.noPhotosMessage.style.display = 'none';
-        // DOMElements.qrCodeOverlay.classList.remove('visible'); // Removed QR overlay
     } else {
         DOMElements.downloadSpinner.classList.add('hidden-spinner');
-        // Only show canvas if no other overlays are visible
-        // Removed QR overlay check: if (DOMElements.noPhotosMessage.style.display === 'none' && !DOMElements.qrCodeOverlay.classList.contains('visible')) {
         if (DOMElements.noPhotosMessage.style.display === 'none') {
             DOMElements.photoCanvas.style.display = 'block';
         }
@@ -450,27 +440,29 @@ function populateFrameOptions(frames) {
  */
 function updateTextControlsFromSelection() {
     const isTextSelected = appState.selectedDraggable && appState.selectedDraggable.type === 'text';
+    // Use selected text object's properties or default settings if none selected
     const textObj = isTextSelected ? appState.selectedDraggable : DEFAULT_TEXT_SETTINGS;
 
-    // The main text input should *always* be enabled for new text entry.
+    // The main text input field should *always* be enabled for new text entry.
     // Its value will be set to the selected text's content, or cleared if nothing is selected.
     DOMElements.textInput.value = isTextSelected ? textObj.content : '';
-    DOMElements.textInput.disabled = false; // <-- This ensures you can always type in the input
+    DOMElements.textInput.disabled = false; // Always enable for new input
 
+    // Set values of other controls based on selection, or default values if nothing is selected
     DOMElements.textColorInput.value = textObj.color;
     DOMElements.textFontSelect.value = textObj.font;
     DOMElements.textSizeInput.value = textObj.size;
     DOMElements.textAlignSelect.value = textObj.align;
 
+    // Update active states for style buttons
     DOMElements.textBoldBtn.classList.toggle('active', isTextSelected && textObj.isBold);
     DOMElements.textItalicBtn.classList.toggle('active', isTextSelected && textObj.isItalic);
     DOMElements.textUnderlineBtn.classList.toggle('active', isTextSelected && textObj.isUnderline);
 
-    // Controls that should ONLY be enabled when a text object IS SELECTED (for editing)
+    // Controls that should ONLY be enabled when a text object IS SELECTED (for editing existing text)
     const textEditingControls = [
         DOMElements.textColorInput, DOMElements.textFontSelect, DOMElements.textSizeInput,
         DOMElements.textAlignSelect, DOMElements.textBoldBtn, DOMElements.textItalicBtn, DOMElements.textUnderlineBtn
-        // Removed outline/shadow controls from this list
     ];
     textEditingControls.forEach(control => {
         if (control) control.disabled = !isTextSelected;
@@ -667,13 +659,12 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
                 textDrawX = obj.x + obj.width;
             }
 
-            // Removed: Drawing text outline (properties no longer exist in obj)
-            // Removed: Applying text shadow (properties no longer exist in obj)
-            // Ensure no lingering shadow properties from previous draws
+            // Ensure no lingering shadow/outline properties from previous draws
             targetCtx.shadowColor = 'rgba(0,0,0,0)';
             targetCtx.shadowBlur = 0;
             targetCtx.shadowOffsetX = 0;
             targetCtx.shadowOffsetY = 0;
+            targetCtx.lineWidth = 0; // Clear outline
 
             // Draw filled text
             targetCtx.fillStyle = obj.color;
@@ -728,6 +719,7 @@ function drawDrawingsOnCanvas(targetCtx, drawingsData) {
 
 /**
  * Draws the selection rectangle and interaction handles (resize, rotate) around the selected draggable object.
+ * Uses increased handle size for better touch usability.
  * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
  * @param {object} obj - The currently selected draggable object.
  */
@@ -748,26 +740,31 @@ function drawSelectionHandles(targetCtx, obj) {
     targetCtx.strokeRect(obj.x, obj.y, obj.width, obj.height);
     targetCtx.setLineDash([]); // Reset line dash for subsequent draws
 
-    const handleSize = 12;
+    // Increased handle size for better touch usability
+    const handleSize = 30; // Original was 12
     const halfHandleSize = handleSize / 2;
+    const rotateHandleOffset = 30; // Distance of rotate handle from object top edge
 
     targetCtx.fillStyle = 'white';
     targetCtx.strokeStyle = 'black';
     targetCtx.lineWidth = 1;
 
     // Draw corner resize handles (squares)
-    targetCtx.fillRect(obj.x - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    targetCtx.fillRect(obj.x - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize); // TL
     targetCtx.strokeRect(obj.x - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
-    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    
+    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize); // TR
     targetCtx.strokeRect(obj.x + obj.width - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
-    targetCtx.fillRect(obj.x - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+    
+    targetCtx.fillRect(obj.x - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize); // BL
     targetCtx.strokeRect(obj.x - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
-    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+    
+    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize); // BR
     targetCtx.strokeRect(obj.x + obj.width - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
 
     // Draw rotate handle (circle above the top center)
     const rotateHandleX = obj.x + obj.width / 2;
-    const rotateHandleY = obj.y - 20; // Position above the object
+    const rotateHandleY = obj.y - rotateHandleOffset; // Position above the object
     targetCtx.beginPath();
     targetCtx.arc(rotateHandleX, rotateHandleY, halfHandleSize, 0, Math.PI * 2);
     targetCtx.fill();
@@ -807,7 +804,7 @@ async function addSticker(stickerSrc) {
             y: (DOMElements.photoCanvas.height / 2) - (initialHeight / 2), // Center vertically
             width: initialWidth,
             height: initialHeight,
-            originalWidth: img.naturalWidth,
+            originalWidth: img.naturalWidth, // Store original dimensions for aspect ratio
             originalHeight: img.naturalHeight,
             angle: 0, // No initial rotation
             type: 'sticker' // Identifier for object type
@@ -851,9 +848,10 @@ function addText() {
     }
 
     // Temporarily set context font to measure text accurately
-    DOMElements.ctx.font = `${DOMElements.textBoldBtn.classList.contains('active') ? 'bold ' : ''}` +
-                         `${DOMElements.textItalicBtn.classList.contains('active') ? 'italic ' : ''}` +
-                         `${parseInt(DOMElements.textSizeInput.value)}px ${DOMElements.textFontSelect.value}`;
+    // Ensure font style (bold/italic) is considered for accurate measurement
+    const tempFontStyle = `${DOMElements.textBoldBtn.classList.contains('active') ? 'bold ' : ''}` +
+                         `${DOMElements.textItalicBtn.classList.contains('active') ? 'italic ' : ''}`;
+    DOMElements.ctx.font = `${tempFontStyle}${parseInt(DOMElements.textSizeInput.value)}px ${DOMElements.textFontSelect.value}`;
     const textMetrics = DOMElements.ctx.measureText(textContent);
     const textWidth = textMetrics.width;
     const textHeight = parseInt(DOMElements.textSizeInput.value); // Use font size as height approximation
@@ -870,12 +868,11 @@ function addText() {
         isBold: DOMElements.textBoldBtn.classList.contains('active'),
         isItalic: DOMElements.textItalicBtn.classList.contains('active'),
         isUnderline: DOMElements.textUnderlineBtn.classList.contains('active'),
-        width: textWidth, // Measured width
-        height: textHeight, // Measured height
+        width: textWidth, // Measured width (will be updated on render)
+        height: textHeight, // Measured height (will be updated on render)
         originalSize: textHeight, // Store original font size for scaling
         angle: 0,
         type: 'text' // Identifier for object type
-        // Removed outline/shadow properties
     };
 
     appState.texts.push(newTextObj);
@@ -1081,7 +1078,7 @@ function handleCanvasPointerMove(e) {
         const sinInitialAngle = Math.sin(-appState.initialObjAngle);
 
         const rotatedMouseX = currentMouseXTranslated * cosInitialAngle - currentMouseYTranslated * sinInitialAngle;
-        const rotatedMouseY = currentMouseXTranslated * sinAngle + currentMouseYTranslated * cosInitialAngle;
+        const rotatedMouseY = currentMouseXTranslated * sinInitialAngle + currentMouseYTranslated * cosInitialAngle;
 
         let newWidth = appState.initialObjWidth;
         let newHeight = appState.initialObjHeight;
@@ -1094,28 +1091,26 @@ function handleCanvasPointerMove(e) {
         let dy_rotated = rotatedMouseY - ((appState.initialMouseX - initialCenterX) * sinInitialAngle + (appState.initialMouseY - initialCenterY) * cosInitialAngle);
 
         // Adjust width, height, and position based on the handle being dragged
+        // We'll prioritize change in width/height based on which corner is dragged
         switch (appState.dragType) {
-            case 'resize-br':
+            case 'resize-br': // Bottom-right
                 newWidth = appState.initialObjWidth + dx_rotated;
                 newHeight = appState.initialObjHeight + dy_rotated;
                 break;
-            case 'resize-tl':
+            case 'resize-tl': // Top-left
                 newWidth = appState.initialObjWidth - dx_rotated;
                 newHeight = appState.initialObjHeight - dy_rotated;
-                // Adjust position to keep the bottom-right anchor fixed
                 newX = appState.initialObjX + dx_rotated * Math.cos(appState.initialObjAngle) - dy_rotated * Math.sin(appState.initialObjAngle);
                 newY = appState.initialObjY + dy_rotated * Math.cos(appState.initialObjAngle) + dx_rotated * Math.sin(appState.initialObjAngle);
                 break;
-            case 'resize-tr':
+            case 'resize-tr': // Top-right
                 newWidth = appState.initialObjWidth + dx_rotated;
                 newHeight = appState.initialObjHeight - dy_rotated;
-                // Adjust position to keep the bottom-left anchor fixed
                 newY = appState.initialObjY + dy_rotated * Math.cos(appState.initialObjAngle) + dx_rotated * Math.sin(appState.initialObjAngle);
                 break;
-            case 'resize-bl':
+            case 'resize-bl': // Bottom-left
                 newWidth = appState.initialObjWidth - dx_rotated;
                 newHeight = appState.initialObjHeight + dy_rotated;
-                // Adjust position to keep the top-right anchor fixed
                 newX = appState.initialObjX + dx_rotated * Math.cos(appState.initialObjAngle) - dy_rotated * Math.sin(appState.initialObjAngle);
                 break;
         }
@@ -1124,7 +1119,8 @@ function handleCanvasPointerMove(e) {
         if (obj.type === 'sticker' && obj.originalWidth && obj.originalHeight) {
             const aspectRatio = obj.originalWidth / obj.originalHeight;
             
-            // Prioritize change in the larger dimension to calculate the other, preventing extreme stretching
+            // Determine which dimension is being changed more to maintain aspect ratio correctly
+            // This prevents "squishing" or "stretching" when dragging diagonally.
             if (Math.abs(newWidth - appState.initialObjWidth) > Math.abs(newHeight - appState.initialObjHeight)) {
                 newHeight = newWidth / aspectRatio;
             } else {
@@ -1132,6 +1128,7 @@ function handleCanvasPointerMove(e) {
             }
 
             // Recalculate position to keep the original anchor point fixed while maintaining aspect ratio
+            // This is complex due to rotation, but essential for correct behavior.
             const newCenterX = initialCenterX + (newWidth - appState.initialObjWidth) / 2 * Math.cos(appState.initialObjAngle) - (newHeight - appState.initialObjHeight) / 2 * Math.sin(appState.initialObjAngle);
             const newCenterY = initialCenterY + (newWidth - appState.initialObjWidth) / 2 * Math.sin(appState.initialObjAngle) + (newHeight - appState.initialObjHeight) / 2 * Math.cos(appState.initialObjAngle);
 
@@ -1139,9 +1136,9 @@ function handleCanvasPointerMove(e) {
             newY = newCenterY - newHeight / 2;
         }
         
-        // Ensure minimum size
-        newWidth = Math.max(10, newWidth);
-        newHeight = Math.max(10, newHeight);
+        // Ensure minimum size (prevent objects from disappearing)
+        newWidth = Math.max(20, newWidth); // Increased minimum size for better usability
+        newHeight = Math.max(20, newHeight);
 
         // Update object properties
         obj.width = newWidth;
@@ -1203,10 +1200,11 @@ function handleCanvasPointerUp(e) {
 
 function handleTouchStart(e) {
     if (e.touches.length === 1) { // Only handle single touch for now
-        e.preventDefault(); // Prevent scrolling/zooming
+        e.preventDefault(); // Prevent default browser actions (like scrolling/zooming)
         const touch = e.touches[0];
         // Create a fake MouseEvent-like object to pass to handleCanvasPointerDown
-        handleCanvasPointerDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        // We pass the raw Touch object because getEventCoordinates can handle it.
+        handleCanvasPointerDown(e); 
     }
 }
 
@@ -1214,7 +1212,8 @@ function handleTouchMove(e) {
     if (e.touches.length === 1 && appState.isDragging) { // Only allow move if dragging
         e.preventDefault(); // Prevent scrolling
         const touch = e.touches[0];
-        handleCanvasPointerMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        // Pass the raw Touch event directly
+        handleCanvasPointerMove(e);
     }
 }
 
@@ -1236,12 +1235,15 @@ function updateSelectedTextProperty(property, value) {
         appState.selectedDraggable[property] = value;
 
         // Recalculate text width and height if content, font, or size changes
+        // Also if bold/italic state changes, as it affects text metrics
         if (property === 'content' || property === 'font' || property === 'size' || property === 'isBold' || property === 'isItalic') {
-            DOMElements.ctx.font = `${appState.selectedDraggable.isBold ? 'bold ' : ''}${appState.selectedDraggable.isItalic ? 'italic ' : ''}${appState.selectedDraggable.size}px ${appState.selectedDraggable.font}`;
-            appState.selectedDraggable.width = DOMElements.ctx.measureText(appState.selectedDraggable.content).width;
-            appState.selectedDraggable.height = appState.selectedDraggable.size; // Simple approximation
+            const currentTextObj = appState.selectedDraggable;
+            const tempFontStyle = `${currentTextObj.isBold ? 'bold ' : ''}${currentTextObj.isItalic ? 'italic ' : ''}`;
+            DOMElements.ctx.font = `${tempFontStyle}${currentTextObj.size}px ${currentTextObj.font}`;
+            currentTextObj.width = DOMElements.ctx.measureText(currentTextObj.content).width;
+            currentTextObj.height = currentTextObj.size; // Simple approximation
         }
-        renderCanvas();
+        renderCanvas(); // Re-render to apply changes
         logAnalytics('Text_Property_Updated', { property: property, value: value });
     }
 }
@@ -1350,8 +1352,6 @@ async function downloadStrip() {
         toggleDownloadSpinner(false); // Hide spinner
     }
 }
-
-// Removed: showQrCode function and its dependencies
 
 
 /**
@@ -1489,29 +1489,32 @@ function setupEventListeners() {
         updateSelectedTextProperty('isUnderline', DOMElements.textUnderlineBtn.classList.contains('active'));
     });
 
-    // Removed: Text Outline/Shadow Event Listeners
-
-    DOMElements.addTextBtn.addEventListener("click", addText);
-    DOMElements.removeTextBtn.addEventListener("click", removeSelectedText);
-
     // Drawing tool controls
     DOMElements.brushColorInput.addEventListener('input', () => {
+        // If actively drawing a new line, update its color
         if (appState.isDrawMode && appState.drawings.length > 0) {
             const lastDrawing = appState.drawings[appState.drawings.length - 1];
-            if (lastDrawing && lastDrawing.points.length <= 1) { // Only change color for newly started lines
-                lastDrawing.color = DOMElements.brushColorInput.value;
-                renderCanvas();
+            if (lastDrawing && lastDrawing.points.length > 0) { // Only update if drawing has started
+                 // If the last point is just being added, update color.
+                 // Otherwise, changing color applies to the *next* stroke.
+                if (appState.isDragging || lastDrawing.points.length === 1) { 
+                    lastDrawing.color = DOMElements.brushColorInput.value;
+                }
             }
         }
+        renderCanvas(); // Re-render to show immediate color change if applicable
     });
     DOMElements.brushSizeInput.addEventListener('input', () => {
+        // If actively drawing a new line, update its size
         if (appState.isDrawMode && appState.drawings.length > 0) {
             const lastDrawing = appState.drawings[appState.drawings.length - 1];
-            if (lastDrawing && lastDrawing.points.length <= 1) { // Only change size for newly started lines
-                lastDrawing.size = parseInt(DOMElements.brushSizeInput.value);
-                renderCanvas();
+            if (lastDrawing && lastDrawing.points.length > 0) { // Only update if drawing has started
+                if (appState.isDragging || lastDrawing.points.length === 1) {
+                    lastDrawing.size = parseInt(DOMElements.brushSizeInput.value);
+                }
             }
         }
+        renderCanvas(); // Re-render to show immediate size change if applicable
     });
     DOMElements.toggleDrawModeBtn.addEventListener('click', toggleDrawMode);
     DOMElements.clearDrawingBtn.addEventListener('click', clearAllDrawings);
@@ -1520,11 +1523,8 @@ function setupEventListeners() {
     DOMElements.downloadStripBtn.addEventListener('click', downloadStrip);
     DOMElements.printStripBtn.addEventListener('click', printStrip);
     
-    // Removed: QR Code event listener
-
     // Navigation buttons
     DOMElements.retakeBtn.addEventListener('click', retakePhotos);
-    // Removed: New Session button event listener
 }
 
 // --- Initialization ---
@@ -1557,13 +1557,14 @@ async function initializeEditorPage() {
         );
         // Disable all editing controls if no photos or invalid setup
         Object.values(DOMElements).forEach(el => {
+            // Check if element exists before trying to disable
             if (el && typeof el.disabled !== 'undefined') el.disabled = true;
         });
         DOMElements.retakeBtn.disabled = false; // Re-enable retake button always
         
         // IMPORTANT: Ensure text input and add button are ALWAYS enabled, even with no photos
-        DOMElements.textInput.disabled = false; 
-        DOMElements.addTextBtn.disabled = false;
+        if (DOMElements.textInput) DOMElements.textInput.disabled = false; 
+        if (DOMElements.addTextBtn) DOMElements.addTextBtn.disabled = false;
         
         logAnalytics('Editor_Page_Load_Failed', { reason: 'No photos or invalid config' });
         return;
@@ -1591,23 +1592,25 @@ async function initializeEditorPage() {
 
 
     // Set initial values for text and drawing controls
-    DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
-    DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
-    DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
-    DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
-    // Removed: textOutline/Shadow default value assignments
-    DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
-    DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
+    // Using `if (DOMElements.element)` checks before assignment for robustness,
+    // though ideally all elements are guaranteed to exist at this point.
+    if (DOMElements.textColorInput) DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
+    if (DOMElements.textFontSelect) DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
+    if (DOMElements.textSizeInput) DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
+    if (DOMElements.textAlignSelect) DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+    if (DOMElements.brushColorInput) DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
+    if (DOMElements.brushSizeInput) DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
 
     // Initially disable controls that depend on selection or specific modes
     // This call will correctly disable the *editing* controls.
     updateTextControlsFromSelection(); 
     // IMPORTANT: Explicitly ensure text input and add button are ENABLED after the above call
-    DOMElements.textInput.disabled = false; 
-    DOMElements.addTextBtn.disabled = false;
+    // This handles the case where there ARE photos, but no text is selected initially.
+    if (DOMElements.textInput) DOMElements.textInput.disabled = false; 
+    if (DOMElements.addTextBtn) DOMElements.addTextBtn.disabled = false;
     
     updateStickerControlsFromSelection(); // This will disable remove sticker button initially
-    DOMElements.toggleDrawModeBtn.classList.remove('active'); // Ensure draw button isn't active by default
+    if (DOMElements.toggleDrawModeBtn) DOMElements.toggleDrawModeBtn.classList.remove('active'); // Ensure draw button isn't active by default
 
     setupEventListeners(); // Attach all event listeners
     renderCanvas(); // Initial render of the photo strip
