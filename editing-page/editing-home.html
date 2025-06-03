@@ -50,11 +50,30 @@
 
             <div class="tool-section">
                 <h3><i class='bx bxs-sticker'></i> Add Stickers</h3>
-                 <select id="stickerSelect" title="Select a high school strand sticker">
+                 <select id="stickerSelect" title="Select a sticker category">
                     <option value="">Select a sticker</option>
-                    <option value="assets/stickers/stem.png">STEM Student</option>
-                    <option value="assets/stickers/humss.png">HUMSS Student</option>
-                    <option value="assets/stickers/abm.png">ABM Student</option>
+
+                    <optgroup label="Strand Stickers">
+                        <option value="assets/stickers/stem.png">STEM Student</option>
+                        <option value="assets/stickers/humss.png">HUMSS Student</option>
+                        <option value="assets/stickers/abm.png">ABM Student</option>
+                        </optgroup>
+
+                    <optgroup label="Hearts">
+                        <option value="assets/stickers/heart1.png">Red Heart</option>
+                        <option value="assets/stickers/heart2.png">Pink Heart</option>
+                        </optgroup>
+
+                    <optgroup label="Ribbons">
+                        <option value="assets/stickers/ribbon1.png">Blue Ribbon</option>
+                        <option value="assets/stickers/ribbon2.png">Gold Ribbon</option>
+                        </optgroup>
+
+                    <optgroup label="XOXO">
+                        <option value="assets/stickers/xoxo_pink.png">Pink XOXO</option>
+                        <option value="assets/stickers/xoxo_blue.png">Blue XOXO</option>
+                        </optgroup>
+
                     </select>
                 <button id="addStickerBtn" class="action-btn">
                     <i class='bx bxs-sticker'></i> Add Sticker
