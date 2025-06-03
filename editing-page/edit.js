@@ -74,11 +74,11 @@ const STRIP_LAYOUT_CONFIGS = {
         stripHeight: 40 + (220 * 3) + (20 * 2) + 150,
         frames: [
             { x: 40, y: 40, width: 320, height: 220 },
-            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
-            { x: 40, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 },
+            { x: 40, y: 280, width: 320, height: 220 },
+            { x: 40, y: 520, width: 320, height: 220 },
             { x: 400, y: 40, width: 320, height: 220 },
-            { x: 400, y: 40 + 220 + 20, width: 320, height: 220 },
-            { x: 400, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 }
+            { x: 400, y: 280, width: 320, height: 220 },
+            { x: 400, y: 520, width: 320, height: 220 }
         ],
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
@@ -89,6 +89,7 @@ const STRIP_LAYOUT_CONFIGS = {
     }
 };
 
+// Removed outline and shadow properties from default settings
 const DEFAULT_TEXT_SETTINGS = {
     color: '#333333',
     font: "'Poppins', sans-serif",
@@ -96,13 +97,7 @@ const DEFAULT_TEXT_SETTINGS = {
     align: 'center',
     isBold: false,
     isItalic: false,
-    isUnderline: false,
-    outlineColor: '#000000',
-    outlineWidth: 0,
-    shadowColor: '#000000',
-    shadowOffsetX: 0,
-    shadowOffsetY: 0,
-    shadowBlur: 0
+    isUnderline: false
 };
 
 const DEFAULT_DRAWING_SETTINGS = {
@@ -134,14 +129,8 @@ const DOMElements = {
     textUnderlineBtn: document.getElementById('textUnderlineBtn'),
     textAlignSelect: document.getElementById('textAlignSelect'),
 
-    textOutlineColorInput: document.getElementById('textOutlineColorInput'),
-    textOutlineWidthInput: document.getElementById('textOutlineWidthInput'),
-    clearTextOutlineBtn: document.getElementById('clearTextOutlineBtn'),
-    textShadowColorInput: document.getElementById('textShadowColorInput'),
-    textShadowOffsetXInput: document.getElementById('textShadowOffsetXInput'),
-    textShadowOffsetYInput: document.getElementById('textShadowOffsetYInput'),
-    textShadowBlurInput: document.getElementById('textShadowBlurInput'),
-    clearTextShadowBtn: document.getElementById('clearTextShadowBtn'),
+    // Removed: textOutlineColorInput, textOutlineWidthInput, clearTextOutlineBtn
+    // Removed: textShadowColorInput, textShadowOffsetXInput, textShadowOffsetYInput, textShadowBlurInput, clearTextShadowBtn
 
     brushColorInput: document.getElementById('brushColorInput'),
     brushSizeInput: document.getElementById('brushSizeInput'),
@@ -150,7 +139,7 @@ const DOMElements = {
 
     downloadStripBtn: document.getElementById("downloadStripBtn"),
     downloadFormatSelect: document.getElementById('downloadFormatSelect'),
-    printStripBtn: document.getElementById('printStripBtn'), // Kept for direct print
+    printStripBtn: document.getElementById('printStripBtn'),
     
     // Removed: showQrCodeBtn, closeQrBtn, qrCodeOverlay, qrcodeCanvas
 
@@ -364,7 +353,7 @@ function populateFrameOptions(frames) {
     }
 }
 
-// **Revised:** Update all text-related controls and remove button enabled state
+// Revised: Update all text-related controls and remove button enabled state
 function updateTextControlsFromSelection() {
     const isTextSelected = appState.selectedDraggable && appState.selectedDraggable.type === 'text';
     const textObj = isTextSelected ? appState.selectedDraggable : DEFAULT_TEXT_SETTINGS;
@@ -379,20 +368,13 @@ function updateTextControlsFromSelection() {
     DOMElements.textItalicBtn.classList.toggle('active', isTextSelected && textObj.isItalic);
     DOMElements.textUnderlineBtn.classList.toggle('active', isTextSelected && textObj.isUnderline);
 
-    DOMElements.textOutlineColorInput.value = textObj.outlineColor;
-    DOMElements.textOutlineWidthInput.value = textObj.outlineWidth;
-    DOMElements.textShadowColorInput.value = textObj.shadowColor;
-    DOMElements.textShadowOffsetXInput.value = textObj.shadowOffsetX;
-    DOMElements.textShadowOffsetYInput.value = textObj.shadowOffsetY;
-    DOMElements.textShadowBlurInput.value = textObj.shadowBlur;
+    // Removed outline/shadow related UI updates
 
     // Enable/disable all controls based on whether a text object is selected
     const textControls = [
         DOMElements.textInput, DOMElements.textColorInput, DOMElements.textFontSelect, DOMElements.textSizeInput,
-        DOMElements.textAlignSelect, DOMElements.textBoldBtn, DOMElements.textItalicBtn, DOMElements.textUnderlineBtn,
-        DOMElements.textOutlineColorInput, DOMElements.textOutlineWidthInput, DOMElements.clearTextOutlineBtn,
-        DOMElements.textShadowColorInput, DOMElements.textShadowOffsetXInput, DOMElements.textShadowOffsetYInput,
-        DOMElements.textShadowBlurInput, DOMElements.clearTextShadowBtn
+        DOMElements.textAlignSelect, DOMElements.textBoldBtn, DOMElements.textItalicBtn, DOMElements.textUnderlineBtn
+        // Removed outline/shadow controls from this list
     ];
     textControls.forEach(control => {
         if (control) control.disabled = !isTextSelected;
@@ -402,7 +384,7 @@ function updateTextControlsFromSelection() {
     DOMElements.removeTextBtn.disabled = !isTextSelected;
 }
 
-// **Revised:** Update sticker remove button enabled state
+// Revised: Update sticker remove button enabled state
 function updateStickerControlsFromSelection() {
     DOMElements.removeStickerBtn.disabled = !(appState.selectedDraggable && appState.selectedDraggable.type === 'sticker');
 }
@@ -538,32 +520,16 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
                 textDrawX = obj.x + obj.width;
             }
 
-            // Draw text outline
-            if (obj.outlineWidth > 0 && obj.outlineColor) {
-                targetCtx.strokeStyle = obj.outlineColor;
-                targetCtx.lineWidth = obj.outlineWidth;
-                targetCtx.strokeText(obj.content, textDrawX, obj.y + obj.height / 2);
-            }
-
-            // Apply text shadow
-            if (obj.shadowColor && (obj.shadowOffsetX !== 0 || obj.shadowOffsetY !== 0 || obj.shadowBlur > 0)) {
-                targetCtx.shadowColor = obj.shadowColor;
-                targetCtx.shadowOffsetX = obj.shadowOffsetX;
-                targetCtx.shadowOffsetY = obj.shadowOffsetY;
-                targetCtx.shadowBlur = obj.shadowBlur;
-            } else {
-                targetCtx.shadowColor = 'rgba(0,0,0,0)';
-                targetCtx.shadowBlur = 0;
-                targetCtx.shadowOffsetX = 0;
-                targetCtx.shadowOffsetY = 0;
-            }
+            // Removed: Draw text outline
+            // Removed: Apply text shadow (and clearing shadow properties)
 
             targetCtx.fillStyle = obj.color;
             targetCtx.fillText(obj.content, textDrawX, obj.y + obj.height / 2);
 
             // Draw underline
             if (obj.isUnderline) {
-                targetCtx.shadowColor = 'rgba(0,0,0,0)'; // Temporarily clear shadow for underline
+                // Ensure no shadow is applied to underline
+                targetCtx.shadowColor = 'rgba(0,0,0,0)';
                 targetCtx.shadowBlur = 0;
                 targetCtx.shadowOffsetX = 0;
                 targetCtx.shadowOffsetY = 0;
@@ -683,7 +649,7 @@ async function addSticker(stickerSrc) {
         appState.stickers.push(newSticker);
         appState.selectedDraggable = newSticker;
         renderCanvas();
-        updateStickerControlsFromSelection(); // Update UI
+        updateStickerControlsFromSelection();
         logAnalytics('Sticker_Added', { src: stickerSrc });
     }
     catch (error) {
@@ -735,13 +701,8 @@ function addText() {
         height: textHeight,
         originalSize: textHeight,
         angle: 0,
-        type: 'text',
-        outlineColor: DOMElements.textOutlineColorInput.value,
-        outlineWidth: parseInt(DOMElements.textOutlineWidthInput.value) || 0,
-        shadowColor: DOMElements.textShadowColorInput.value,
-        shadowOffsetX: parseInt(DOMElements.textShadowOffsetXInput.value) || 0,
-        shadowOffsetY: parseInt(DOMElements.textShadowOffsetYInput.value) || 0,
-        shadowBlur: parseInt(DOMElements.textShadowBlurInput.value) || 0,
+        type: 'text'
+        // Removed: outlineColor, outlineWidth, shadowColor, shadowOffsetX, shadowOffsetY, shadowBlur
     };
 
     appState.texts.push(newTextObj);
@@ -852,7 +813,6 @@ function handleCanvasPointerDown(e) {
         }
     }
     renderCanvas();
-    // Update UI for selection state
     updateTextControlsFromSelection();
     updateStickerControlsFromSelection();
 }
@@ -1231,30 +1191,7 @@ function setupEventListeners() {
         updateSelectedTextProperty('isUnderline', DOMElements.textUnderlineBtn.classList.contains('active'));
     });
 
-    // Text Outline/Shadow Event Listeners
-    DOMElements.textOutlineColorInput.addEventListener('input', () => updateSelectedTextProperty('outlineColor', DOMElements.textOutlineColorInput.value));
-    DOMElements.textOutlineWidthInput.addEventListener('input', () => updateSelectedTextProperty('outlineWidth', parseInt(DOMElements.textOutlineWidthInput.value) || 0));
-    DOMElements.clearTextOutlineBtn.addEventListener('click', () => {
-        DOMElements.textOutlineColorInput.value = DEFAULT_TEXT_SETTINGS.outlineColor;
-        DOMElements.textOutlineWidthInput.value = DEFAULT_TEXT_SETTINGS.outlineWidth;
-        updateSelectedTextProperty('outlineColor', DEFAULT_TEXT_SETTINGS.outlineColor);
-        updateSelectedTextProperty('outlineWidth', DEFAULT_TEXT_SETTINGS.outlineWidth);
-    });
-
-    DOMElements.textShadowColorInput.addEventListener('input', () => updateSelectedTextProperty('shadowColor', DOMElements.textShadowColorInput.value));
-    DOMElements.textShadowOffsetXInput.addEventListener('input', () => updateSelectedTextProperty('shadowOffsetX', parseInt(DOMElements.textShadowOffsetXInput.value) || 0));
-    DOMElements.textShadowOffsetYInput.addEventListener('input', () => updateSelectedTextProperty('shadowOffsetY', parseInt(DOMElements.textShadowOffsetYInput.value) || 0));
-    DOMElements.textShadowBlurInput.addEventListener('input', () => updateSelectedTextProperty('shadowBlur', parseInt(DOMElements.textShadowBlurInput.value) || 0));
-    DOMElements.clearTextShadowBtn.addEventListener('click', () => {
-        DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
-        DOMElements.textShadowOffsetXInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetX;
-        DOMElements.textShadowOffsetYInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetY;
-        DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
-        updateSelectedTextProperty('shadowColor', DEFAULT_TEXT_SETTINGS.shadowColor);
-        updateSelectedTextProperty('shadowOffsetX', DEFAULT_TEXT_SETTINGS.shadowOffsetX);
-        updateSelectedTextProperty('shadowOffsetY', DEFAULT_TEXT_SETTINGS.shadowOffsetY);
-        updateSelectedTextProperty('shadowBlur', DEFAULT_TEXT_SETTINGS.shadowBlur);
-    });
+    // Removed: Text Outline/Shadow Event Listeners
 
     DOMElements.addTextBtn.addEventListener("click", addText);
     DOMElements.removeTextBtn.addEventListener("click", removeSelectedText);
@@ -1267,12 +1204,11 @@ function setupEventListeners() {
     DOMElements.downloadStripBtn.addEventListener('click', downloadStrip);
     DOMElements.printStripBtn.addEventListener('click', printStrip);
     
-    // Removed: DOMElements.showQrCodeBtn.addEventListener('click', showQrCode);
-    // Removed: DOMElements.closeQrBtn.addEventListener('click', ...)
+    // Removed: QR Code event listener
 
     // Navigation buttons
     DOMElements.retakeBtn.addEventListener('click', retakePhotos);
-    // Removed: DOMElements.newSessionBtn.addEventListener('click', startNewSession);
+    // Removed: New Session button event listener
 
     DOMElements.brushColorInput.addEventListener('input', () => {
         if (appState.isDrawMode && appState.drawings.length > 0) {
@@ -1319,7 +1255,6 @@ async function initializeEditorPage() {
             if (el && typeof el.disabled !== 'undefined') el.disabled = true;
         });
         DOMElements.retakeBtn.disabled = false;
-        // Removed: DOMElements.newSessionBtn.disabled = false;
         logAnalytics('Editor_Page_Load_Failed', { reason: 'No photos or invalid config' });
         return;
     }
@@ -1342,20 +1277,15 @@ async function initializeEditorPage() {
     DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
     DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
     DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
-    DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align; // Ensure this is set
-    DOMElements.textOutlineColorInput.value = DEFAULT_TEXT_SETTINGS.outlineColor;
-    DOMElements.textOutlineWidthInput.value = DEFAULT_TEXT_SETTINGS.outlineWidth;
-    DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
-    DOMElements.textShadowOffsetXInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetX;
-    DOMElements.textShadowOffsetYInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetY;
-    DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
+    DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+    // Removed: textOutline/Shadow default value assignments
     DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
     DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
 
     // Initially disable controls that depend on selection or specific modes
-    updateTextControlsFromSelection(); // This will disable text controls initially
-    updateStickerControlsFromSelection(); // This will disable remove sticker button initially
-    DOMElements.toggleDrawModeBtn.classList.remove('active'); // Ensure draw button isn't active by default
+    updateTextControlsFromSelection();
+    updateStickerControlsFromSelection();
+    DOMElements.toggleDrawModeBtn.classList.remove('active');
 
     setupEventListeners();
     renderCanvas();
