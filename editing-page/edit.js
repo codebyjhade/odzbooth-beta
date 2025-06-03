@@ -1,135 +1,91 @@
-// edit.js - The core logic for the Photo Editing Page (Simplified: Drag Only)
+// editing-page/edit.js
+
 "use strict";
 
-// --- DOM Element References ---
-const photoCanvas = document.getElementById("photoCanvas");
-const ctx = photoCanvas.getContext("2d");
-
-const frameSelect = document.getElementById("frameSelect");
-
-const stickerSelect = document.getElementById("stickerSelect");
-const addStickerBtn = document.getElementById("addStickerBtn");
-const removeStickerBtn = document.getElementById("removeStickerBtn"); // Re-added if it exists in HTML
-
-const textInput = document.getElementById("textInput");
-const textColorInput = document.getElementById("textColor");
-const textFontSelect = document.getElementById("textFont");
-const textSizeInput = document.getElementById("textSize");
-const addTextBtn = document.getElementById("addTextBtn");
-const removeTextBtn = document.getElementById("removeTextBtn"); // Re-added if it exists in HTML
-
-const textBoldBtn = document.getElementById('textBoldBtn');
-const textItalicBtn = document.getElementById('textItalicBtn');
-const textUnderlineBtn = document.getElementById('textUnderlineBtn'); // <--- CRITICAL FIX HERE
-const textAlignSelect = document.getElementById('textAlignSelect');
-
-const downloadStripBtn = document.getElementById("downloadStripBtn");
-const downloadFormatSelect = document.getElementById('downloadFormat'); // Added from previous working versions
-const retakeBtn = document.getElementById("retakeBtn");
-
-const noPhotosMessage = document.getElementById('no-photos-message');
-const downloadSpinner = document.getElementById('download-spinner');
-
-
-// --- Global State Variables ---
-let capturedPhotosBase64 = [];
-let stickers = []; // Array to store dynamically added and draggable sticker objects
-let texts = []; // Array to store dynamically added and draggable text objects
-
-let currentStripConfig = null;
-let selectedDraggable = null; // Currently selected sticker or text object
-
-let isDragging = false; // Only need this for drag functionality
-let dragOffsetX, dragOffsetY; // Offset for dragging
-
-let currentFrameImgSrc = ''; // To store the currently selected frame image path
-
-
-// --- Configuration: Fixed Strip Dimensions and Photo Frame Coordinates ---
-const STRIP_COMMON_SETTINGS = {
-    photoSidePadding: 40,
-    photoSlotWidth: 320,
-    gapBetweenPhotos: 20,
-    topPadding: 40,
-    bottomSpaceForLogo: 150
-};
-
-const STRIP_CONFIGS = {
+// --- Configuration ---
+// Defines the layout specifics for photo strips based on the number of photos.
+const STRIP_LAYOUT_CONFIGS = {
+    // Common settings for photo slots and padding
+    common: {
+        photoSidePadding: 40,
+        photoSlotWidth: 320,
+        gapBetweenPhotos: 20,
+        topPadding: 40,
+        bottomSpaceForLogo: 150
+    },
+    // Configuration for a 1-photo strip
     '1': {
         stripWidth: 400,
-        stripHeight: STRIP_COMMON_SETTINGS.topPadding + 240 + STRIP_COMMON_SETTINGS.bottomSpaceForLogo,
-        frames: [
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 240 }
-        ],
+        stripHeight: 40 + 240 + 150, // topPadding + photoHeight + bottomSpaceForLogo
+        frames: [{ x: 40, y: 40, width: 320, height: 240 }],
         defaultBackground: '#CCCCCC',
-        frameAspectRatio: 320 / 240,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-1-photos-option1.png', name: 'Original Single' },
             { id: 'option2', src: 'assets/strip-frame-1-photos-option2.png', name: 'Clean White' },
             { id: 'option3', src: 'assets/strip-frame-1-photos-option3.png', name: 'Styled Border' }
         ]
     },
+    // Configuration for a 2-photo strip
     '2': {
         stripWidth: 400,
-        stripHeight: STRIP_COMMON_SETTINGS.topPadding + (240 * 2) + STRIP_COMMON_SETTINGS.gapBetweenPhotos + STRIP_COMMON_SETTINGS.bottomSpaceForLogo,
+        stripHeight: 40 + (240 * 2) + 20 + 150, // top + (2*photo) + gap + bottom
         frames: [
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 240 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + 240 + STRIP_COMMON_SETTINGS.gapBetweenPhotos, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 240 }
+            { x: 40, y: 40, width: 320, height: 240 },
+            { x: 40, y: 40 + 240 + 20, width: 320, height: 240 }
         ],
         defaultBackground: '#CCCCCC',
-        frameAspectRatio: 320 / 240,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Double' },
             { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Lines' },
             { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Decorative Duo' }
         ]
     },
+    // Configuration for a 3-photo strip
     '3': {
         stripWidth: 400,
-        stripHeight: 890,
+        stripHeight: 40 + (220 * 3) + (20 * 2) + 150,
         frames: [
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 220 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + 220 + STRIP_COMMON_SETTINGS.gapBetweenPhotos, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 220 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + (220 * 2) + (STRIP_COMMON_SETTINGS.gapBetweenPhotos * 2), width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 220 }
+            { x: 40, y: 40, width: 320, height: 220 },
+            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
+            { x: 40, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 }
         ],
         defaultBackground: '#CCCCCC',
-        frameAspectRatio: 320 / 220,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Original Triple' },
             { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Simple Border' },
             { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Modern Style' }
         ]
     },
+    // Configuration for a 4-photo strip
     '4': {
         stripWidth: 400,
-        stripHeight: 1155,
+        stripHeight: 40 + (226 * 4) + (20 * 3) + 150,
         frames: [
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 226 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + 226 + STRIP_COMMON_SETTINGS.gapBetweenPhotos, width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 226 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + (226 * 2) + (STRIP_COMMON_SETTINGS.gapBetweenPhotos * 2), width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 226 },
-            { x: STRIP_COMMON_SETTINGS.photoSidePadding, y: STRIP_COMMON_SETTINGS.topPadding + (226 * 3) + (STRIP_COMMON_SETTINGS.gapBetweenPhotos * 3), width: STRIP_COMMON_SETTINGS.photoSlotWidth, height: 226 }
+            { x: 40, y: 40, width: 320, height: 226 },
+            { x: 40, y: 40 + 226 + 20, width: 320, height: 226 },
+            { x: 40, y: 40 + (226 * 2) + (20 * 2), width: 320, height: 226 },
+            { x: 40, y: 40 + (226 * 3) + (20 * 3), width: 320, height: 226 }
         ],
         defaultBackground: '#CCCCCC',
-        frameAspectRatio: 320 / 226,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'Original Quad' },
             { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Vintage Edge' },
             { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'Clean Frame' }
         ]
     },
+    // Configuration for a 6-photo strip (2 columns)
     '6': {
-        stripWidth: 760,
-        stripHeight: 890,
+        stripWidth: 760, // Wider for two columns
+        stripHeight: 40 + (220 * 3) + (20 * 2) + 150,
         frames: [
             { x: 40, y: 40, width: 320, height: 220 },
-            { x: 40, y: 280, width: 320, height: 220 },
-            { x: 40, y: 520, width: 320, height: 220 },
+            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
+            { x: 40, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 },
             { x: 400, y: 40, width: 320, height: 220 },
-            { x: 400, y: 280, width: 320, height: 220 },
-            { x: 400, y: 520, width: 320, height: 220 }
+            { x: 400, y: 40 + 220 + 20, width: 320, height: 220 },
+            { x: 400, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 }
         ],
         defaultBackground: '#CCCCCC',
-        frameAspectRatio: 320 / 220,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Original Six' },
             { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Two-Column Classic' }
@@ -137,20 +93,140 @@ const STRIP_CONFIGS = {
     }
 };
 
-// --- Image Preloading Utility ---
-let preloadedCapturedImages = [];
+// Default values for new text and drawing elements.
+const DEFAULT_TEXT_SETTINGS = {
+    color: '#333333',
+    font: "'Poppins', sans-serif",
+    size: 30,
+    align: 'center',
+    isBold: false,
+    isItalic: false,
+    isUnderline: false,
+    outlineColor: '#000000',
+    outlineWidth: 0,
+    shadowColor: '#000000',
+    shadowOffsetX: 0,
+    shadowOffsetY: 0,
+    shadowBlur: 0
+};
 
-async function preloadAllCapturedImages() {
-    preloadedCapturedImages = [];
-    const promises = capturedPhotosBase64.map(src => loadImage(src));
-    try {
-        preloadedCapturedImages = await Promise.all(promises);
-        console.log("All captured photos preloaded for editing.");
-    } catch (error) {
-        console.error("Error preloading captured images:", error);
-    }
+const DEFAULT_DRAWING_SETTINGS = {
+    color: '#FF0000',
+    size: 5
+};
+
+// --- DOM Element References ---
+// Centralized object for all frequently accessed DOM elements on this page.
+const DOMElements = {
+    photoCanvas: document.getElementById("photoCanvas"),
+    // Get context after canvas is defined. This will be assigned in initializeEditor.
+    ctx: null, 
+    canvasContainer: document.getElementById('canvasContainer'),
+
+    frameSelect: document.getElementById("frameSelect"),
+
+    stickerSelect: document.getElementById("stickerSelect"),
+    addStickerBtn: document.getElementById("addStickerBtn"),
+    removeStickerBtn: document.getElementById("removeStickerBtn"),
+
+    textInput: document.getElementById("textInput"),
+    // Corrected ID to match HTML
+    textColorInput: document.getElementById("textColorInput"), 
+    // Corrected ID to match HTML
+    textFontSelect: document.getElementById("textFontSelect"),
+    // Corrected ID to match HTML
+    textSizeInput: document.getElementById("textSizeInput"),
+    addTextBtn: document.getElementById("addTextBtn"),
+    removeTextBtn: document.getElementById("removeTextBtn"),
+
+    textBoldBtn: document.getElementById('textBoldBtn'),
+    textItalicBtn: document.getElementById('textItalicBtn'),
+    textUnderlineBtn: document.getElementById('textUnderlineBtn'),
+    textAlignSelect: document.getElementById('textAlignSelect'),
+
+    // Added Text Outline/Shadow elements
+    textOutlineColorInput: document.getElementById('textOutlineColorInput'),
+    textOutlineWidthInput: document.getElementById('textOutlineWidthInput'),
+    clearTextOutlineBtn: document.getElementById('clearTextOutlineBtn'),
+    textShadowColorInput: document.getElementById('textShadowColorInput'),
+    textShadowOffsetXInput: document.getElementById('textShadowOffsetXInput'),
+    textShadowOffsetYInput: document.getElementById('textShadowOffsetYInput'),
+    textShadowBlurInput: document.getElementById('textShadowBlurInput'),
+    clearTextShadowBtn: document.getElementById('clearTextShadowBtn'),
+
+    // Added Drawing tool elements
+    brushColorInput: document.getElementById('brushColorInput'),
+    brushSizeInput: document.getElementById('brushSizeInput'),
+    toggleDrawModeBtn: document.getElementById('toggleDrawModeBtn'),
+    clearDrawingBtn: document.getElementById('clearDrawingBtn'),
+
+    downloadStripBtn: document.getElementById("downloadStripBtn"),
+    // Corrected ID to match HTML
+    downloadFormatSelect: document.getElementById('downloadFormatSelect'),
+    // Added QR code and Print buttons
+    showQrCodeBtn: document.getElementById('showQrCodeBtn'),
+    printStripBtn: document.getElementById('printStripBtn'),
+    closeQrBtn: document.getElementById('closeQrBtn'), // For QR overlay
+    qrCodeOverlay: document.getElementById('qrCodeOverlay'), // For QR overlay
+    qrcodeCanvas: document.getElementById('qrcodeCanvas'), // SVG for JsBarcode
+
+    retakeBtn: document.getElementById("retakeBtn"),
+    newSessionBtn: document.getElementById('newSessionBtn'), // New Session button
+
+    // Corrected ID to match HTML
+    noPhotosMessage: document.getElementById('noPhotosMessage'),
+    // Corrected ID to match HTML
+    downloadSpinner: document.getElementById('downloadSpinner'),
+};
+
+// --- Global Application State Variables ---
+// Encapsulates all dynamic data that defines the current state of the editor.
+const appState = {
+    capturedPhotosBase64: [],      // Base64 data URLs of photos from capture page
+    preloadedCapturedImages: [],   // Preloaded Image objects of captured photos
+
+    stickers: [],                  // Array of active sticker objects on the canvas
+    texts: [],                     // Array of active text objects on the canvas
+    drawings: [],                  // Array of drawing path segments
+
+    currentStripConfig: null,      // The layout configuration for the current strip (e.g., for 3 photos)
+    selectedDraggable: null,       // Reference to the currently selected sticker or text object
+    currentFrameImg: null,         // The loaded Image object of the selected frame
+
+    isDragging: false,             // True when an object/handle is actively being dragged
+    dragType: null,                // Type of interaction: 'drag', 'resize-tl', 'rotate', etc.
+
+    // Variables to store initial state for drag/resize/rotate calculations
+    initialMouseX: 0,
+    initialMouseY: 0,
+    initialObjX: 0,
+    initialObjY: 0,
+    initialObjWidth: 0,
+    initialObjHeight: 0,
+    initialObjAngle: 0,
+
+    isDrawMode: false,             // True when drawing mode is active
+    lastDrawX: 0,                  // Last X coordinate for drawing a continuous line
+    lastDrawY: 0,                  // Last Y coordinate for drawing a continuous line
+};
+
+// --- Utility Functions ---
+
+/**
+ * Logs an analytics event to the console.
+ * This function acts as a placeholder for actual analytics tracking.
+ * @param {string} eventName - The name of the event (e.g., "Sticker Added").
+ * @param {object} [details={}] - Optional details related to the event.
+ */
+function logAnalytics(eventName, details = {}) {
+    console.log(`ANALYTICS: ${eventName} -`, { timestamp: new Date().toISOString(), ...details });
 }
 
+/**
+ * Loads an image and returns a Promise that resolves with the Image object.
+ * @param {string} src - The URL of the image to load.
+ * @returns {Promise<HTMLImageElement>} - A promise resolving to the loaded Image object.
+ */
 function loadImage(src) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -161,91 +237,416 @@ function loadImage(src) {
 }
 
 /**
- * Displays an info/error message in the canvas area.
+ * Preloads all captured photo images for faster rendering.
+ */
+async function preloadCapturedPhotos() {
+    appState.preloadedCapturedImages = []; // Clear any previous preloaded images
+    const promises = appState.capturedPhotosBase64.map(src => loadImage(src));
+    try {
+        appState.preloadedCapturedImages = await Promise.all(promises);
+        logAnalytics("Captured_Photos_Preloaded", { count: appState.preloadedCapturedImages.length });
+    } catch (error) {
+        console.error("Error preloading captured images:", error);
+        logAnalytics("Captured_Photos_Preload_Failed", { error: error.message });
+    }
+}
+
+/**
+ * Gets mouse or touch coordinates relative to the canvas.
+ * @param {MouseEvent | TouchEvent} event - The mouse or touch event.
+ * @returns {{x: number, y: number}} - Coordinates {x, y} on the canvas.
+ */
+function getEventCoordinates(event) {
+    const rect = DOMElements.photoCanvas.getBoundingClientRect(); // Get canvas size and position
+    const canvasActualWidth = DOMElements.photoCanvas.width;    // Actual canvas resolution
+    const canvasActualHeight = DOMElements.photoCanvas.height;
+
+    // Calculate scaling factors if canvas display size differs from its internal resolution
+    const scaleX = canvasActualWidth / rect.width;
+    const scaleY = canvasActualHeight / rect.height;
+
+    let clientX, clientY;
+    // Handle touch events for mobile
+    if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    } else { // Handle mouse events
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
+
+    // Adjust coordinates based on canvas position and scaling
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    return { x, y };
+}
+
+/**
+ * Checks if a point (px, py) is inside a rotated rectangle (draggable object).
+ * This is crucial for hit testing on stickers and text.
+ * @param {number} px - X coordinate of the point.
+ * @param {number} py - Y coordinate of the point.
+ * @param {object} obj - The draggable object ({x, y, width, height, angle}).
+ * @returns {boolean} True if the point is inside the rotated rectangle.
+ */
+function isPointInRotatedRect(px, py, obj) {
+    // If no rotation, a simple AABB check is sufficient and faster
+    if (obj.angle === 0) {
+        return px >= obj.x && px <= obj.x + obj.width &&
+               py >= obj.y && py <= obj.y + obj.height;
+    }
+
+    // Translate point and rectangle center to origin
+    const centerX = obj.x + obj.width / 2;
+    const centerY = obj.y + obj.height / 2;
+
+    const translatedPx = px - centerX;
+    const translatedPy = py - centerY;
+
+    // Rotate the point back by the object's negative angle
+    const cosAngle = Math.cos(-obj.angle);
+    const sinAngle = Math.sin(-obj.angle);
+
+    const rotatedPx = translatedPx * cosAngle - translatedPy * sinAngle;
+    const rotatedPy = translatedPx * sinAngle + translatedPy * cosAngle;
+
+    // Now check if the rotated point is within the *unrotated* bounds of the rectangle
+    return rotatedPx >= -obj.width / 2 && rotatedPx <= obj.width / 2 &&
+           rotatedPy >= -obj.height / 2 && rotatedPy <= obj.height / 2;
+}
+
+/**
+ * Checks if a point (px, py) is within any of the draggable object's handles (resize or rotate).
+ * @param {number} px - X coordinate of the point.
+ * @param {number} py - Y coordinate of the point.
+ * @param {object} obj - The draggable object ({x, y, width, height, angle}).
+ * @returns {string|null} The type of handle ('resize-tl', 'rotate', etc.) or null if no handle is hit.
+ */
+function checkHandleClick(px, py, obj) {
+    const handleSize = 12; // Size of the interactive handles
+    const halfHandleSize = handleSize / 2;
+
+    // Calculate object's center for rotation
+    const centerX = obj.x + obj.width / 2;
+    const centerY = obj.y + obj.height / 2;
+
+    // Translate point to object's local space (relative to its center)
+    const translatedPx = px - centerX;
+    const translatedPy = py - centerY;
+
+    // Rotate point back by the object's negative angle to align with its unrotated bounding box
+    const cosAngle = Math.cos(-obj.angle);
+    const sinAngle = Math.sin(-obj.angle);
+
+    const rotatedPx = translatedPx * cosAngle - translatedPy * sinAngle;
+    const rotatedPy = translatedPx * sinAngle + translatedPy * cosAngle;
+
+    // Translate point back to top-left corner as origin for handle checks
+    const localPx = rotatedPx + obj.width / 2;
+    const localPy = rotatedPy + obj.height / 2;
+
+    // Define the bounding boxes for each handle in local coordinates
+    const handles = {
+        'resize-tl': { x: -halfHandleSize, y: -halfHandleSize, width: handleSize, height: handleSize },
+        'resize-tr': { x: obj.width - halfHandleSize, y: -halfHandleSize, width: handleSize, height: handleSize },
+        'resize-bl': { x: -halfHandleSize, y: obj.height - halfHandleSize, width: handleSize, height: handleSize },
+        'resize-br': { x: obj.width - halfHandleSize, y: obj.height - halfHandleSize, width: handleSize, height: handleSize },
+        'rotate': { x: obj.width / 2 - halfHandleSize, y: -20 - halfHandleSize, width: handleSize, height: handleSize } // Rotate handle is typically above center
+    };
+
+    // Check if the local point hits any handle
+    for (const type in handles) {
+        const hRect = handles[type];
+        if (localPx >= hRect.x && localPx <= hRect.x + hRect.width &&
+            localPy >= hRect.y && localPy <= hRect.y + hRect.height) {
+            return type; // Return the type of handle hit
+        }
+    }
+    return null; // No handle hit
+}
+
+/**
+ * Clears all relevant data from localStorage and redirects to the main index page.
+ * This provides a clean start for a new photobooth session.
+ */
+function startNewSession() {
+    localStorage.removeItem('capturedPhotos');
+    localStorage.removeItem('selectedPhotoCount');
+    localStorage.removeItem('selectedFrameAspectRatio');
+    logAnalytics('New_Session_Initiated_From_Editing');
+    window.location.href = 'index.html'; // Navigate back to the main landing page
+}
+
+
+// --- UI Feedback & State Update Functions ---
+
+/**
+ * Displays an info or error message in the canvas area.
  * @param {string} mainMsg - The primary message.
- * @param {'info'|'error'} type - The type of message for styling.
+ * @param {'info'|'error'} [type='info'] - The type of message for styling.
  * @param {string} [subMsg=''] - An optional secondary message (can contain HTML).
  */
-function displayNoPhotosMessage(mainMsg, type = 'info', subMsg = '') {
-    let mainParagraph = noPhotosMessage.querySelector('p:first-child');
+function displayCanvasMessage(mainMsg, type = 'info', subMsg = '') {
+    // Ensure the message container is visible
+    DOMElements.noPhotosMessage.style.display = 'block';
+    DOMElements.photoCanvas.style.display = 'none'; // Hide canvas if message is showing
+    DOMElements.downloadSpinner.classList.add('hidden-spinner'); // Hide spinner if message is showing
+    DOMElements.qrCodeOverlay.classList.remove('visible'); // Hide QR overlay
+
+    DOMElements.noPhotosMessage.className = `info-message ${type}`; // Apply styling class
+
+    // Update main message paragraph
+    let mainParagraph = DOMElements.noPhotosMessage.querySelector('p:first-child');
     if (!mainParagraph) {
         mainParagraph = document.createElement('p');
-        noPhotosMessage.prepend(mainParagraph);
+        DOMElements.noPhotosMessage.prepend(mainParagraph);
     }
     mainParagraph.innerText = mainMsg;
 
-    let subMsgElement = noPhotosMessage.querySelector('.sub-message');
+    // Update sub-message paragraph
+    let subMsgElement = DOMElements.noPhotosMessage.querySelector('.sub-message');
     if (!subMsgElement) {
         subMsgElement = document.createElement('p');
         subMsgElement.classList.add('sub-message');
-        noPhotosMessage.appendChild(subMsgElement);
+        DOMElements.noPhotosMessage.appendChild(subMsgElement);
     }
-    subMsgElement.innerHTML = subMsg;
-
-    noPhotosMessage.className = `info-message ${type}`;
-    noPhotosMessage.style.display = 'block';
-    downloadSpinner.classList.add('hidden-spinner');
-    photoCanvas.style.display = 'none';
+    subMsgElement.innerHTML = subMsg; // Use innerHTML for links
 }
 
 /**
- * Hides the no photos message.
+ * Hides the canvas message and shows the canvas.
  */
-function hideNoPhotosMessage() {
-    noPhotosMessage.style.display = 'none';
-    photoCanvas.style.display = 'block';
+function hideCanvasMessage() {
+    DOMElements.noPhotosMessage.style.display = 'none';
+    // Only show canvas if neither spinner nor QR overlay is visible
+    if (DOMElements.downloadSpinner.classList.contains('hidden-spinner') && !DOMElements.qrCodeOverlay.classList.contains('visible')) {
+        DOMElements.photoCanvas.style.display = 'block';
+    }
 }
 
 /**
- * Shows/hides the download processing spinner for strip.
- * @param {boolean} show - True to show, false to hide.
+ * Shows/hides the download processing spinner overlay.
+ * @param {boolean} show - True to show the spinner, false to hide it.
  */
-function showDownloadSpinner(show) {
+function toggleDownloadSpinner(show) {
     if (show) {
-        downloadSpinner.classList.remove('hidden-spinner');
-        photoCanvas.style.display = 'none';
-        noPhotosMessage.style.display = 'none';
+        DOMElements.downloadSpinner.classList.remove('hidden-spinner');
+        DOMElements.photoCanvas.style.display = 'none';
+        DOMElements.noPhotosMessage.style.display = 'none';
+        DOMElements.qrCodeOverlay.classList.remove('visible'); // Hide QR if spinner shows
     } else {
-        downloadSpinner.classList.add('hidden-spinner');
-        if (noPhotosMessage.style.display === 'none') {
-            photoCanvas.style.display = 'block';
+        DOMEElements.downloadSpinner.classList.add('hidden-spinner');
+        // Only show canvas if no other overlays are visible
+        if (DOMElements.noPhotosMessage.style.display === 'none' && !DOMElements.qrCodeOverlay.classList.contains('visible')) {
+            DOMElements.photoCanvas.style.display = 'block';
         }
+    }
+}
+
+/**
+ * Populates the frame selection dropdown with available frames for the current strip layout.
+ * @param {Array<Object>} frames - An array of frame objects from `STRIP_LAYOUT_CONFIGS`.
+ */
+function populateFrameOptions(frames) {
+    DOMElements.frameSelect.innerHTML = ''; // Clear existing options
+    if (frames && frames.length > 0) {
+        frames.forEach(frame => {
+            const option = document.createElement('option');
+            option.value = frame.src; // Use src as the value
+            option.textContent = frame.name;
+            DOMElements.frameSelect.appendChild(option);
+        });
+        DOMElements.frameSelect.disabled = false;
+        // Set the first frame as default if no value is set
+        if (!DOMElements.frameSelect.value) {
+            DOMElements.frameSelect.value = frames[0].src;
+        }
+    } else {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No frames available';
+        DOMElements.frameSelect.appendChild(option);
+        DOMElements.frameSelect.disabled = true;
+    }
+}
+
+/**
+ * Updates the text editing controls (input, color, font, size, styles)
+ * to reflect the properties of the currently `selectedDraggable` text object.
+ */
+function updateTextControlsFromSelection() {
+    if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
+        const textObj = appState.selectedDraggable;
+        DOMElements.textInput.value = textObj.content;
+        DOMElements.textColorInput.value = textObj.color;
+        DOMElements.textFontSelect.value = textObj.font;
+        DOMElements.textSizeInput.value = textObj.size;
+        DOMElements.textAlignSelect.value = textObj.align;
+
+        DOMElements.textBoldBtn.classList.toggle('active', textObj.isBold);
+        DOMElements.textItalicBtn.classList.toggle('active', textObj.isItalic);
+        DOMElements.textUnderlineBtn.classList.toggle('active', textObj.isUnderline);
+
+        DOMElements.textOutlineColorInput.value = textObj.outlineColor;
+        DOMElements.textOutlineWidthInput.value = textObj.outlineWidth;
+        DOMElements.textShadowColorInput.value = textObj.shadowColor;
+        DOMElements.textShadowOffsetXInput.value = textObj.shadowOffsetX;
+        DOMElements.textShadowOffsetYInput.value = textObj.shadowOffsetY;
+        DOMElements.textShadowBlurInput.value = textObj.shadowBlur;
+
+        // Enable relevant text controls
+        DOMElements.textInput.disabled = false;
+        DOMElements.textColorInput.disabled = false;
+        DOMElements.textFontSelect.disabled = false;
+        DOMElements.textSizeInput.disabled = false;
+        DOMElements.textAlignSelect.disabled = false;
+        DOMElements.textBoldBtn.disabled = false;
+        DOMElements.textItalicBtn.disabled = false;
+        DOMElements.textUnderlineBtn.disabled = false;
+        DOMElements.textOutlineColorInput.disabled = false;
+        DOMElements.textOutlineWidthInput.disabled = false;
+        DOMElements.clearTextOutlineBtn.disabled = false;
+        DOMElements.textShadowColorInput.disabled = false;
+        DOMElements.textShadowOffsetXInput.disabled = false;
+        DOMElements.textShadowOffsetYInput.disabled = false;
+        DOMElements.textShadowBlurInput.disabled = false;
+        DOMElements.clearTextShadowBtn.disabled = false;
+        DOMElements.removeTextBtn.disabled = false;
+    } else {
+        // If no text object is selected, disable and reset text controls
+        DOMElements.textInput.value = '';
+        DOMElements.textInput.disabled = true; // Disable until text is added/selected
+        DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
+        DOMElements.textColorInput.disabled = true;
+        DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
+        DOMElements.textFontSelect.disabled = true;
+        DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
+        DOMElements.textSizeInput.disabled = true;
+        DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+        DOMElements.textAlignSelect.disabled = true;
+
+        DOMElements.textBoldBtn.classList.remove('active');
+        DOMElements.textItalicBtn.classList.remove('active');
+        DOMElements.textUnderlineBtn.classList.remove('active');
+        DOMElements.textBoldBtn.disabled = true;
+        DOMElements.textItalicBtn.disabled = true;
+        DOMElements.textUnderlineBtn.disabled = true;
+
+        DOMElements.textOutlineColorInput.value = DEFAULT_TEXT_SETTINGS.outlineColor;
+        DOMElements.textOutlineColorInput.disabled = true;
+        DOMElements.textOutlineWidthInput.value = DEFAULT_TEXT_SETTINGS.outlineWidth;
+        DOMElements.textOutlineWidthInput.disabled = true;
+        DOMElements.clearTextOutlineBtn.disabled = true;
+
+        DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
+        DOMElements.textShadowColorInput.disabled = true;
+        DOMElements.textShadowOffsetXInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetX;
+        DOMElements.textShadowOffsetXInput.disabled = true;
+        DOMElements.textShadowOffsetYInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetY;
+        DOMElements.textShadowOffsetYInput.disabled = true;
+        DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
+        DOMElements.textShadowBlurInput.disabled = true;
+        DOMElements.clearTextShadowBtn.disabled = true;
+        DOMElements.removeTextBtn.disabled = true;
+    }
+}
+
+/**
+ * Updates the sticker controls (remove button) based on whether a sticker is selected.
+ */
+function updateStickerControlsFromSelection() {
+    DOMElements.removeStickerBtn.disabled = !(appState.selectedDraggable && appState.selectedDraggable.type === 'sticker');
+}
+
+/**
+ * Updates the canvas cursor based on the current interaction mode (draw, grab, resize, rotate).
+ * @param {string} cursorType - The type of cursor to set ('default', 'grab', 'grabbing', 'resize-nwse', etc.).
+ */
+function updateCanvasCursor(cursorType) {
+    // Only update cursor if not in drawing mode or if it's explicitly about drawing mode
+    if (appState.isDrawMode && cursorType !== 'draw-mode' && cursorType !== 'default') {
+        DOMElements.canvasContainer.classList.add('draw-mode'); // Maintain crosshair if in draw mode
+        return;
+    }
+    // Remove all specific cursor classes first
+    DOMElements.canvasContainer.classList.remove(
+        'resize-ns', 'resize-ew', 'resize-nwse', 'resize-nesw',
+        'rotate', 'grab', 'grabbing', 'draw-mode'
+    );
+    // Add the desired cursor class
+    if (cursorType && cursorType !== 'default') {
+        DOMElements.canvasContainer.classList.add(cursorType);
     }
 }
 
 
 // --- Canvas Drawing Functions ---
 
+/**
+ * Clears the canvas and redraws all elements (background, photos, frame, stickers, text, drawings).
+ * This is the main rendering loop.
+ */
 async function renderCanvas() {
-    ctx.clearRect(0, 0, photoCanvas.width, photoCanvas.height);
+    DOMElements.ctx.clearRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
 
-    if (currentStripConfig && currentStripConfig.defaultBackground) {
-        ctx.fillStyle = currentStripConfig.defaultBackground;
-        ctx.fillRect(0, 0, photoCanvas.width, photoCanvas.height);
+    // Draw background color
+    if (appState.currentStripConfig && appState.currentStripConfig.defaultBackground) {
+        DOMElements.ctx.fillStyle = appState.currentStripConfig.defaultBackground;
+        DOMElements.ctx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
     }
 
-    if (currentFrameImgSrc) {
-        try {
-            const frameImg = await loadImage(currentFrameImgSrc);
-            ctx.drawImage(frameImg, 0, 0, photoCanvas.width, photoCanvas.height);
-        } catch (error) {
-            console.warn(`WARNING: Could not load selected strip frame image: ${currentFrameImgSrc}. Ensure it exists and is correct.`, error);
-            ctx.fillStyle = currentStripConfig.defaultBackground || '#CCCCCC';
-            ctx.fillRect(0, 0, photoCanvas.width, photoCanvas.height);
-        }
-    } else {
-        ctx.fillStyle = currentStripConfig.defaultBackground || '#CCCCCC';
-        ctx.fillRect(0, 0, photoCanvas.width, photoCanvas.height);
-    }
+    // Draw the selected frame image
+    await drawFrameOnCanvas(DOMElements.ctx);
 
-    drawPhotosOnStrip(ctx);
-    drawStickersOnCanvas(ctx, stickers);
-    drawTextOnCanvas(ctx, texts);
+    // Draw captured photos within their respective frames
+    drawPhotosOnCanvas(DOMElements.ctx);
+
+    // Draw all active stickers
+    drawDraggableObjectsOnCanvas(DOMElements.ctx, appState.stickers);
+
+    // Draw all active text elements
+    drawDraggableObjectsOnCanvas(DOMElements.ctx, appState.texts);
+
+    // Draw all user drawings
+    drawDrawingsOnCanvas(DOMElements.ctx, appState.drawings);
+
+    // Draw selection handles for the currently selected draggable object
+    if (appState.selectedDraggable && !appState.isDrawMode) {
+        drawSelectionHandles(DOMElements.ctx, appState.selectedDraggable);
+    }
 }
 
-function drawPhotosOnStrip(targetCtx) {
-    const numPhotosToDisplay = capturedPhotosBase64.length;
-    const framesToUse = currentStripConfig ? currentStripConfig.frames : [];
+/**
+ * Draws the selected frame image onto the canvas.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ */
+async function drawFrameOnCanvas(targetCtx) {
+    if (DOMElements.frameSelect.value) {
+        try {
+            // Load the frame image if not already loaded, or use the preloaded one
+            if (!appState.currentFrameImg || appState.currentFrameImg.src !== DOMElements.frameSelect.value) {
+                appState.currentFrameImg = await loadImage(DOMElements.frameSelect.value);
+            }
+            targetCtx.drawImage(appState.currentFrameImg, 0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+        } catch (error) {
+            console.warn(`WARNING: Could not load selected strip frame image: ${DOMElements.frameSelect.value}. Falling back to default background.`, error);
+            targetCtx.fillStyle = appState.currentStripConfig.defaultBackground || '#CCCCCC';
+            targetCtx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+        }
+    } else {
+        // Fallback if no frame selected or loading failed
+        targetCtx.fillStyle = appState.currentStripConfig.defaultBackground || '#CCCCCC';
+        targetCtx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+    }
+}
+
+/**
+ * Draws captured photos onto the canvas, fitting them into their allocated frames.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ */
+function drawPhotosOnCanvas(targetCtx) {
+    const numPhotosToDisplay = appState.capturedPhotosBase64.length;
+    const framesToUse = appState.currentStripConfig ? appState.currentStripConfig.frames : [];
 
     for (let i = 0; i < Math.min(numPhotosToDisplay, framesToUse.length); i++) {
         const frame = framesToUse[i];
@@ -254,18 +655,20 @@ function drawPhotosOnStrip(targetCtx) {
             continue;
         }
 
-        const img = preloadedCapturedImages[i];
+        const img = appState.preloadedCapturedImages[i];
 
         if (img && img.complete) {
             targetCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
         } else {
+            // Fallback for images not yet preloaded (should be rare)
             console.warn(`Preloaded image ${i} not ready. Attempting to load on demand.`);
-            const imgSrc = capturedPhotosBase64[i];
+            const imgSrc = appState.capturedPhotosBase64[i];
             loadImage(imgSrc).then(loadedImg => {
                 targetCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
-                renderCanvas();
+                renderCanvas(); // Re-render once image is loaded
             }).catch(error => {
                 console.error(`ERROR: Failed to draw photo ${i + 1}. Image source might be corrupt. Details:`, error);
+                // Draw a placeholder for failed images
                 targetCtx.fillStyle = '#ccc';
                 targetCtx.fillRect(frame.x, frame.y, frame.width, frame.height);
                 targetCtx.fillStyle = 'red';
@@ -277,546 +680,1063 @@ function drawPhotosOnStrip(targetCtx) {
     }
 }
 
-function drawStickersOnCanvas(targetCtx, stickersData) {
-    for (const sticker of stickersData) {
-        try {
-            const imgToDraw = sticker.img || (() => {
+/**
+ * Draws an array of draggable objects (stickers or text) onto the canvas.
+ * Handles rotation and checks for image readiness.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ * @param {Array<object>} objects - Array of sticker or text objects to draw.
+ */
+function drawDraggableObjectsOnCanvas(targetCtx, objects) {
+    objects.forEach(obj => {
+        targetCtx.save(); // Save the canvas state before applying transformations
+
+        // Translate to object's center, rotate, then translate back
+        // This makes rotation pivot around the object's center
+        const centerX = obj.x + obj.width / 2;
+        const centerY = obj.y + obj.height / 2;
+        targetCtx.translate(centerX, centerY);
+        targetCtx.rotate(obj.angle);
+        targetCtx.translate(-centerX, -centerY);
+
+        if (obj.type === 'sticker') {
+            const imgToDraw = obj.img || (() => { // Load image if not already loaded (should be preloaded)
                 const img = new Image();
-                img.src = sticker.src;
-                sticker.img = img;
+                img.src = obj.src;
+                obj.img = img; // Store for future use
                 return img;
             })();
 
             if (imgToDraw.complete) {
-                targetCtx.drawImage(imgToDraw, sticker.x, sticker.y, sticker.width, sticker.height);
+                targetCtx.drawImage(imgToDraw, obj.x, obj.y, obj.width, obj.height);
             } else {
-                imgToDraw.onload = () => renderCanvas();
+                imgToDraw.onload = () => renderCanvas(); // Re-render when image loads
+            }
+        } else if (obj.type === 'text') {
+            let fontStyle = '';
+            if (obj.isItalic) fontStyle += 'italic ';
+            if (obj.isBold) fontStyle += 'bold ';
+
+            targetCtx.font = `${fontStyle}${obj.size}px ${obj.font}`;
+            targetCtx.textAlign = obj.align;
+            targetCtx.textBaseline = 'middle'; // Center text vertically
+
+            // Store measured width/height for hit testing and handle drawing
+            const textMetrics = targetCtx.measureText(obj.content);
+            obj.width = textMetrics.width;
+            obj.height = obj.size; // Approximation for text height
+
+            let textDrawX = obj.x; // Adjust drawing position based on alignment
+            if (obj.align === 'center') {
+                textDrawX = obj.x + obj.width / 2;
+            } else if (obj.align === 'right') {
+                textDrawX = obj.x + obj.width;
             }
 
-            // Draw selection border if selected
-            if (selectedDraggable === sticker) {
-                targetCtx.strokeStyle = 'cyan';
-                targetCtx.lineWidth = 2;
-                targetCtx.setLineDash([5, 5]); // Dashed line
-                targetCtx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
-                targetCtx.setLineDash([]); // Reset line dash
+            // Draw text outline (if enabled)
+            if (obj.outlineWidth > 0 && obj.outlineColor) {
+                targetCtx.strokeStyle = obj.outlineColor;
+                targetCtx.lineWidth = obj.outlineWidth;
+                targetCtx.strokeText(obj.content, textDrawX, obj.y + obj.height / 2);
             }
-        } catch (error) {
-            console.error(`ERROR: Failed to draw sticker ${sticker.src}:`, error);
-        }
-    }
-}
 
-function drawTextOnCanvas(targetCtx, textsData) {
-    textsData.forEach(textObj => {
-        targetCtx.fillStyle = textObj.color;
-        let fontStyle = '';
-        if (textObj.isItalic) fontStyle += 'italic ';
-        if (textObj.isBold) fontStyle += 'bold ';
-
-        targetCtx.font = `${fontStyle}${textObj.size}px ${textObj.font}`;
-        targetCtx.textAlign = textObj.align;
-        targetCtx.textBaseline = 'middle'; // For vertical centering
-
-        // Adjust X based on alignment
-        let textX = textObj.x;
-        if (textObj.align === 'center') {
-            textX = textObj.x + textObj.width / 2; // drawText positions from origin for center
-        } else if (textObj.align === 'right') {
-            textX = textObj.x + textObj.width; // drawText positions from origin for right
-        }
-
-        targetCtx.fillText(textObj.content, textX, textObj.y + textObj.height / 2); // Center Y for simpler logic
-
-        // Draw underline if enabled
-        if (textObj.isUnderline) {
-            const textMetrics = targetCtx.measureText(textObj.content);
-            const underlineHeight = textObj.size / 15;
-            const underlineY = textObj.y + textObj.height / 2 + textObj.size / 2 - underlineHeight / 2; // Position below text
-
-            let underlineStartX = textObj.x;
-            if (textObj.align === 'center') {
-                underlineStartX = textX - textMetrics.width / 2;
-            } else if (textObj.align === 'right') {
-                underlineStartX = textX - textMetrics.width;
+            // Apply text shadow (if enabled)
+            if (obj.shadowColor && (obj.shadowOffsetX !== 0 || obj.shadowOffsetY !== 0 || obj.shadowBlur > 0)) {
+                targetCtx.shadowColor = obj.shadowColor;
+                targetCtx.shadowOffsetX = obj.shadowOffsetX;
+                targetCtx.shadowOffsetY = obj.shadowOffsetY;
+                targetCtx.shadowBlur = obj.shadowBlur;
+            } else {
+                // Clear shadow properties if not active to avoid affecting other draws
+                targetCtx.shadowColor = 'rgba(0,0,0,0)';
+                targetCtx.shadowBlur = 0;
+                targetCtx.shadowOffsetX = 0;
+                targetCtx.shadowOffsetY = 0;
             }
-            
-            targetCtx.beginPath();
-            targetCtx.strokeStyle = textObj.color;
-            targetCtx.lineWidth = underlineHeight;
-            targetCtx.moveTo(underlineStartX, underlineY);
-            targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
-            targetCtx.stroke();
-        }
 
-        // Draw selection border if selected
-        if (selectedDraggable === textObj) {
-            targetCtx.strokeStyle = 'cyan';
-            targetCtx.lineWidth = 2;
-            targetCtx.setLineDash([5, 5]); // Dashed line
-            targetCtx.strokeRect(textObj.x, textObj.y, textObj.width, textObj.height);
-            targetCtx.setLineDash([]); // Reset line dash
+            // Draw filled text
+            targetCtx.fillStyle = obj.color;
+            targetCtx.fillText(obj.content, textDrawX, obj.y + obj.height / 2);
+
+            // Draw underline (if enabled), ensuring no shadow is applied to it
+            if (obj.isUnderline) {
+                targetCtx.shadowColor = 'rgba(0,0,0,0)'; // Temporarily clear shadow for underline
+                targetCtx.shadowBlur = 0;
+                targetCtx.shadowOffsetX = 0;
+                targetCtx.shadowOffsetY = 0;
+
+                const underlineHeight = obj.size / 15; // Proportional underline thickness
+                const underlineY = obj.y + obj.height / 2 + obj.size / 2 - underlineHeight / 2; // Position below text
+
+                let underlineStartX = obj.x;
+                // Adjust underline start X based on text alignment
+                if (obj.align === 'center') {
+                    underlineStartX = textDrawX - textMetrics.width / 2;
+                } else if (obj.align === 'right') {
+                    underlineStartX = textDrawX - textMetrics.width;
+                }
+
+                targetCtx.beginPath();
+                targetCtx.strokeStyle = obj.color;
+                targetCtx.lineWidth = underlineHeight;
+                targetCtx.moveTo(underlineStartX, underlineY);
+                targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
+                targetCtx.stroke();
+            }
         }
+        targetCtx.restore(); // Restore the canvas state
     });
 }
 
-function updateCanvasAndRender() {
-    const selectedPhotoCountStr = localStorage.getItem('selectedPhotoCount');
-    const selectedPhotoCount = parseInt(selectedPhotoCountStr, 10);
+/**
+ * Draws all user-created drawing paths onto the canvas.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ * @param {Array<object>} drawingsData - Array of drawing objects, each containing points, color, and size.
+ */
+function drawDrawingsOnCanvas(targetCtx, drawingsData) {
+    drawingsData.forEach(drawing => {
+        targetCtx.beginPath();
+        targetCtx.strokeStyle = drawing.color;
+        targetCtx.lineWidth = drawing.size;
+        targetCtx.lineCap = 'round'; // Round caps for smoother lines
+        targetCtx.lineJoin = 'round'; // Round joins for smoother corners
 
-    const configKey = isNaN(selectedPhotoCount) || selectedPhotoCount < 1 || selectedPhotoCount > 6 || selectedPhotoCount === 5
-        ? '3'
-        : selectedPhotoCount.toString();
-
-    currentStripConfig = STRIP_CONFIGS[configKey];
-
-    if (!currentStripConfig || typeof currentStripConfig.stripWidth === 'undefined' || typeof currentStripConfig.stripHeight === 'undefined') {
-        console.error('ERROR: currentStripConfig is invalid or missing dimensions! Cannot render.');
-        displayNoPhotosMessage('Error: Strip configuration missing. Please report this issue.', 'error');
-        return;
-    }
-
-    photoCanvas.width = currentStripConfig.stripWidth;
-    photoCanvas.height = currentStripConfig.stripHeight;
-
-    populateFrameOptions(currentStripConfig.availableFrames);
-    if (!currentFrameImgSrc && currentStripConfig.availableFrames.length > 0) {
-        currentFrameImgSrc = currentStripConfig.availableFrames[0].src; // Set first as default
-        frameSelect.value = currentStripConfig.availableFrames[0].src; // Update dropdown to reflect default
-    } else if (currentFrameImgSrc) {
-        frameSelect.value = currentFrameImgSrc;
-    }
-
-
-    renderCanvas();
+        if (drawing.points.length > 0) {
+            targetCtx.moveTo(drawing.points[0].x, drawing.points[0].y);
+            for (let i = 1; i < drawing.points.length; i++) {
+                targetCtx.lineTo(drawing.points[i].x, drawing.points[i].y);
+            }
+        }
+        targetCtx.stroke();
+    });
 }
 
 /**
- * Populates the frame selection dropdown with available frames for the current layout.
- * @param {Array<Object>} frames - An array of frame objects from currentStripConfig.availableFrames.
+ * Draws the selection rectangle and interaction handles (resize, rotate) around the selected draggable object.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ * @param {object} obj - The currently selected draggable object.
  */
-function populateFrameOptions(frames) {
-    frameSelect.innerHTML = ''; // Clear existing options
-    if (frames && frames.length > 0) {
-        frames.forEach(frame => {
-            const option = document.createElement('option');
-            option.value = frame.src; // Use src as the value
-            option.textContent = frame.name;
-            frameSelect.appendChild(option);
-        });
-        frameSelect.disabled = false;
-    } else {
-        const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No frames available';
-        frameSelect.appendChild(option);
-        frameSelect.disabled = true;
-    }
+function drawSelectionHandles(targetCtx, obj) {
+    targetCtx.save(); // Save context state before handle drawing
+
+    // Apply object's rotation to the context so handles are drawn relative to its rotated state
+    const centerX = obj.x + obj.width / 2;
+    const centerY = obj.y + obj.height / 2;
+    targetCtx.translate(centerX, centerY);
+    targetCtx.rotate(obj.angle);
+    targetCtx.translate(-centerX, -centerY);
+
+    // Draw dashed selection border
+    targetCtx.strokeStyle = '#00FFFF'; // Cyan
+    targetCtx.lineWidth = 2;
+    targetCtx.setLineDash([5, 5]); // Dashed line
+    targetCtx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+    targetCtx.setLineDash([]); // Reset line dash for subsequent draws
+
+    const handleSize = 12;
+    const halfHandleSize = handleSize / 2;
+
+    targetCtx.fillStyle = 'white';
+    targetCtx.strokeStyle = 'black';
+    targetCtx.lineWidth = 1;
+
+    // Draw corner resize handles (squares)
+    targetCtx.fillRect(obj.x - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    targetCtx.strokeRect(obj.x - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    targetCtx.strokeRect(obj.x + obj.width - halfHandleSize, obj.y - halfHandleSize, handleSize, handleSize);
+    targetCtx.fillRect(obj.x - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+    targetCtx.strokeRect(obj.x - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+    targetCtx.fillRect(obj.x + obj.width - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+    targetCtx.strokeRect(obj.x + obj.width - halfHandleSize, obj.y + obj.height - halfHandleSize, handleSize, handleSize);
+
+    // Draw rotate handle (circle above the top center)
+    const rotateHandleX = obj.x + obj.width / 2;
+    const rotateHandleY = obj.y - 20; // Position above the object
+    targetCtx.beginPath();
+    targetCtx.arc(rotateHandleX, rotateHandleY, halfHandleSize, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.stroke();
+
+    // Draw line from object to rotate handle
+    targetCtx.beginPath();
+    targetCtx.moveTo(obj.x + obj.width / 2, obj.y); // Center of top edge
+    targetCtx.lineTo(rotateHandleX, rotateHandleY + halfHandleSize); // Center of rotate handle
+    targetCtx.stroke();
+
+    targetCtx.restore(); // Restore context to original state
 }
 
 
-// --- Initialization ---
+// --- Draggable Object Management ---
 
-async function initializeEditor() {
-    capturedPhotosBase64 = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
-    const selectedPhotoCount = localStorage.getItem('selectedPhotoCount');
-
-    if (capturedPhotosBase64.length === 0 || !selectedPhotoCount) {
-        displayNoPhotosMessage('No photos found.', 'info', 'Please go back to <a href="capture-page/capture-page.html">capture photos</a> first.');
-        stickerSelect.disabled = true;
-        addStickerBtn.disabled = true;
-        removeStickerBtn.disabled = true;
-        textInput.disabled = true;
-        textColorInput.disabled = true;
-        textFontSelect.disabled = true;
-        textSizeInput.disabled = true;
-        addTextBtn.disabled = true;
-        removeTextBtn.disabled = true;
-        downloadStripBtn.disabled = true;
-        frameSelect.disabled = true; // Disable frame select if no photos
-        return;
-    }
-
-    currentStripConfig = STRIP_CONFIGS[selectedPhotoCount];
-    if (!currentStripConfig) {
-        displayNoPhotosMessage('Invalid layout selected.', 'error', 'The selected photo layout is not supported. Please <a href="layout-selection/layout-selection.html">choose another layout</a>.');
-        stickerSelect.disabled = true;
-        addStickerBtn.disabled = true;
-        removeStickerBtn.disabled = true;
-        textInput.disabled = true;
-        textColorInput.disabled = true;
-        textFontSelect.disabled = true;
-        textSizeInput.disabled = true;
-        addTextBtn.disabled = true;
-        removeTextBtn.disabled = true;
-        downloadStripBtn.disabled = true;
-        frameSelect.disabled = true; // Disable frame select if invalid layout
-        return;
-    }
-
-    if (currentStripConfig.availableFrames && currentStripConfig.availableFrames.length > 0) {
-        if (!currentFrameImgSrc) {
-            currentFrameImgSrc = currentStripConfig.availableFrames[0].src;
-        }
-    }
-
-    await preloadAllCapturedImages();
-    updateCanvasAndRender();
-
-    // Attach only basic mouse/touch event listeners
-    photoCanvas.addEventListener('mousedown', handleMouseDown);
-    photoCanvas.addEventListener('mousemove', handleMouseMove);
-    photoCanvas.addEventListener('mouseup', handleMouseUp);
-    photoCanvas.addEventListener('mouseout', handleMouseUp); // End interaction if mouse leaves canvas
-
-    // Mobile/Touch events
-    photoCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    photoCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    photoCanvas.addEventListener('touchend', handleTouchEnd);
-    photoCanvas.addEventListener('touchcancel', handleTouchEnd);
-}
-
-
-// --- Event Listeners for UI Buttons ---
-
-addStickerBtn.addEventListener("click", async function() {
-    const stickerSrc = stickerSelect.value;
+/**
+ * Adds a new sticker to the canvas.
+ * @param {string} stickerSrc - The source URL of the sticker image.
+ */
+async function addSticker(stickerSrc) {
     if (!stickerSrc) return;
 
     try {
         const img = await loadImage(stickerSrc);
-        const initialWidth = 100; // Fixed initial width
-        const initialHeight = (img.height / img.width) * initialWidth; // Maintain aspect ratio
+        const initialWidth = 100; // Default size for new stickers
+        const initialHeight = (img.naturalHeight / img.naturalWidth) * initialWidth;
         const newSticker = {
-            img: img,
+            id: Date.now(), // Unique ID for tracking
+            img: img, // Loaded Image object
             src: stickerSrc,
-            x: (photoCanvas.width / 2) - (initialWidth / 2), // Center horizontally
-            y: (photoCanvas.height / 2) - (initialHeight / 2), // Center vertically
-            width: initialWidth, // Fixed width
-            height: initialHeight, // Fixed height
+            x: (DOMElements.photoCanvas.width / 2) - (initialWidth / 2), // Center horizontally
+            y: (DOMElements.photoCanvas.height / 2) - (initialHeight / 2), // Center vertically
+            width: initialWidth,
+            height: initialHeight,
+            originalWidth: img.naturalWidth,
+            originalHeight: img.naturalHeight,
+            angle: 0, // No initial rotation
+            type: 'sticker' // Identifier for object type
         };
-        stickers.push(newSticker);
-        selectedDraggable = newSticker; // Select the newly added sticker
-        renderCanvas();
-    }
-    catch (error) {
+        appState.stickers.push(newSticker);
+        appState.selectedDraggable = newSticker; // Select the newly added sticker
+        renderCanvas(); // Redraw canvas with new sticker
+        logAnalytics('Sticker_Added', { src: stickerSrc });
+    } catch (error) {
         console.error("Failed to add sticker:", error);
-        alert("Error loading sticker image. Please ensure the file exists in the 'assets' folder.");
+        alert("Error loading sticker image. Please ensure the file exists.");
+        logAnalytics('Sticker_Add_Failed', { src: stickerSrc, error: error.message });
     }
-});
+}
 
-removeStickerBtn.addEventListener("click", () => {
-    if (selectedDraggable && stickers.includes(selectedDraggable)) {
-        stickers = stickers.filter(s => s !== selectedDraggable);
-        selectedDraggable = null;
-        renderCanvas();
+/**
+ * Removes the currently selected sticker from the canvas.
+ */
+function removeSelectedSticker() {
+    if (appState.selectedDraggable && appState.selectedDraggable.type === 'sticker') {
+        // Filter out the selected sticker from the array
+        appState.stickers = appState.stickers.filter(s => s !== appState.selectedDraggable);
+        appState.selectedDraggable = null; // Deselect the object
+        renderCanvas(); // Redraw canvas
+        updateStickerControlsFromSelection(); // Update UI
+        logAnalytics('Sticker_Removed');
     } else {
         alert("No sticker selected to remove. Click on a sticker on the canvas first to select it.");
     }
-});
+}
 
-addTextBtn.addEventListener("click", function() {
-    const textContent = textInput.value.trim();
+/**
+ * Adds a new text object to the canvas with current UI settings.
+ */
+function addText() {
+    const textContent = DOMElements.textInput.value.trim();
     if (!textContent) {
+        alert("Please enter some text to add.");
         return;
     }
 
-    const textColor = textColorInput.value;
-    const textFont = textFontSelect.value;
-    const textSize = parseInt(textSizeInput.value);
-
-    // Temporarily set font to measure text width
-    ctx.font = `${textBoldBtn.classList.contains('active') ? 'bold ' : ''}${textItalicBtn.classList.contains('active') ? 'italic ' : ''}${textSize}px ${textFont}`;
-    const textMetrics = ctx.measureText(textContent);
+    // Temporarily set context font to measure text accurately
+    DOMElements.ctx.font = `${DOMElements.textBoldBtn.classList.contains('active') ? 'bold ' : ''}` +
+                         `${DOMElements.textItalicBtn.classList.contains('active') ? 'italic ' : ''}` +
+                         `${parseInt(DOMElements.textSizeInput.value)}px ${DOMElements.textFontSelect.value}`;
+    const textMetrics = DOMElements.ctx.measureText(textContent);
     const textWidth = textMetrics.width;
-    const textHeight = textSize; // Approximate height for bounding box
+    const textHeight = parseInt(DOMElements.textSizeInput.value); // Use font size as height approximation
 
     const newTextObj = {
+        id: Date.now() + 1, // Unique ID
         content: textContent,
-        x: (photoCanvas.width / 2) - (textWidth / 2), // Center horizontally
-        y: (photoCanvas.height / 2) - (textHeight / 2), // Center vertically
-        color: textColor,
-        font: textFont,
-        size: textSize,
-        align: textAlignSelect.value,
-        isBold: textBoldBtn.classList.contains('active'),
-        isItalic: textItalicBtn.classList.contains('active'),
-        isUnderline: textUnderlineBtn.classList.contains('active'), 
-        width: textWidth, // Store calculated width
-        height: textHeight, // Store approximate height
+        x: (DOMElements.photoCanvas.width / 2) - (textWidth / 2), // Center horizontally
+        y: (DOMElements.photoCanvas.height / 2) - (textHeight / 2), // Center vertically
+        color: DOMElements.textColorInput.value,
+        font: DOMElements.textFontSelect.value,
+        size: textHeight, // Storing initial size and current size
+        align: DOMElements.textAlignSelect.value,
+        isBold: DOMElements.textBoldBtn.classList.contains('active'),
+        isItalic: DOMElements.textItalicBtn.classList.contains('active'),
+        isUnderline: DOMElements.textUnderlineBtn.classList.contains('active'),
+        width: textWidth, // Measured width
+        height: textHeight, // Measured height
+        originalSize: textHeight, // Store original font size for scaling
+        angle: 0,
+        type: 'text',
+        // Text Outline properties
+        outlineColor: DOMElements.textOutlineColorInput.value,
+        outlineWidth: parseInt(DOMElements.textOutlineWidthInput.value) || 0,
+        // Text Shadow properties
+        shadowColor: DOMElements.textShadowColorInput.value,
+        shadowOffsetX: parseInt(DOMElements.textShadowOffsetXInput.value) || 0,
+        shadowOffsetY: parseInt(DOMElements.textShadowOffsetYInput.value) || 0,
+        shadowBlur: parseInt(DOMElements.textShadowBlurInput.value) || 0,
     };
 
-    texts.push(newTextObj);
-    textInput.value = "";
-    selectedDraggable = newTextObj; // Select the newly added text
-    renderCanvas();
-});
+    appState.texts.push(newTextObj);
+    DOMElements.textInput.value = ""; // Clear input after adding
+    appState.selectedDraggable = newTextObj; // Select the newly added text
+    renderCanvas(); // Redraw canvas
+    updateTextControlsFromSelection(); // Update controls to reflect new selection
+    logAnalytics('Text_Added', { content: textContent });
+}
 
-removeTextBtn.addEventListener("click", () => {
-    if (selectedDraggable && texts.includes(selectedDraggable)) {
-        texts = texts.filter(t => t !== selectedDraggable);
-        selectedDraggable = null;
+/**
+ * Removes the currently selected text object from the canvas.
+ */
+function removeSelectedText() {
+    if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
+        appState.texts = appState.texts.filter(t => t !== appState.selectedDraggable);
+        appState.selectedDraggable = null; // Deselect
         renderCanvas();
+        updateTextControlsFromSelection(); // Update UI
+        logAnalytics('Text_Removed');
     } else {
         alert("No text selected to remove. Click on a text element on the canvas first to select it.");
     }
-});
+}
 
-textBoldBtn.addEventListener('click', () => { textBoldBtn.classList.toggle('active'); renderCanvas(); });
-textItalicBtn.addEventListener('click', () => { textItalicBtn.classList.toggle('active'); renderCanvas(); });
-textUnderlineBtn.addEventListener('click', () => { textUnderlineBtn.classList.toggle('active'); renderCanvas(); });
-textAlignSelect.addEventListener('change', () => { renderCanvas(); });
-
-
-// --- Basic Dragging Interaction Handlers ---
-
-function getEventCoordinates(event) {
-    const rect = photoCanvas.getBoundingClientRect();
-    const scaleX = photoCanvas.width / rect.width;
-    const scaleY = photoCanvas.height / rect.height;
-
-    let clientX, clientY;
-    if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
+/**
+ * Toggles drawing mode on/off.
+ * When entering drawing mode, any selected draggable is deselected.
+ */
+function toggleDrawMode() {
+    appState.isDrawMode = !appState.isDrawMode;
+    if (appState.isDrawMode) {
+        updateCanvasCursor('draw-mode'); // Change cursor to crosshair
+        DOMElements.toggleDrawModeBtn.classList.add('active'); // Highlight button
+        appState.selectedDraggable = null; // Deselect any object when entering draw mode
+        updateTextControlsFromSelection(); // Update UI
+        updateStickerControlsFromSelection(); // Update UI
+        logAnalytics('Draw_Mode_Enabled');
     } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
+        updateCanvasCursor('default'); // Revert cursor
+        DOMElements.toggleDrawModeBtn.classList.remove('active'); // Unhighlight button
+        logAnalytics('Draw_Mode_Disabled');
     }
-
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-    return { x, y };
+    renderCanvas(); // Re-render to clear selection handles if draw mode is entered
 }
 
-function isPointInRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight) {
-    return pointX >= rectX &&
-           pointX <= rectX + rectWidth &&
-           pointY >= rectY &&
-           pointY <= rectY + rectHeight;
+/**
+ * Clears all drawings from the canvas after user confirmation.
+ */
+function clearAllDrawings() {
+    if (confirm('Are you sure you want to clear all drawings? This cannot be undone.')) {
+        appState.drawings = []; // Clear the drawings array
+        renderCanvas(); // Redraw canvas without drawings
+        logAnalytics('All_Drawings_Cleared');
+    }
 }
 
-function handleMouseDown(e) {
-    e.preventDefault();
-    const mousePos = getEventCoordinates(e);
 
-    isDragging = false; // Reset drag state
-    selectedDraggable = null; // Reset selected draggable
+// --- Canvas Interaction Logic (Mouse & Touch) ---
 
-    // Iterate through stickers and texts in reverse order to select topmost
-    const allDraggables = [...stickers, ...texts];
-    for (let i = allDraggables.length - 1; i >= 0; i--) {
-        const obj = allDraggables[i];
-        if (isPointInRect(mousePos.x, mousePos.y, obj.x, obj.y, obj.width, obj.height)) {
-            selectedDraggable = obj;
-            isDragging = true;
-            dragOffsetX = mousePos.x - obj.x;
-            dragOffsetY = mousePos.y - obj.y;
+/**
+ * Handles the mouse/touch down event on the canvas.
+ * Determines if an object or handle is clicked, or initiates drawing mode.
+ * @param {MouseEvent | TouchEvent} e - The event object.
+ */
+function handleCanvasPointerDown(e) {
+    e.preventDefault(); // Prevent default browser actions (like scrolling on touch)
+    const { x, y } = getEventCoordinates(e);
 
-            // Bring selected object to front by moving it to the end of its array
-            if (stickers.includes(selectedDraggable)) {
-                stickers = stickers.filter(s => s !== selectedDraggable);
-                stickers.push(selectedDraggable);
-            } else if (texts.includes(selectedDraggable)) {
-                texts = texts.filter(t => t !== selectedDraggable);
-                texts.push(selectedDraggable);
+    if (appState.isDrawMode) {
+        // Start a new drawing path
+        appState.isDragging = true;
+        appState.lastDrawX = x;
+        appState.lastDrawY = y;
+        appState.drawings.push({
+            color: DOMElements.brushColorInput.value,
+            size: parseInt(DOMElements.brushSizeInput.value),
+            points: [{ x, y }] // Start the path with the current point
+        });
+        logAnalytics('Drawing_Started');
+    } else { // Handle object dragging/resizing/rotation
+        // If an object is already selected, check if a handle was clicked
+        if (appState.selectedDraggable) {
+            appState.dragType = checkHandleClick(x, y, appState.selectedDraggable);
+            if (appState.dragType) {
+                appState.isDragging = true;
+                // Store initial state for transformation calculations
+                appState.initialMouseX = x;
+                appState.initialMouseY = y;
+                appState.initialObjX = appState.selectedDraggable.x;
+                appState.initialObjY = appState.selectedDraggable.y;
+                appState.initialObjWidth = appState.selectedDraggable.width;
+                appState.initialObjHeight = appState.selectedDraggable.height;
+                appState.initialObjAngle = appState.selectedDraggable.angle;
+                logAnalytics('Draggable_Handle_Clicked', { type: appState.dragType });
+                return; // Stop here if a handle was clicked
             }
-            break; // Found and selected an object, stop checking
+        }
+
+        // If no handle clicked, or no object selected, check if any draggable object was clicked
+        // Iterate in reverse order to select the topmost object if objects overlap
+        const allDraggables = [...appState.stickers, ...appState.texts].slice().reverse();
+        let clickedOnDraggable = false;
+        for (const obj of allDraggables) {
+            if (isPointInRotatedRect(x, y, obj)) {
+                appState.selectedDraggable = obj;
+                appState.isDragging = true;
+                appState.dragType = 'drag'; // Default drag type when clicking the object body
+                appState.dragOffsetX = x - obj.x; // Offset for smooth dragging
+                appState.dragOffsetY = y - obj.y;
+
+                // Move the selected object to the end of its respective array
+                // This ensures it's drawn last (on top) and is selected first on subsequent clicks
+                if (obj.type === 'sticker') {
+                    appState.stickers = appState.stickers.filter(s => s !== obj);
+                    appState.stickers.push(obj);
+                } else if (obj.type === 'text') {
+                    appState.texts = appState.texts.filter(t => t !== obj);
+                    appState.texts.push(obj);
+                    updateTextControlsFromSelection(); // Update text controls to match selected text
+                }
+                clickedOnDraggable = true;
+                logAnalytics('Draggable_Selected_And_Dragged', { type: obj.type, id: obj.id });
+                break; // Found and selected an object, stop checking
+            }
+        }
+
+        // If no draggable object was clicked, deselect any currently selected object
+        if (!clickedOnDraggable) {
+            appState.selectedDraggable = null;
+            appState.dragType = null;
+            updateTextControlsFromSelection(); // Reset text controls
+            updateStickerControlsFromSelection(); // Reset sticker controls
+            logAnalytics('Canvas_Clicked_Deselected_Object');
         }
     }
-    renderCanvas(); // Redraw to show selection
+    renderCanvas(); // Re-render to show/hide selection handles
 }
 
-function handleMouseMove(e) {
-    if (!isDragging || !selectedDraggable) return;
+/**
+ * Handles the mouse/touch move event on the canvas.
+ * Continues drawing, dragging, resizing, or rotating the selected object.
+ * @param {MouseEvent | TouchEvent} e - The event object.
+ */
+function handleCanvasPointerMove(e) {
+    const { x, y } = getEventCoordinates(e);
 
-    e.preventDefault();
-    const mousePos = getEventCoordinates(e);
+    // If in drawing mode and dragging, continue the current drawing path
+    if (appState.isDrawMode && appState.isDragging) {
+        const lastDrawing = appState.drawings[appState.drawings.length - 1];
+        if (lastDrawing) { // Ensure there's a current drawing path
+            lastDrawing.points.push({ x, y });
+            renderCanvas();
+            appState.lastDrawX = x;
+            appState.lastDrawY = y;
+        }
+        return; // Stop further processing if drawing
+    }
 
-    selectedDraggable.x = mousePos.x - dragOffsetX;
-    selectedDraggable.y = mousePos.y - dragOffsetY;
+    // Update cursor based on hover if not currently dragging and not in draw mode
+    if (!appState.isDragging && !appState.isDrawMode) {
+        updateCanvasCursor('default'); // Start with default cursor
+        if (appState.selectedDraggable) {
+            const handleType = checkHandleClick(x, y, appState.selectedDraggable);
+            if (handleType) {
+                // Set specific cursor for resize/rotate handles
+                if (handleType.startsWith('resize')) {
+                    updateCanvasCursor(handleType === 'resize-tl' || handleType === 'resize-br' ? 'resize-nwse' : 'resize-nesw');
+                } else if (handleType === 'rotate') {
+                    updateCanvasCursor('rotate');
+                }
+            } else if (isPointInRotatedRect(x, y, appState.selectedDraggable)) {
+                updateCanvasCursor('grab'); // Set grab cursor if hovering over selected object body
+            }
+        }
+    }
 
-    renderCanvas();
+    // If not dragging or no object selected, nothing more to do
+    if (!appState.isDragging || !appState.selectedDraggable) return;
+
+    e.preventDefault(); // Prevent default browser actions (like text selection or scrolling)
+    updateCanvasCursor('grabbing'); // Set grabbing cursor while actively interacting
+
+    const obj = appState.selectedDraggable;
+
+    if (appState.dragType === 'drag') {
+        // Update object's position directly
+        obj.x = x - appState.dragOffsetX;
+        obj.y = y - appState.dragOffsetY;
+        logAnalytics('Draggable_Dragging', { type: obj.type, id: obj.id });
+    } else if (appState.dragType.startsWith('resize')) {
+        // Calculate new dimensions and position based on mouse movement relative to object's initial state
+        const initialCenterX = appState.initialObjX + appState.initialObjWidth / 2;
+        const initialCenterY = appState.initialObjY + appState.initialObjHeight / 2;
+
+        // Translate current mouse position to be relative to the object's initial center
+        const currentMouseXTranslated = x - initialCenterX;
+        const currentMouseYTranslated = y - initialCenterY;
+
+        // Rotate current mouse position back by the object's initial negative angle
+        // This effectively un-rotates the mouse movement relative to the object's original axis
+        const cosInitialAngle = Math.cos(-appState.initialObjAngle);
+        const sinInitialAngle = Math.sin(-appState.initialObjAngle);
+
+        const rotatedMouseX = currentMouseXTranslated * cosInitialAngle - currentMouseYTranslated * sinInitialAngle;
+        const rotatedMouseY = currentMouseXTranslated * sinInitialAngle + currentMouseYTranslated * cosInitialAngle;
+
+        let newWidth = appState.initialObjWidth;
+        let newHeight = appState.initialObjHeight;
+        let newX = appState.initialObjX;
+        let newY = appState.initialObjY;
+
+        // Calculate the change in mouse position *in the rotated object's local space*
+        // This is key for consistent resizing regardless of object rotation
+        let dx_rotated = rotatedMouseX - ((appState.initialMouseX - initialCenterX) * cosInitialAngle - (appState.initialMouseY - initialCenterY) * sinInitialAngle);
+        let dy_rotated = rotatedMouseY - ((appState.initialMouseX - initialCenterX) * sinInitialAngle + (appState.initialMouseY - initialCenterY) * cosInitialAngle);
+
+        // Adjust width, height, and position based on the handle being dragged
+        switch (appState.dragType) {
+            case 'resize-br':
+                newWidth = appState.initialObjWidth + dx_rotated;
+                newHeight = appState.initialObjHeight + dy_rotated;
+                break;
+            case 'resize-tl':
+                newWidth = appState.initialObjWidth - dx_rotated;
+                newHeight = appState.initialObjHeight - dy_rotated;
+                // Adjust position to keep the bottom-right anchor fixed
+                newX = appState.initialObjX + dx_rotated * Math.cos(appState.initialObjAngle) - dy_rotated * Math.sin(appState.initialObjAngle);
+                newY = appState.initialObjY + dy_rotated * Math.cos(appState.initialObjAngle) + dx_rotated * Math.sin(appState.initialObjAngle);
+                break;
+            case 'resize-tr':
+                newWidth = appState.initialObjWidth + dx_rotated;
+                newHeight = appState.initialObjHeight - dy_rotated;
+                // Adjust position to keep the bottom-left anchor fixed
+                newY = appState.initialObjY + dy_rotated * Math.cos(appState.initialObjAngle) + dx_rotated * Math.sin(appState.initialObjAngle);
+                break;
+            case 'resize-bl':
+                newWidth = appState.initialObjWidth - dx_rotated;
+                newHeight = appState.initialObjHeight + dy_rotated;
+                // Adjust position to keep the top-right anchor fixed
+                newX = appState.initialObjX + dx_rotated * Math.cos(appState.initialObjAngle) - dy_rotated * Math.sin(appState.initialObjAngle);
+                break;
+        }
+
+        // Maintain aspect ratio for stickers
+        if (obj.type === 'sticker' && obj.originalWidth && obj.originalHeight) {
+            const aspectRatio = obj.originalWidth / obj.originalHeight;
+            
+            // Prioritize change in the larger dimension to calculate the other, preventing extreme stretching
+            if (Math.abs(newWidth - appState.initialObjWidth) > Math.abs(newHeight - appState.initialObjHeight)) {
+                newHeight = newWidth / aspectRatio;
+            } else {
+                newWidth = newHeight * aspectRatio;
+            }
+
+            // Recalculate position to keep the original anchor point fixed while maintaining aspect ratio
+            const newCenterX = initialCenterX + (newWidth - appState.initialObjWidth) / 2 * Math.cos(appState.initialObjAngle) - (newHeight - appState.initialObjHeight) / 2 * Math.sin(appState.initialObjAngle);
+            const newCenterY = initialCenterY + (newWidth - appState.initialObjWidth) / 2 * Math.sin(appState.initialObjAngle) + (newHeight - appState.initialObjHeight) / 2 * Math.cos(appState.initialObjAngle);
+
+            newX = newCenterX - newWidth / 2;
+            newY = newCenterY - newHeight / 2;
+        }
+        
+        // Ensure minimum size
+        newWidth = Math.max(10, newWidth);
+        newHeight = Math.max(10, newHeight);
+
+        // Update object properties
+        obj.width = newWidth;
+        obj.height = newHeight;
+        obj.x = newX;
+        obj.y = newY;
+
+        // If it's a text object, scale its font size proportionally
+        if (obj.type === 'text') {
+            const newTextSize = (obj.originalSize || appState.initialObjHeight) * (newHeight / appState.initialObjHeight);
+            obj.size = Math.max(10, Math.round(newTextSize)); // Ensure minimum font size
+            updateTextControlsFromSelection(); // Update the size input in the UI
+        }
+        logAnalytics('Draggable_Resizing', { type: obj.type, id: obj.id, width: obj.width, height: obj.height });
+
+    } else if (appState.dragType === 'rotate') {
+        // Calculate new angle based on mouse position relative to object's center
+        const obj = appState.selectedDraggable;
+        const centerX = appState.initialObjX + appState.initialObjWidth / 2;
+        const centerY = appState.initialObjY + appState.initialObjHeight / 2;
+
+        const initialVectorX = appState.initialMouseX - centerX;
+        const initialVectorY = appState.initialMouseY - centerY;
+
+        const currentVectorX = x - centerX;
+        const currentVectorY = y - centerY;
+
+        const initialAngle = Math.atan2(initialVectorY, initialVectorX); // Angle of initial mouse position
+        const currentAngle = Math.atan2(currentVectorY, currentVectorX); // Angle of current mouse position
+
+        const angleDelta = currentAngle - initialAngle; // Change in angle
+        obj.angle = appState.initialObjAngle + angleDelta; // Apply delta to initial angle
+        logAnalytics('Draggable_Rotating', { type: obj.type, id: obj.id, angle: obj.angle });
+    }
+    renderCanvas(); // Re-render canvas to show changes
 }
 
-function handleMouseUp(e) {
-    isDragging = false;
-    // Do NOT deselect selectedDraggable here if you want it to remain selected after drag
-    // selectedDraggable = null; // Uncomment this if you want auto-deselection
-    // renderCanvas(); // If you uncommented above, uncomment this too
+/**
+ * Handles the mouse/touch up event on the canvas.
+ * Ends any active dragging, resizing, or drawing operation.
+ * @param {MouseEvent | TouchEvent} e - The event object.
+ */
+function handleCanvasPointerUp(e) {
+    if (appState.isDragging && appState.isDrawMode) {
+        logAnalytics('Drawing_Ended');
+    } else if (appState.isDragging && appState.selectedDraggable) {
+        logAnalytics('Draggable_Interaction_Ended', { type: appState.dragType, id: appState.selectedDraggable.id });
+    }
+    appState.isDragging = false;
+    appState.dragType = null;
+    if (!appState.isDrawMode) { // Only reset cursor if not in draw mode
+        updateCanvasCursor('default');
+    }
+    renderCanvas(); // Re-render to ensure handles are drawn correctly after interaction
 }
 
 // --- Touch Event Handlers (Simplified for single touch) ---
+// These functions map touch events to the more general pointer handlers.
 
 function handleTouchStart(e) {
     if (e.touches.length === 1) { // Only handle single touch for now
-        e.preventDefault();
+        e.preventDefault(); // Prevent scrolling/zooming
         const touch = e.touches[0];
-        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        // Create a fake MouseEvent-like object to pass to handleCanvasPointerDown
+        handleCanvasPointerDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
     }
 }
 
 function handleTouchMove(e) {
-    if (e.touches.length === 1 && isDragging) { // Only allow move if dragging
-        e.preventDefault();
+    if (e.touches.length === 1 && appState.isDragging) { // Only allow move if dragging
+        e.preventDefault(); // Prevent scrolling
         const touch = e.touches[0];
-        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        handleCanvasPointerMove({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
     }
 }
 
 function handleTouchEnd(e) {
-    handleMouseUp(e);
+    handleCanvasPointerUp(e);
 }
 
 
-// --- Download Strip Button Logic ---
-downloadStripBtn.addEventListener('click', () => {
-    if (capturedPhotosBase64.length === 0) {
-        alert('Please capture photos first to download a strip.');
-        return;
+// --- Editing Tool Event Handlers (UI controls) ---
+
+/**
+ * Updates the selected text object's properties based on UI input changes.
+ * This generic handler can be used for text content, color, font, and size.
+ * @param {string} property - The property to update (e.g., 'content', 'color', 'font', 'size').
+ * @param {*} value - The new value for the property.
+ */
+function updateSelectedTextProperty(property, value) {
+    if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
+        appState.selectedDraggable[property] = value;
+
+        // Recalculate text width and height if content, font, or size changes
+        if (property === 'content' || property === 'font' || property === 'size' || property === 'isBold' || property === 'isItalic') {
+            DOMElements.ctx.font = `${appState.selectedDraggable.isBold ? 'bold ' : ''}${appState.selectedDraggable.isItalic ? 'italic ' : ''}${appState.selectedDraggable.size}px ${appState.selectedDraggable.font}`;
+            appState.selectedDraggable.width = DOMElements.ctx.measureText(appState.selectedDraggable.content).width;
+            appState.selectedDraggable.height = appState.selectedDraggable.size;
+        }
+        renderCanvas();
+        logAnalytics('Text_Property_Updated', { property: property, value: value });
+    }
+}
+
+
+// --- Download, Print, QR Logic ---
+
+/**
+ * Creates a composite image of the photo strip on a temporary canvas,
+ * including photos, frames, stickers, text, and drawings.
+ * This temporary canvas is used for download, QR, and print.
+ * @returns {Promise<HTMLCanvasElement>} A promise that resolves with the final composite canvas.
+ */
+async function createFinalStripCanvas() {
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = DOMElements.photoCanvas.width;
+    finalCanvas.height = DOMElements.photoCanvas.height;
+    const finalCtx = finalCanvas.getContext('2d');
+
+    // Temporarily clear selection for a clean render for output
+    const tempSelected = appState.selectedDraggable;
+    appState.selectedDraggable = null;
+
+    // Draw background color
+    if (appState.currentStripConfig && appState.currentStripConfig.defaultBackground) {
+        finalCtx.fillStyle = appState.currentStripConfig.defaultBackground;
+        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
     }
 
-    showDownloadSpinner(true);
-    const format = downloadFormatSelect.value.split(';');
-    const mimeType = format[0];
-    const quality = format.length > 1 ? parseFloat(format[1]) : 1.0;
+    // Draw frame (async operation)
+    await drawFrameOnCanvas(finalCtx); // Re-use drawing function
 
-    setTimeout(() => {
-        try {
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = photoCanvas.width;
-            finalCanvas.height = photoCanvas.height;
-            const finalCtx = finalCanvas.getContext('2d');
-
-            // Temporarily clear selection for download
-            const tempSelected = selectedDraggable;
-            selectedDraggable = null;
-
-            if (currentStripConfig && currentStripConfig.defaultBackground) {
-                finalCtx.fillStyle = currentStripConfig.defaultBackground;
-                finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            }
-            if (currentFrameImgSrc) {
-                loadImage(currentFrameImgSrc).then(frameImg => {
-                    finalCtx.drawImage(frameImg, 0, 0, finalCanvas.width, finalCanvas.height);
-                    drawPhotosAndDraggablesForDownload(finalCtx); // Draw photos, stickers, text
-                    finalizeDownload(finalCanvas, mimeType, quality);
-                    selectedDraggable = tempSelected; // Restore selection
-                    renderCanvas(); // Re-render editing canvas with selection
-                }).catch(error => {
-                    console.error("Error loading frame for download:", error);
-                    drawPhotosAndDraggablesForDownload(finalCtx); // Draw without frame
-                    finalizeDownload(finalCanvas, mimeType, quality);
-                    selectedDraggable = tempSelected; // Restore selection
-                    renderCanvas(); // Re-render editing canvas with selection
-                });
-            } else {
-                drawPhotosAndDraggablesForDownload(finalCtx); // Draw without frame
-                finalizeDownload(finalCanvas, mimeType, quality);
-                selectedDraggable = tempSelected; // Restore selection
-                renderCanvas(); // Re-render editing canvas with selection
-            }
-        } catch (error) {
-            console.error('Error preparing strip for download:', error);
-            alert('Failed to prepare photo strip for download. See console for details.');
-            showDownloadSpinner(false);
-        }
-    }, 50);
-});
-
-async function drawPhotosAndDraggablesForDownload(targetCtx) {
-    const numPhotosToDisplay = capturedPhotosBase64.length;
-    const framesToUse = currentStripConfig ? currentStripConfig.frames : [];
-
+    // Draw photos
+    const numPhotosToDisplay = appState.capturedPhotosBase64.length;
+    const framesToUse = appState.currentStripConfig ? appState.currentStripConfig.frames : [];
     for (let i = 0; i < Math.min(numPhotosToDisplay, framesToUse.length); i++) {
         const frame = framesToUse[i];
         if (!frame) continue;
-
-        const img = preloadedCapturedImages[i];
+        const img = appState.preloadedCapturedImages[i];
         if (img && img.complete) {
-            targetCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
+            finalCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
         } else {
+            // Fallback: Try to load on demand if preloading failed (should be rare for final output)
             try {
-                const loadedImg = await loadImage(capturedPhotosBase64[i]);
-                targetCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
+                const loadedImg = await loadImage(appState.capturedPhotosBase64[i]);
+                finalCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
             } catch (error) {
                 console.error(`ERROR: Failed to draw photo ${i + 1} on final composite:`, error);
             }
         }
     }
 
-    for (const sticker of stickers) {
-        try {
-            const imgToDraw = sticker.img || await loadImage(sticker.src);
-            targetCtx.drawImage(imgToDraw, sticker.x, sticker.y, sticker.width, sticker.height);
-        } catch (error) {
-            console.error(`ERROR: Failed to draw sticker ${sticker.src} for download:`, error);
-        }
-    }
+    // Draw stickers, text, and drawings on the final canvas
+    drawDraggableObjectsOnCanvas(finalCtx, appState.stickers);
+    drawDraggableObjectsOnCanvas(finalCtx, appState.texts);
+    drawDrawingsOnCanvas(finalCtx, appState.drawings);
 
-    for (const textObj of texts) {
-        targetCtx.fillStyle = textObj.color;
-        let fontStyle = '';
-        if (textObj.isItalic) fontStyle += 'italic ';
-        if (textObj.isBold) fontStyle += 'bold ';
-        targetCtx.font = `${fontStyle}${textObj.size}px ${textObj.font}`;
-        targetCtx.textAlign = textObj.align;
-        targetCtx.textBaseline = 'middle';
+    appState.selectedDraggable = tempSelected; // Restore selection on main editing canvas
+    renderCanvas(); // Re-render main editing canvas (important to restore selection handles)
 
-        // Adjust X based on alignment for download render
-        let textX = textObj.x;
-        if (textObj.align === 'center') {
-            textX = textObj.x + textObj.width / 2;
-        } else if (textObj.align === 'right') {
-            textX = textObj.x + textObj.width;
-        }
-
-        targetCtx.fillText(textObj.content, textX, textObj.y + textObj.height / 2);
-
-        if (textObj.isUnderline) {
-            const textMetrics = targetCtx.measureText(textObj.content);
-            const underlineHeight = textObj.size / 15;
-            const underlineY = textObj.y + textObj.height / 2 + textObj.size / 2 - underlineHeight / 2;
-
-            let underlineStartX = textObj.x;
-            if (textObj.align === 'center') {
-                underlineStartX = textX - textMetrics.width / 2;
-            } else if (textObj.align === 'right') {
-                underlineStartX = textX - textMetrics.width;
-            }
-            
-            targetCtx.beginPath();
-            targetCtx.strokeStyle = textObj.color;
-            targetCtx.lineWidth = underlineHeight;
-            targetCtx.moveTo(underlineStartX, underlineY);
-            targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
-            targetCtx.stroke();
-        }
-    }
-}
-
-function finalizeDownload(canvas, mimeType, quality) {
-    const dataURL = canvas.toDataURL(mimeType, quality);
-    const link = document.createElement('a');
-    link.href = dataURL;
-    link.download = `odz_photobooth_strip.${mimeType.split('/')[1].split(';')[0]}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showDownloadSpinner(false);
+    return finalCanvas;
 }
 
 
-// NEW: Frame Selection Event Listener
-frameSelect.addEventListener('change', (event) => {
-    currentFrameImgSrc = event.target.value;
-    renderCanvas();
-});
+/**
+ * Handles the download of the photo strip.
+ */
+async function downloadStrip() {
+    if (appState.capturedPhotosBase64.length === 0) {
+        alert('No photos found. Please capture photos first.');
+        return;
+    }
 
-retakeBtn.addEventListener('click', () => {
+    toggleDownloadSpinner(true); // Show spinner
+    logAnalytics('Download_Started');
+
+    try {
+        const finalCanvas = await createFinalStripCanvas(); // Get the composite canvas
+        const format = DOMElements.downloadFormatSelect.value.split(';');
+        const mimeType = format[0];
+        const quality = format.length > 1 ? parseFloat(format[1]) : 1.0;
+
+        const dataURL = finalCanvas.toDataURL(mimeType, quality);
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = `odz_photobooth_strip_${Date.now()}.${mimeType.split('/')[1].split(';')[0]}`; // Unique filename
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        logAnalytics('Download_Successful', { format: mimeType, quality: quality });
+    } catch (error) {
+        console.error('Error during strip download:', error);
+        alert('Failed to download photo strip. See console for details.');
+        logAnalytics('Download_Failed', { error: error.message });
+    } finally {
+        toggleDownloadSpinner(false); // Hide spinner
+    }
+}
+
+/**
+ * Handles the display of the QR code for downloading the photo strip.
+ */
+async function showQrCode() {
+    if (appState.capturedPhotosBase64.length === 0) {
+        alert('No photos found. Please capture photos first.');
+        return;
+    }
+
+    toggleDownloadSpinner(true); // Show spinner while generating image
+    logAnalytics('QR_Code_Generation_Started');
+
+    try {
+        const finalCanvas = await createFinalStripCanvas(); // Get the composite canvas
+        const dataURL = finalCanvas.toDataURL('image/png', 1.0); // PNG for best QR quality
+
+        // JsBarcode will draw the QR code into the SVG element
+        JsBarcode(DOMElements.qrcodeCanvas, dataURL, {
+            format: "QR",
+            width: 5, // Controls module size of QR code
+            height: 5,
+            displayValue: false, // Don't show the data URL text below QR
+            margin: 10 // Margin around the QR code
+        });
+        DOMElements.qrCodeOverlay.classList.add('visible'); // Show the overlay
+        logAnalytics('QR_Code_Displayed');
+    } catch (qrError) {
+        console.error("Error generating QR code:", qrError);
+        alert("Failed to generate QR code. The image data might be too large or invalid.");
+        logAnalytics('QR_Code_Generation_Failed', { error: qrError.message });
+    } finally {
+        toggleDownloadSpinner(false); // Hide spinner
+    }
+}
+
+/**
+ * Handles the printing of the photo strip.
+ */
+async function printStrip() {
+    if (appState.capturedPhotosBase64.length === 0) {
+        alert('No photos found. Please capture photos first.');
+        return;
+    }
+
+    toggleDownloadSpinner(true); // Show spinner
+    logAnalytics('Print_Request_Started');
+
+    try {
+        const finalCanvas = await createFinalStripCanvas(); // Get the composite canvas
+        const dataURL = finalCanvas.toDataURL('image/png'); // Use PNG for print quality
+
+        // Open a new window for printing, containing only the image
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            // Check if the pop-up was blocked.
+            alert('Print window was blocked. Please allow pop-ups for this site to print.');
+            logAnalytics('Print_Request_Failed', { reason: 'Pop-up blocked' });
+            return;
+        }
+
+        printWindow.document.write('<html><head><title>Print Photo Strip</title>');
+        printWindow.document.write('<style>');
+        // Basic print styles to ensure the image fits the page and no unwanted margins
+        printWindow.document.write(`
+            body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+            img { max-width: 100%; max-height: 95vh; display: block; margin: 0 auto; }
+            @page { margin: 0; size: auto; } /* Remove print margins */
+        `);
+        printWindow.document.write('</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<img src="${dataURL}" alt="Photo Strip for Printing">`);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        // Wait for the image to load in the new window before triggering print
+        printWindow.onload = function() {
+            printWindow.focus(); // Bring the new window to the front
+            printWindow.print(); // Open the native print dialog
+            // printWindow.close(); // You might comment this out to let user close manually after print dialog
+            logAnalytics('Print_Dialog_Opened');
+        };
+    } catch (error) {
+        console.error("Error preparing strip for printing:", error);
+        alert("Failed to prepare photo strip for printing. See console for details.");
+        logAnalytics('Print_Request_Failed', { error: error.message });
+    } finally {
+        toggleDownloadSpinner(false); // Hide spinner
+    }
+}
+
+/**
+ * Navigates back to the capture page to retake photos, clearing current editing data.
+ */
+function retakePhotos() {
+    // Clear only captured photos and related counts, but keep layout info
     localStorage.removeItem('capturedPhotos');
-    localStorage.removeItem('selectedPhotoCount');
-    window.location.href = 'layout-selection/layout-selection.html'; // Path is relative to base href
-});
+    // localStorage.removeItem('selectedPhotoCount'); // Keep this, as layout is chosen
+    // localStorage.removeItem('selectedFrameAspectRatio'); // Keep this
 
-document.addEventListener('DOMContentLoaded', initializeEditor);
+    logAnalytics('Retake_Photos_Initiated');
+    window.location.href = 'capture-page/capture-page.html';
+}
+
+
+// --- Event Listeners ---
+
+/**
+ * Attaches all necessary event listeners to DOM elements.
+ */
+function setupEventListeners() {
+    // Canvas interaction events
+    DOMElements.photoCanvas.addEventListener('mousedown', handleCanvasPointerDown);
+    DOMElements.photoCanvas.addEventListener('mousemove', handleCanvasPointerMove);
+    DOMElements.photoCanvas.addEventListener('mouseup', handleCanvasPointerUp);
+    DOMElements.photoCanvas.addEventListener('mouseout', handleCanvasPointerUp); // End interaction if mouse leaves canvas
+
+    DOMElements.photoCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    DOMElements.photoCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    DOMElements.photoCanvas.addEventListener('touchend', handleTouchEnd);
+    DOMElements.photoCanvas.addEventListener('touchcancel', handleTouchEnd);
+
+    // Frame selection
+    DOMElements.frameSelect.addEventListener('change', async () => {
+        // Preload the new frame image to avoid flicker
+        try {
+            appState.currentFrameImg = await loadImage(DOMElements.frameSelect.value);
+            renderCanvas();
+            logAnalytics('Frame_Changed', { newFrame: DOMElements.frameSelect.value });
+        } catch (error) {
+            console.error("Failed to load selected frame:", error);
+            alert("Could not load selected frame. Using default background.");
+            appState.currentFrameImg = null; // Clear if load fails
+            renderCanvas();
+            logAnalytics('Frame_Load_Failed', { frameSrc: DOMElements.frameSelect.value, error: error.message });
+        }
+    });
+
+    // Sticker controls
+    DOMElements.addStickerBtn.addEventListener("click", () => addSticker(DOMElements.stickerSelect.value));
+    DOMElements.removeStickerBtn.addEventListener("click", removeSelectedSticker);
+
+    // Text controls
+    DOMElements.textInput.addEventListener('input', () => updateSelectedTextProperty('content', DOMElements.textInput.value));
+    DOMElements.textColorInput.addEventListener('change', () => updateSelectedTextProperty('color', DOMElements.textColorInput.value));
+    DOMElements.textFontSelect.addEventListener('change', () => updateSelectedTextProperty('font', DOMElements.textFontSelect.value));
+    DOMElements.textSizeInput.addEventListener('change', () => updateSelectedTextProperty('size', parseInt(DOMElements.textSizeInput.value)));
+    DOMElements.textAlignSelect.addEventListener('change', () => updateSelectedTextProperty('align', DOMElements.textAlignSelect.value));
+    DOMElements.textBoldBtn.addEventListener('click', () => {
+        DOMElements.textBoldBtn.classList.toggle('active');
+        updateSelectedTextProperty('isBold', DOMElements.textBoldBtn.classList.contains('active'));
+    });
+    DOMElements.textItalicBtn.addEventListener('click', () => {
+        DOMElements.textItalicBtn.classList.toggle('active');
+        updateSelectedTextProperty('isItalic', DOMElements.textItalicBtn.classList.contains('active'));
+    });
+    DOMElements.textUnderlineBtn.addEventListener('click', () => {
+        DOMElements.textUnderlineBtn.classList.toggle('active');
+        updateSelectedTextProperty('isUnderline', DOMElements.textUnderlineBtn.classList.contains('active'));
+    });
+
+    // Text Outline/Shadow Event Listeners
+    DOMElements.textOutlineColorInput.addEventListener('input', () => updateSelectedTextProperty('outlineColor', DOMElements.textOutlineColorInput.value));
+    DOMElements.textOutlineWidthInput.addEventListener('input', () => updateSelectedTextProperty('outlineWidth', parseInt(DOMElements.textOutlineWidthInput.value) || 0));
+    DOMElements.clearTextOutlineBtn.addEventListener('click', () => {
+        DOMElements.textOutlineColorInput.value = DEFAULT_TEXT_SETTINGS.outlineColor;
+        DOMElements.textOutlineWidthInput.value = DEFAULT_TEXT_SETTINGS.outlineWidth;
+        updateSelectedTextProperty('outlineColor', DEFAULT_TEXT_SETTINGS.outlineColor);
+        updateSelectedTextProperty('outlineWidth', DEFAULT_TEXT_SETTINGS.outlineWidth);
+    });
+
+    DOMElements.textShadowColorInput.addEventListener('input', () => updateSelectedTextProperty('shadowColor', DOMElements.textShadowColorInput.value));
+    DOMElements.textShadowOffsetXInput.addEventListener('input', () => updateSelectedTextProperty('shadowOffsetX', parseInt(DOMElements.textShadowOffsetXInput.value) || 0));
+    DOMElements.textShadowOffsetYInput.addEventListener('input', () => updateSelectedTextProperty('shadowOffsetY', parseInt(DOMElements.textShadowOffsetYInput.value) || 0));
+    DOMElements.textShadowBlurInput.addEventListener('input', () => updateSelectedTextProperty('shadowBlur', parseInt(DOMElements.textShadowBlurInput.value) || 0));
+    DOMElements.clearTextShadowBtn.addEventListener('click', () => {
+        DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
+        DOMElements.textShadowOffsetXInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetX;
+        DOMElements.textShadowOffsetYInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetY;
+        DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
+        updateSelectedTextProperty('shadowColor', DEFAULT_TEXT_SETTINGS.shadowColor);
+        updateSelectedTextProperty('shadowOffsetX', DEFAULT_TEXT_SETTINGS.shadowOffsetX);
+        updateSelectedTextProperty('shadowOffsetY', DEFAULT_TEXT_SETTINGS.shadowOffsetY);
+        updateSelectedTextProperty('shadowBlur', DEFAULT_TEXT_SETTINGS.shadowBlur);
+    });
+
+    DOMElements.addTextBtn.addEventListener("click", addText);
+    DOMElements.removeTextBtn.addEventListener("click", removeSelectedText);
+
+    // Drawing tool controls
+    DOMElements.toggleDrawModeBtn.addEventListener('click', toggleDrawMode);
+    DOMElements.clearDrawingBtn.addEventListener('click', clearAllDrawings);
+
+    // Download, QR, Print buttons
+    DOMElements.downloadStripBtn.addEventListener('click', downloadStrip);
+    DOMElements.showQrCodeBtn.addEventListener('click', showQrCode);
+    DOMElements.printStripBtn.addEventListener('click', printStrip);
+    DOMElements.closeQrBtn.addEventListener('click', () => DOMElements.qrCodeOverlay.classList.remove('visible'));
+
+    // Navigation buttons
+    DOMElements.retakeBtn.addEventListener('click', retakePhotos);
+    DOMElements.newSessionBtn.addEventListener('click', startNewSession);
+
+    // Listen for brush color/size changes if in draw mode
+    DOMElements.brushColorInput.addEventListener('input', () => {
+        if (appState.isDrawMode && appState.drawings.length > 0) {
+            const lastDrawing = appState.drawings[appState.drawings.length - 1];
+            // If the current drawing path is empty or just started, apply new color
+            if (lastDrawing && lastDrawing.points.length <= 1) {
+                lastDrawing.color = DOMElements.brushColorInput.value;
+                renderCanvas();
+            } else {
+                // For a new stroke, the color will be picked up when new drawing object is created.
+                // For existing stroke, current color is what's used.
+            }
+        }
+    });
+    DOMElements.brushSizeInput.addEventListener('input', () => {
+        if (appState.isDrawMode && appState.drawings.length > 0) {
+            const lastDrawing = appState.drawings[appState.drawings.length - 1];
+            if (lastDrawing && lastDrawing.points.length <= 1) {
+                lastDrawing.size = parseInt(DOMElements.brushSizeInput.value);
+                renderCanvas();
+            }
+        }
+    });
+}
+
+// --- Initialization ---
+
+/**
+ * Initializes the editing page: retrieves captured photos, sets up canvas,
+ * populates UI controls, and attaches event listeners.
+ */
+async function initializeEditorPage() {
+    // 1. Get the 2D rendering context for the canvas.
+    DOMElements.ctx = DOMElements.photoCanvas.getContext("2d");
+
+    // 2. Retrieve captured photos and layout configuration from localStorage
+    appState.capturedPhotosBase64 = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
+    const selectedPhotoCountStr = localStorage.getItem('selectedPhotoCount');
+    const selectedPhotoCount = parseInt(selectedPhotoCountStr, 10);
+
+    // Determine the strip configuration based on selected photo count
+    const configKey = isNaN(selectedPhotoCount) || selectedPhotoCount < 1 || selectedPhotoCount > 6 || selectedPhotoCount === 5
+        ? '3' // Default to 3 photos if invalid/missing
+        : selectedPhotoCount.toString();
+    appState.currentStripConfig = STRIP_LAYOUT_CONFIGS[configKey];
+
+    // Handle cases where no photos are found or layout is invalid
+    if (appState.capturedPhotosBase64.length === 0 || !appState.currentStripConfig || typeof appState.currentStripConfig.stripWidth === 'undefined') {
+        displayCanvasMessage(
+            'No photos found or invalid layout.',
+            'info',
+            'Please go back to <a href="capture-page/capture-page.html">capture photos</a> first.'
+        );
+        // Disable all editing controls if no photos or invalid setup
+        Object.values(DOMElements).forEach(el => {
+            if (el && typeof el.disabled !== 'undefined') el.disabled = true;
+        });
+        DOMElements.retakeBtn.disabled = false; // Re-enable retake button always
+        DOMElements.newSessionBtn.disabled = false; // Re-enable new session button always
+        logAnalytics('Editor_Page_Load_Failed', { reason: 'No photos or invalid config' });
+        return;
+    }
+
+    // Set canvas dimensions based on the determined strip configuration
+    DOMElements.photoCanvas.width = appState.currentStripConfig.stripWidth;
+    DOMElements.photoCanvas.height = appState.currentStripConfig.stripHeight;
+
+    // Preload captured images for efficient drawing
+    await preloadCapturedPhotos();
+
+    // Populate frame options in the dropdown
+    populateFrameOptions(appState.currentStripConfig.availableFrames);
+
+    // If a frame is already selected or default, preload it
+    if (DOMElements.frameSelect.value) {
+        try {
+            appState.currentFrameImg = await loadImage(DOMElements.frameSelect.value);
+        } catch (error) {
+            console.error("Failed to preload initial frame:", error);
+            // Will fallback to default background in drawFrameOnCanvas
+        }
+    }
+
+
+    // Set initial values for text and drawing controls
+    DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
+    DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
+    DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
+    DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+    DOMElements.textOutlineColorInput.value = DEFAULT_TEXT_SETTINGS.outlineColor;
+    DOMElements.textOutlineWidthInput.value = DEFAULT_TEXT_SETTINGS.outlineWidth;
+    DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
+    DOMElements.textShadowOffsetXInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetX;
+    DOMElements.textShadowOffsetYInput.value = DEFAULT_TEXT_SETTINGS.shadowOffsetY;
+    DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
+    DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
+    DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
+
+    // Initially disable text and sticker remove buttons as nothing is selected
+    updateTextControlsFromSelection();
+    updateStickerControlsFromSelection();
+
+    setupEventListeners(); // Attach all event listeners
+    renderCanvas(); // Initial render of the photo strip
+    logAnalytics('Editor_Page_Loaded_Successfully', { layout: configKey });
+}
+
+// Ensure the initialization function runs when the DOM is ready
+document.addEventListener('DOMContentLoaded', initializeEditorPage);
