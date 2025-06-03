@@ -4,9 +4,8 @@
 
 // --- Configuration ---
 // Defines the layout specifics for photo strips based on the number of photos.
-// THESE VALUES DEFINE THE DISPLAY RESOLUTION AND RELATIVE POSITIONS.
-// They DO NOT need to be changed for print quality, as scaling is done dynamically.
 const STRIP_LAYOUT_CONFIGS = {
+    // Common settings for photo slots and padding
     common: {
         photoSidePadding: 40,
         photoSlotWidth: 320,
@@ -14,6 +13,7 @@ const STRIP_LAYOUT_CONFIGS = {
         topPadding: 40,
         bottomSpaceForLogo: 150
     },
+    // Configuration for a 1-photo strip
     '1': {
         stripWidth: 400,
         stripHeight: 40 + 240 + 150, // topPadding + photoHeight + bottomSpaceForLogo
@@ -25,6 +25,7 @@ const STRIP_LAYOUT_CONFIGS = {
             { id: 'option3', src: 'assets/strip-frame-1-photos-option3.png', name: 'Styled Border' }
         ]
     },
+    // Configuration for a 2-photo strip
     '2': {
         stripWidth: 400,
         stripHeight: 40 + (240 * 2) + 20 + 150, // top + (2*photo) + gap + bottom
@@ -34,11 +35,12 @@ const STRIP_LAYOUT_CONFIGS = {
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Double' },
-            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Lines' },
-            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Decorative Duo' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'option-3' }
         ]
     },
+    // Configuration for a 3-photo strip
     '3': {
         stripWidth: 400,
         stripHeight: 40 + (220 * 3) + (20 * 2) + 150,
@@ -50,11 +52,12 @@ const STRIP_LAYOUT_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Original Triple' },
-            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Simple Border' },
-            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Modern Style' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'option-3' }
         ]
     },
+    // Configuration for a 4-photo strip
     '4': {
         stripWidth: 400,
         stripHeight: 40 + (226 * 4) + (20 * 3) + 150,
@@ -67,43 +70,37 @@ const STRIP_LAYOUT_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 226,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'Original Quad' },
-            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Vintage Edge' },
-            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'Clean Frame' }
+            { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'option-3' }
         ]
     },
+    // Configuration for a 6-photo strip (2 columns)
     '6': {
-        stripWidth: 760,
+        stripWidth: 760, // Wider for two columns
         stripHeight: 40 + (220 * 3) + (20 * 2) + 150,
         frames: [
             { x: 40, y: 40, width: 320, height: 220 },
-            { x: 40, y: 280, width: 320, height: 220 },
-            { x: 40, y: 520, width: 320, height: 220 },
+            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
+            { x: 40, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 },
             { x: 400, y: 40, width: 320, height: 220 },
-            { x: 400, y: 280, width: 320, height: 220 },
-            { x: 400, y: 520, width: 320, height: 220 }
+            { x: 400, y: 40 + 220 + 20, width: 320, height: 220 },
+            { x: 400, y: 40 + (220 * 2) + (20 * 2), width: 320, height: 220 }
         ],
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Original Six' },
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Two-Column Classic' }
+            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'option-2' }
         ]
     }
 };
-
-// --- NEW PRINTING/DOWNLOAD CONFIGURATION ---
-// Target DPI for high-quality output (print and download). 300 DPI is standard for photos.
-const OUTPUT_DPI = 300; 
-// Standard photo strip dimensions in inches.
-const PHYSICAL_STRIP_WIDTH_INCHES = 2; // e.g., 2 inches wide
-const PHYSICAL_STRIP_HEIGHT_INCHES = 6; // e.g., 6 inches tall
 
 // Default values for new text (no outline/shadow properties now)
 const DEFAULT_TEXT_SETTINGS = {
     color: '#333333',
     font: "'Poppins', sans-serif",
-    size: 30, // This is a display size, will be scaled for output
+    size: 30,
     align: 'center',
     isBold: false,
     isItalic: false,
@@ -112,16 +109,16 @@ const DEFAULT_TEXT_SETTINGS = {
 
 const DEFAULT_DRAWING_SETTINGS = {
     color: '#FF0000',
-    size: 5 // This is a display size, will be scaled for output
+    size: 5
 };
 
 // --- DOM Element References ---
 // Centralized object for all frequently accessed DOM elements on this page.
-// FIX: Ensure ALL IDs here perfectly match the IDs in editing-home.html
 const DOMElements = {
     photoCanvas: document.getElementById("photoCanvas"),
-    ctx: null, // Assigned later in initializeEditorPage
-    canvasContainer: document.getElementById('canvasContainer'), // Assuming this exists for cursor control
+    // Get context after canvas is defined. This will be assigned in initializeEditor.
+    ctx: null, 
+    canvasContainer: document.getElementById('canvasContainer'),
 
     frameSelect: document.getElementById("frameSelect"),
 
@@ -129,11 +126,10 @@ const DOMElements = {
     addStickerBtn: document.getElementById("addStickerBtn"),
     removeStickerBtn: document.getElementById("removeStickerBtn"),
 
-    // --- CORRECTED TEXT ELEMENTS IDs (CRITICAL FIX) ---
     textInput: document.getElementById("textInput"),
     textColorInput: document.getElementById("textColorInput"), 
-    textFontSelect: document.getElementById("textFontSelect"), 
-    textSizeInput: document.getElementById("textSizeInput"),   
+    textFontSelect: document.getElementById("textFontSelect"),
+    textSizeInput: document.getElementById("textSizeInput"),
     addTextBtn: document.getElementById("addTextBtn"),
     removeTextBtn: document.getElementById("removeTextBtn"),
 
@@ -142,22 +138,19 @@ const DOMElements = {
     textUnderlineBtn: document.getElementById('textUnderlineBtn'),
     textAlignSelect: document.getElementById('textAlignSelect'),
 
-    // --- DRAWING ELEMENTS ---
     brushColorInput: document.getElementById('brushColorInput'),
     brushSizeInput: document.getElementById('brushSizeInput'),
     toggleDrawModeBtn: document.getElementById('toggleDrawModeBtn'),
     clearDrawingBtn: document.getElementById('clearDrawingBtn'),
 
-    // --- CORRECTED DOWNLOAD/PRINT ELEMENTS (CRITICAL FIX) ---
     downloadStripBtn: document.getElementById("downloadStripBtn"),
-    downloadFormatSelect: document.getElementById('downloadFormatSelect'), 
+    downloadFormatSelect: document.getElementById('downloadFormatSelect'),
     printStripBtn: document.getElementById('printStripBtn'),
     
     retakeBtn: document.getElementById("retakeBtn"),
 
-    // --- CORRECTED MESSAGE ELEMENTS (CRITICAL FIX) ---
-    noPhotosMessage: document.getElementById('noPhotosMessage'), 
-    downloadSpinner: document.getElementById('downloadSpinner'), 
+    noPhotosMessage: document.getElementById('noPhotosMessage'),
+    downloadSpinner: document.getElementById('downloadSpinner'),
 };
 
 // --- Global Application State Variables ---
@@ -529,10 +522,10 @@ async function renderCanvas() {
     }
 
     // Draw the selected frame image
-    await drawFrameOnCanvas(DOMElements.ctx, appState.currentStripConfig);
+    await drawFrameOnCanvas(DOMElements.ctx);
 
     // Draw captured photos within their respective frames
-    drawPhotosOnCanvas(DOMElements.ctx, appState.currentStripConfig);
+    drawPhotosOnCanvas(DOMElements.ctx);
 
     // Draw all active stickers
     drawDraggableObjectsOnCanvas(DOMElements.ctx, appState.stickers);
@@ -552,59 +545,34 @@ async function renderCanvas() {
 /**
  * Draws the selected frame image onto the canvas.
  * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
- * @param {object} stripConfig - The current strip configuration to get dimensions from.
  */
-async function drawFrameOnCanvas(targetCtx, stripConfig) {
-    // Determine canvas dimensions based on whether it's the display canvas or print canvas
-    const canvasWidth = targetCtx.canvas.width;
-    const canvasHeight = targetCtx.canvas.height;
-
-    // Check if the current context is the display canvas (using currentStripConfig)
-    // or a scaled output canvas.
-    const isDisplayCanvas = targetCtx === DOMElements.ctx;
-
+async function drawFrameOnCanvas(targetCtx) {
     if (DOMElements.frameSelect.value) {
         try {
-            // Load the frame image if not already loaded, or use the preloaded one for display
-            if (isDisplayCanvas && (!appState.currentFrameImg || appState.currentFrameImg.src !== DOMElements.frameSelect.value)) {
-                appState.currentFrameImg = await loadImage(DOMElements.frameSelect.value);
-            } else if (!isDisplayCanvas && !appState.currentFrameImg) {
-                // If this is a print/download canvas and frame isn't yet loaded for display
-                // (should ideally be loaded for display first), load it now.
+            // Load the frame image if not already loaded, or use the preloaded one
+            if (!appState.currentFrameImg || appState.currentFrameImg.src !== DOMElements.frameSelect.value) {
                 appState.currentFrameImg = await loadImage(DOMElements.frameSelect.value);
             }
-            
-            if (appState.currentFrameImg) {
-                targetCtx.drawImage(appState.currentFrameImg, 0, 0, canvasWidth, canvasHeight);
-            } else {
-                console.warn(`WARNING: Frame image not available for drawing.`);
-                targetCtx.fillStyle = stripConfig.defaultBackground || '#CCCCCC';
-                targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-            }
-
+            targetCtx.drawImage(appState.currentFrameImg, 0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
         } catch (error) {
             console.warn(`WARNING: Could not load selected strip frame image: ${DOMElements.frameSelect.value}. Falling back to default background.`, error);
-            targetCtx.fillStyle = stripConfig.defaultBackground || '#CCCCCC';
-            targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+            targetCtx.fillStyle = appState.currentStripConfig.defaultBackground || '#CCCCCC';
+            targetCtx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
         }
     } else {
         // Fallback if no frame selected or loading failed
-        targetCtx.fillStyle = stripConfig.defaultBackground || '#CCCCCC';
-        targetCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        targetCtx.fillStyle = appState.currentStripConfig.defaultBackground || '#CCCCCC';
+        targetCtx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
     }
 }
 
 /**
  * Draws captured photos onto the canvas, fitting them into their allocated frames.
  * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
- * @param {object} stripConfig - The current strip configuration to get frame positions from.
  */
-function drawPhotosOnCanvas(targetCtx, stripConfig) {
+function drawPhotosOnCanvas(targetCtx) {
     const numPhotosToDisplay = appState.capturedPhotosBase64.length;
-    const framesToUse = stripConfig.frames;
-
-    // Calculate scaling factor from display canvas width to targetCtx canvas width
-    const scaleFactor = targetCtx.canvas.width / stripConfig.stripWidth;
+    const framesToUse = appState.currentStripConfig ? appState.currentStripConfig.frames : [];
 
     for (let i = 0; i < Math.min(numPhotosToDisplay, framesToUse.length); i++) {
         const frame = framesToUse[i];
@@ -616,25 +584,23 @@ function drawPhotosOnCanvas(targetCtx, stripConfig) {
         const img = appState.preloadedCapturedImages[i];
 
         if (img && img.complete) {
-            targetCtx.drawImage(img, frame.x * scaleFactor, frame.y * scaleFactor, frame.width * scaleFactor, frame.height * scaleFactor);
+            targetCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
         } else {
             // Fallback for images not yet preloaded (should be rare)
             console.warn(`Preloaded image ${i} not ready. Attempting to load on demand.`);
             const imgSrc = appState.capturedPhotosBase64[i];
             loadImage(imgSrc).then(loadedImg => {
-                targetCtx.drawImage(loadedImg, frame.x * scaleFactor, frame.y * scaleFactor, frame.width * scaleFactor, frame.height * scaleFactor);
-                // Only re-render if it's the display canvas, otherwise no need for print canvas
-                if (targetCtx === DOMElements.ctx) { // Check if it's the display canvas
-                    renderCanvas(); 
-                }
+                targetCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
+                renderCanvas(); // Re-render once image is loaded
             }).catch(error => {
                 console.error(`ERROR: Failed to draw photo ${i + 1}. Image source might be corrupt. Details:`, error);
+                // Draw a placeholder for failed images
                 targetCtx.fillStyle = '#ccc';
-                targetCtx.fillRect(frame.x * scaleFactor, frame.y * scaleFactor, frame.width * scaleFactor, frame.height * scaleFactor);
+                targetCtx.fillRect(frame.x, frame.y, frame.width, frame.height);
                 targetCtx.fillStyle = 'red';
-                targetCtx.font = `${12 * scaleFactor}px Arial`; // Scale error text too
+                targetCtx.font = '12px Arial';
                 targetCtx.textAlign = 'center';
-                targetCtx.fillText('Error', (frame.x + frame.width / 2) * scaleFactor, (frame.y + frame.height / 2) * scaleFactor);
+                targetCtx.fillText('Error', frame.x + frame.width / 2, frame.y + frame.height / 2);
             });
         }
     }
@@ -647,21 +613,13 @@ function drawPhotosOnCanvas(targetCtx, stripConfig) {
  * @param {Array<object>} objects - Array of sticker or text objects to draw.
  */
 function drawDraggableObjectsOnCanvas(targetCtx, objects) {
-    // Calculate scaling factor from display canvas width to targetCtx canvas width
-    const scaleFactor = targetCtx.canvas.width / (appState.currentStripConfig ? appState.currentStripConfig.stripWidth : DOMElements.photoCanvas.width);
-
     objects.forEach(obj => {
         targetCtx.save(); // Save the canvas state before applying transformations
 
-        // Scale object dimensions and position
-        const scaledX = obj.x * scaleFactor;
-        const scaledY = obj.y * scaleFactor;
-        const scaledWidth = obj.width * scaleFactor;
-        const scaledHeight = obj.height * scaleFactor;
-
         // Translate to object's center, rotate, then translate back
-        const centerX = scaledX + scaledWidth / 2;
-        const centerY = scaledY + scaledHeight / 2;
+        // This makes rotation pivot around the object's center
+        const centerX = obj.x + obj.width / 2;
+        const centerY = obj.y + obj.height / 2;
         targetCtx.translate(centerX, centerY);
         targetCtx.rotate(obj.angle);
         targetCtx.translate(-centerX, -centerY);
@@ -675,23 +633,30 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
             })();
 
             if (imgToDraw.complete) {
-                targetCtx.drawImage(imgToDraw, scaledX, scaledY, scaledWidth, scaledHeight);
+                targetCtx.drawImage(imgToDraw, obj.x, obj.y, obj.width, obj.height);
             } else {
-                // If not complete, and we are drawing to the display canvas, set onload to re-render
-                if (targetCtx === DOMElements.ctx) { // Check if it's the display canvas
-                   imgToDraw.onload = () => renderCanvas(); 
-                }
+                imgToDraw.onload = () => renderCanvas(); // Re-render when image loads
             }
         } else if (obj.type === 'text') {
             let fontStyle = '';
             if (obj.isItalic) fontStyle += 'italic ';
             if (obj.isBold) fontStyle += 'bold ';
 
-            // Scale font size
-            const scaledFontSize = obj.size * scaleFactor;
-            targetCtx.font = `${fontStyle}${scaledFontSize}px ${obj.font}`;
+            targetCtx.font = `${fontStyle}${obj.size}px ${obj.font}`;
             targetCtx.textAlign = obj.align;
             targetCtx.textBaseline = 'middle'; // Center text vertically
+
+            // Store measured width/height for hit testing and handle drawing
+            const textMetrics = targetCtx.measureText(obj.content);
+            obj.width = textMetrics.width;
+            obj.height = obj.size; // Approximation for text height
+
+            let textDrawX = obj.x; // Adjust drawing position based on alignment
+            if (obj.align === 'center') {
+                textDrawX = obj.x + obj.width / 2;
+            } else if (obj.align === 'right') {
+                textDrawX = obj.x + obj.width;
+            }
 
             // Ensure no lingering shadow/outline properties from previous draws
             targetCtx.shadowColor = 'rgba(0,0,0,0)';
@@ -702,25 +667,25 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
 
             // Draw filled text
             targetCtx.fillStyle = obj.color;
-            targetCtx.fillText(obj.content, textDrawX, scaledY + scaledHeight / 2); // textDrawX calculated with scaled values
+            targetCtx.fillText(obj.content, textDrawX, obj.y + obj.height / 2);
 
             // Draw underline (if enabled)
             if (obj.isUnderline) {
                 targetCtx.beginPath();
                 targetCtx.strokeStyle = obj.color;
-                targetCtx.lineWidth = (obj.size / 15) * scaleFactor; // Proportional underline thickness
-                const underlineY = scaledY + scaledHeight / 2 + scaledFontSize / 2 - targetCtx.lineWidth / 2; // Position below text
+                targetCtx.lineWidth = obj.size / 15; // Proportional underline thickness
+                const underlineY = obj.y + obj.height / 2 + obj.size / 2 - (obj.size / 15) / 2; // Position below text
 
-                let underlineStartX = scaledX;
+                let underlineStartX = obj.x;
                 // Adjust underline start X based on text alignment
                 if (obj.align === 'center') {
-                    underlineStartX = textDrawX - (obj.width / 2) * scaleFactor; 
+                    underlineStartX = textDrawX - textMetrics.width / 2;
                 } else if (obj.align === 'right') {
-                    underlineStartX = textDrawX - obj.width * scaleFactor; 
+                    underlineStartX = textDrawX - textMetrics.width;
                 }
                 
                 targetCtx.moveTo(underlineStartX, underlineY);
-                targetCtx.lineTo(underlineStartX + obj.width * scaleFactor, underlineY); 
+                targetCtx.lineTo(underlineStartX + textMetrics.width, underlineY);
                 targetCtx.stroke();
             }
         }
@@ -734,20 +699,17 @@ function drawDraggableObjectsOnCanvas(targetCtx, objects) {
  * @param {Array<object>} drawingsData - Array of drawing objects, each containing points, color, and size.
  */
 function drawDrawingsOnCanvas(targetCtx, drawingsData) {
-    // Calculate scaling factor from display canvas width to targetCtx canvas width
-    const scaleFactor = targetCtx.canvas.width / (appState.currentStripConfig ? appState.currentStripConfig.stripWidth : DOMElements.photoCanvas.width);
-
     drawingsData.forEach(drawing => {
         targetCtx.beginPath();
         targetCtx.strokeStyle = drawing.color;
-        targetCtx.lineWidth = drawing.size * scaleFactor; // Scale brush size
+        targetCtx.lineWidth = drawing.size;
         targetCtx.lineCap = 'round'; // Round caps for smoother lines
         targetCtx.lineJoin = 'round'; // Round joins for smoother corners
 
         if (drawing.points.length > 0) {
-            targetCtx.moveTo(drawing.points[0].x * scaleFactor, drawing.points[0].y * scaleFactor);
+            targetCtx.moveTo(drawing.points[0].x, drawing.points[0].y);
             for (let i = 1; i < drawing.points.length; i++) {
-                targetCtx.lineTo(drawing.points[i].x * scaleFactor, drawing.points[i].y * scaleFactor);
+                targetCtx.lineTo(drawing.points[i].x, drawing.points[i].y);
             }
         }
         targetCtx.stroke();
@@ -757,14 +719,10 @@ function drawDrawingsOnCanvas(targetCtx, drawingsData) {
 /**
  * Draws the selection rectangle and interaction handles (resize, rotate) around the selected draggable object.
  * Uses increased handle size for better touch usability.
- * NOTE: This function should only be called for the DISPLAY canvas, not the print canvas.
  * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
  * @param {object} obj - The currently selected draggable object.
  */
 function drawSelectionHandles(targetCtx, obj) {
-    // Ensure handles are only drawn on the display canvas
-    if (targetCtx !== DOMElements.ctx) return; 
-
     targetCtx.save(); // Save context state before handle drawing
 
     // Apply object's rotation to the context so handles are drawn relative to its rotated state
@@ -834,9 +792,8 @@ async function addSticker(stickerSrc) {
     }
 
     try {
-        // Initial size for new stickers (relative to display canvas)
-        const initialWidth = 100; 
         const img = await loadImage(stickerSrc);
+        const initialWidth = 100; // Default size for new stickers
         const initialHeight = (img.naturalHeight / img.naturalWidth) * initialWidth;
         const newSticker = {
             id: Date.now(), // Unique ID for tracking
@@ -893,13 +850,10 @@ function addText() {
     // Ensure font style (bold/italic) is considered for accurate measurement
     const tempFontStyle = `${DOMElements.textBoldBtn.classList.contains('active') ? 'bold ' : ''}` +
                          `${DOMElements.textItalicBtn.classList.contains('active') ? 'italic ' : ''}`;
-    // Use the *display* font size for measurement on the display canvas
-    const displayFontSize = parseInt(DOMElements.textSizeInput.value);
-    DOMElements.ctx.font = `${tempFontStyle}${displayFontSize}px ${DOMElements.textFontSelect.value}`;
-    
+    DOMElements.ctx.font = `${tempFontStyle}${parseInt(DOMElements.textSizeInput.value)}px ${DOMElements.textFontSelect.value}`;
     const textMetrics = DOMElements.ctx.measureText(textContent);
     const textWidth = textMetrics.width;
-    const textHeight = displayFontSize; // Use font size as height approximation
+    const textHeight = parseInt(DOMElements.textSizeInput.value); // Use font size as height approximation
 
     const newTextObj = {
         id: Date.now() + 1, // Unique ID
@@ -908,14 +862,14 @@ function addText() {
         y: (DOMElements.photoCanvas.height / 2) - (textHeight / 2), // Center vertically
         color: DOMElements.textColorInput.value,
         font: DOMElements.textFontSelect.value,
-        size: displayFontSize, // Store display font size
+        size: textHeight, // Storing initial size and current size
         align: DOMElements.textAlignSelect.value,
         isBold: DOMElements.textBoldBtn.classList.contains('active'),
         isItalic: DOMElements.textItalicBtn.classList.contains('active'),
         isUnderline: DOMElements.textUnderlineBtn.classList.contains('active'),
-        width: textWidth, // Measured width (will be updated on render based on actual drawn text)
+        width: textWidth, // Measured width (will be updated on render)
         height: textHeight, // Measured height (will be updated on render)
-        originalSize: displayFontSize, // Store original font size for scaling during resize
+        originalSize: textHeight, // Store original font size for scaling
         angle: 0,
         type: 'text' // Identifier for object type
     };
@@ -1123,7 +1077,7 @@ function handleCanvasPointerMove(e) {
         const sinInitialAngle = Math.sin(-appState.initialObjAngle);
 
         const rotatedMouseX = currentMouseXTranslated * cosInitialAngle - currentMouseYTranslated * sinInitialAngle;
-        const rotatedPosY = currentMouseXTranslated * sinInitialAngle + currentMouseYTranslated * cosInitialAngle;
+        const rotatedMouseY = currentMouseXTranslated * sinInitialAngle + currentMouseYTranslated * cosInitialAngle;
 
         let newWidth = appState.initialObjWidth;
         let newHeight = appState.initialObjHeight;
@@ -1133,7 +1087,7 @@ function handleCanvasPointerMove(e) {
         // Calculate the change in mouse position *in the rotated object's local space*
         // This is key for consistent resizing regardless of object rotation
         let dx_rotated = rotatedMouseX - ((appState.initialMouseX - initialCenterX) * cosInitialAngle - (appState.initialMouseY - initialCenterY) * sinInitialAngle);
-        let dy_rotated = rotatedPosY - ((appState.initialMouseX - initialCenterX) * sinInitialAngle + (appState.initialMouseY - initialCenterY) * cosInitialAngle);
+        let dy_rotated = rotatedMouseY - ((appState.initialMouseX - initialCenterX) * sinInitialAngle + (appState.initialMouseY - initialCenterY) * cosInitialAngle);
 
         // Adjust width, height, and position based on the handle being dragged
         // We'll prioritize change in width/height based on which corner is dragged
@@ -1172,6 +1126,7 @@ function handleCanvasPointerMove(e) {
             }
 
             // Recalculate position to keep the original anchor point fixed while maintaining aspect ratio
+            // This is complex due to rotation, but essential for correct behavior.
             const newCenterX = initialCenterX + (newWidth - appState.initialObjWidth) / 2 * Math.cos(appState.initialObjAngle) - (newHeight - appState.initialObjHeight) / 2 * Math.sin(appState.initialObjAngle);
             const newCenterY = initialCenterY + (newWidth - appState.initialObjWidth) / 2 * Math.sin(appState.initialObjAngle) + (newHeight - appState.initialObjHeight) / 2 * Math.cos(appState.initialObjAngle);
 
@@ -1191,7 +1146,6 @@ function handleCanvasPointerMove(e) {
 
         // If it's a text object, scale its font size proportionally
         if (obj.type === 'text') {
-            // Scale based on the ratio of new height to original object height
             const newTextSize = (obj.originalSize || appState.initialObjHeight) * (newHeight / appState.initialObjHeight);
             obj.size = Math.max(10, Math.round(newTextSize)); // Ensure minimum font size
             updateTextControlsFromSelection(); // Update the size input in the UI
@@ -1280,7 +1234,6 @@ function updateSelectedTextProperty(property, value) {
         if (property === 'content' || property === 'font' || property === 'size' || property === 'isBold' || property === 'isItalic') {
             const currentTextObj = appState.selectedDraggable;
             const tempFontStyle = `${currentTextObj.isBold ? 'bold ' : ''}${currentTextObj.isItalic ? 'italic ' : ''}`;
-            // Use the *display* font size for measurement on the display canvas
             DOMElements.ctx.font = `${tempFontStyle}${currentTextObj.size}px ${currentTextObj.font}`;
             currentTextObj.width = DOMElements.ctx.measureText(currentTextObj.content).width;
             currentTextObj.height = currentTextObj.size; // Simple approximation for height based on font size
@@ -1300,45 +1253,58 @@ function updateSelectedTextProperty(property, value) {
  * @returns {Promise<HTMLCanvasElement>} A promise that resolves with the final composite canvas.
  */
 async function createFinalStripCanvas() {
-    // Calculate the dimensions for the high-resolution print/download canvas
-    const outputCanvasWidth = Math.round(PHYSICAL_STRIP_WIDTH_INCHES * OUTPUT_DPI);
-    const outputCanvasHeight = Math.round(PHYSICAL_STRIP_HEIGHT_INCHES * OUTPUT_DPI);
-
     const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = outputCanvasWidth;
-    finalCanvas.height = outputCanvasHeight;
+    finalCanvas.width = DOMElements.photoCanvas.width;
+    finalCanvas.height = DOMElements.photoCanvas.height;
     const finalCtx = finalCanvas.getContext('2d');
 
-    // Calculate the scaling factor from the display canvas dimensions to the output canvas dimensions
-    const displayWidth = appState.currentStripConfig.stripWidth;
-    // const displayHeight = appState.currentStripConfig.stripHeight; // Not strictly needed for scale factor if using width-based scale
-    
-    // Check for division by zero if stripWidth is 0 (should not happen with valid config)
-    const scaleFactor = displayWidth > 0 ? outputCanvasWidth / displayWidth : 1; 
-    // console.log(`Output Canvas: ${outputCanvasWidth}x${outputCanvasHeight}, Display Canvas: ${displayWidth}x${displayHeight}, Scale Factor: ${scaleFactor}`);
-
-
     // Temporarily clear selection on the main editing canvas for a clean render for output.
+    // This prevents selection handles from appearing on the downloaded/printed image.
     const tempSelected = appState.selectedDraggable;
     appState.selectedDraggable = null;
 
-    // Draw background color (scaled to output canvas)
+    // Draw background color
     if (appState.currentStripConfig && appState.currentStripConfig.defaultBackground) {
         finalCtx.fillStyle = appState.currentStripConfig.defaultBackground;
-        finalCtx.fillRect(0, 0, outputCanvasWidth, outputCanvasHeight);
+        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
     }
 
-    // Pass the original stripConfig to drawing functions for their internal calculations,
-    // and let them apply the scaleFactor when drawing to finalCtx.
-    // NOTE: Passing appState.currentStripConfig is important for drawing functions
-    // to know the *original* layout coordinates before scaling.
-    await drawFrameOnCanvas(finalCtx, appState.currentStripConfig);
-    drawPhotosOnCanvas(finalCtx, appState.currentStripConfig);
+    // Draw the selected frame image (this is an asynchronous operation, so we await it).
+    // The `drawFrameOnCanvas` function is designed to draw to any provided context.
+    await drawFrameOnCanvas(finalCtx);
+
+    // Draw captured photos within their respective frames on the final canvas.
+    // Ensure all preloaded images are fully loaded before drawing.
+    const numPhotosToDisplay = appState.capturedPhotosBase64.length;
+    const framesToUse = appState.currentStripConfig ? appState.currentStripConfig.frames : [];
+    for (let i = 0; i < Math.min(numPhotosToDisplay, framesToUse.length); i++) {
+        const frame = framesToUse[i];
+        if (!frame) continue; // Skip if frame configuration is missing.
+
+        const img = appState.preloadedCapturedImages[i];
+        if (img && img.complete) { // Check if image is loaded and complete.
+            finalCtx.drawImage(img, frame.x, frame.y, frame.width, frame.height);
+        } else {
+            // Fallback: If for some reason a preloaded image isn't ready (should be rare),
+            // try to load it on demand for the final output.
+            try {
+                const loadedImg = await loadImage(appState.capturedPhotosBase64[i]);
+                finalCtx.drawImage(loadedImg, frame.x, frame.y, frame.width, frame.height);
+            } catch (error) {
+                console.error(`ERROR: Failed to draw photo ${i + 1} on final composite for print/download:`, error);
+                // Optionally draw a placeholder for failed images on the final output.
+            }
+        }
+    }
+
+    // Draw all active stickers, text elements, and user drawings on the final canvas.
+    // These functions also draw to any provided context.
     drawDraggableObjectsOnCanvas(finalCtx, appState.stickers);
     drawDraggableObjectsOnCanvas(finalCtx, appState.texts);
     drawDrawingsOnCanvas(finalCtx, appState.drawings);
 
     // Restore the selection on the main editing canvas after the final image is created.
+    // This is important so the user's current selection state is not lost.
     appState.selectedDraggable = tempSelected;
     renderCanvas(); // Re-render the main canvas to bring back selection handles if any.
 
@@ -1359,7 +1325,7 @@ async function downloadStrip() {
     logAnalytics('Download_Started');
 
     try {
-        const finalCanvas = await createFinalStripCanvas(); // Get the composite canvas at high DPI
+        const finalCanvas = await createFinalStripCanvas(); // Get the composite canvas
         const format = DOMElements.downloadFormatSelect.value.split(';');
         const mimeType = format[0];
         const quality = format.length > 1 ? parseFloat(format[1]) : 1.0;
@@ -1399,7 +1365,7 @@ async function printStrip() {
     logAnalytics('Print_Request_Started');
 
     try {
-        // Create the final composite image on a temporary canvas at high DPI
+        // Create the final composite image on a temporary canvas.
         const finalCanvas = await createFinalStripCanvas();
         // Get the image as a PNG data URL, which is generally good for print quality.
         const dataURL = finalCanvas.toDataURL('image/png');
@@ -1417,7 +1383,6 @@ async function printStrip() {
         printWindow.document.write('<html><head><title>Print ODZ Booth Strip</title>');
         printWindow.document.write('<style>');
         // CSS to ensure the image fits the page, is centered, and removes default print margins.
-        // It's important to set print media styles directly here for reliable printing.
         printWindow.document.write(`
             body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; }
             img { max-width: 100%; max-height: 95vh; display: block; margin: 0 auto; object-fit: contain; }
@@ -1425,7 +1390,6 @@ async function printStrip() {
         `);
         printWindow.document.write('</style>');
         printWindow.document.write('</head><body>');
-        // Embed the generated photo strip image.
         printWindow.document.write(`<img src="${dataURL}" alt="ODZ Booth Photo Strip">`);
         printWindow.document.close(); // Close the document stream.
 
@@ -1434,7 +1398,11 @@ async function printStrip() {
         printWindow.onload = function() {
             printWindow.focus(); // Bring the new window to the foreground.
             printWindow.print(); // Open the native print dialog.
+            // Note: printWindow.close() here might close the window *before* the user interacts with the print dialog.
+            // It's often better to let the user close it, or use a setTimeout to close after a delay.
+            // For most modern browsers, the print dialog handles its own window closure.
             logAnalytics('Print_Dialog_Opened');
+            // If you want to force close after print dialog, use: setTimeout(() => printWindow.close(), 500);
         };
     } catch (error) {
         console.error("Error preparing strip for printing:", error);
@@ -1451,8 +1419,11 @@ async function printStrip() {
 function retakePhotos() {
     // Clear only captured photos and related counts, but keep layout info
     localStorage.removeItem('capturedPhotos');
+    // localStorage.removeItem('selectedPhotoCount'); // Keep this, as layout is chosen
+    // localStorage.removeItem('selectedFrameAspectRatio'); // Keep this
+
     logAnalytics('Retake_Photos_Initiated');
-    window.location.href = 'layout-selection/layout-selection.html';
+    window.location.href = 'capture-page/capture-page.html';
 }
 
 
@@ -1494,7 +1465,6 @@ function setupEventListeners() {
     DOMElements.removeStickerBtn.addEventListener("click", removeSelectedSticker);
 
     // Text controls
-    // Event listeners for text styling, using the corrected DOMElements
     DOMElements.textInput.addEventListener('input', () => updateSelectedTextProperty('content', DOMElements.textInput.value));
     DOMElements.textColorInput.addEventListener('change', () => updateSelectedTextProperty('color', DOMElements.textColorInput.value));
     DOMElements.textFontSelect.addEventListener('change', () => updateSelectedTextProperty('font', DOMElements.textFontSelect.value));
@@ -1580,14 +1550,14 @@ async function initializeEditorPage() {
         displayCanvasMessage(
             'No photos found or invalid layout.',
             'info',
-            'Please go back to <a href="layout-selection/layout-selection.html">capture photos</a> first.' // Corrected link
+            'Please go back to <a href="capture-page/capture-page.html">capture photos</a> first.'
         );
         // Disable all editing controls if no photos or invalid setup
         Object.values(DOMElements).forEach(el => {
             // Check if element exists before trying to disable
             if (el && typeof el.disabled !== 'undefined') el.disabled = true;
         });
-        if (DOMElements.retakeBtn) DOMElements.retakeBtn.disabled = false; // Re-enable retake button always
+        DOMElements.retakeBtn.disabled = false; // Re-enable retake button always
         
         // IMPORTANT: Ensure text input and add button are ALWAYS enabled, even with no photos
         if (DOMElements.textInput) DOMElements.textInput.disabled = false; 
@@ -1597,7 +1567,7 @@ async function initializeEditorPage() {
         return;
     }
 
-    // Set canvas dimensions based on the determined strip configuration (display resolution)
+    // Set canvas dimensions based on the determined strip configuration
     DOMElements.photoCanvas.width = appState.currentStripConfig.stripWidth;
     DOMElements.photoCanvas.height = appState.currentStripConfig.stripHeight;
 
@@ -1623,7 +1593,7 @@ async function initializeEditorPage() {
     // though ideally all elements are guaranteed to exist at this point.
     if (DOMElements.textColorInput) DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
     if (DOMElements.textFontSelect) DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.font;
-    if (DOMElements.textSizeInput) DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size; // Initial display size
+    if (DOMElements.textSizeInput) DOMElements.textSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
     if (DOMElements.textAlignSelect) DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
     if (DOMElements.brushColorInput) DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
     if (DOMElements.brushSizeInput) DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
