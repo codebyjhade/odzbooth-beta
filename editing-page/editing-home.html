@@ -42,14 +42,14 @@
             <h2>Customize Your Strip</h2>
 
             <div class="tool-section">
-                <h3>Choose Frame</h3>
+                <h3><i class='bx bx-border-all'></i> Choose Frame</h3>
                 <select id="frameSelect" title="Select a frame design">
                     </select>
                 <p class="tool-tip">Select a different frame design for your photo strip.</p>
             </div>
 
             <div class="tool-section">
-                <h3><i class='bx bx-border-all'></i> Choose Frame</h3>
+                <h3><i class='bx bxs-sticker'></i> Add Stickers</h3>
                  <select id="stickerSelect" title="Select a high school strand sticker">
                     <option value="">Select a sticker</option>
                     <option value="assets/stickers/stem.png">STEM Student</option>
@@ -66,7 +66,7 @@
             </div>
 
             <div class="tool-section">
-                <h3>Add Text</h3>
+                <h3><i class='bx bx-text'></i> Add Text</h3>
                 <input type="text" id="textInput" placeholder="Enter text here">
                 <input type="color" id="textColorInput" value="#333333" title="Text Color">
                 <select id="textFontSelect">
@@ -87,21 +87,7 @@
                         <option value="right">Right</option>
                     </select>
                 </div>
-                <div class="text-effect-options">
-                    <label for="textOutlineColorInput">Outline:</label>
-                    <input type="color" id="textOutlineColorInput" value="#000000" title="Text Outline Color" disabled>
-                    <input type="number" id="textOutlineWidthInput" value="0" min="0" max="5" title="Text Outline Width" disabled>
-                    <button id="clearTextOutlineBtn" class="style-toggle-btn small-btn" title="Clear Outline" disabled><i class='bx bx-brush-alt'></i></button>
-                </div>
-                <div class="text-effect-options">
-                    <label for="textShadowColorInput">Shadow:</label>
-                    <input type="color" id="textShadowColorInput" value="#000000" title="Text Shadow Color" disabled>
-                    <input type="number" id="textShadowOffsetXInput" value="0" min="-10" max="10" title="Shadow Offset X" disabled>
-                    <input type="number" id="textShadowOffsetYInput" value="0" min="-10" max="10" title="Shadow Offset Y" disabled>
-                    <input type="number" id="textShadowBlurInput" value="0" min="0" max="20" title="Shadow Blur" disabled>
-                    <button id="clearTextShadowBtn" class="style-toggle-btn small-btn" title="Clear Shadow" disabled><i class='bx bx-sun'></i></button>
-                </div>
-
+                
                 <button id="addTextBtn" class="action-btn">
                         <i class='bx bx-text'></i> Add Text
                 </button>
