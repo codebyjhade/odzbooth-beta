@@ -11,8 +11,6 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    
     <script defer src="editing-page/edit.js"></script> 
 </head>
 <body>
@@ -20,10 +18,7 @@
     <header class="editor-header">
         <h1 class="title">ODZ <span class="booth">BOOTH</span></h1>
         <p>Unleash Your Creativity: Edit Your Masterpiece!</p>
-        <button id="newSessionBtn" class="header-action-btn" title="Start a new session from the beginning">
-            <i class='bx bx-home'></i> New Session
-        </button>
-    </header>
+        </header>
 
     <main class="editor-wrapper">
         <div class="photo-strip-preview">
@@ -40,14 +35,7 @@
                     <p>Generating Strip...</p>
                 </div>
                 
-                <div id="qrCodeOverlay" class="qr-code-overlay hidden">
-                    <div class="qr-code-content">
-                        <h3>Scan to Download!</h3>
-                        <svg id="qrcodeCanvas"></svg> <p>Scan this QR code with your phone to download your photo strip instantly!</p>
-                        <button id="closeQrBtn" class="action-btn">Close</button>
-                    </div>
                 </div>
-            </div>
         </div>
 
         <div class="tools-panel">
@@ -71,7 +59,7 @@
                 <button id="addStickerBtn" class="action-btn">
                     <i class='bx bxs-sticker'></i> Add Sticker
                 </button>
-                <button id="removeStickerBtn" class="action-btn delete-btn" style="margin-top: 10px;"> 
+                <button id="removeStickerBtn" class="action-btn delete-btn" disabled> 
                     <i class='bx bx-trash'></i> Remove Selected Sticker
                 </button>
                 <p class="tool-tip">Select a sticker from the list and click 'Add Sticker'. Click on a sticker on the canvas to select it, then click 'Remove Selected Sticker' to delete it.</p>
@@ -90,10 +78,10 @@
                 <input type="number" id="textSizeInput" value="30" min="10" max="100" title="Text Size">
                 
                 <div class="text-style-options">
-                    <button id="textBoldBtn" class="style-toggle-btn" title="Bold"><i class='bx bx-bold'></i></button>
-                    <button id="textItalicBtn" class="style-toggle-btn" title="Italic"><i class='bx bx-italic'></i></button>
-                    <button id="textUnderlineBtn" class="style-toggle-btn" title="Underline"><i class='bx bx-underline'></i></button>
-                    <select id="textAlignSelect" title="Text Alignment">
+                    <button id="textBoldBtn" class="style-toggle-btn" title="Bold" disabled><i class='bx bx-bold'></i></button>
+                    <button id="textItalicBtn" class="style-toggle-btn" title="Italic" disabled><i class='bx bx-italic'></i></button>
+                    <button id="textUnderlineBtn" class="style-toggle-btn" title="Underline" disabled><i class='bx bx-underline'></i></button>
+                    <select id="textAlignSelect" title="Text Alignment" disabled>
                         <option value="center">Center</option>
                         <option value="left">Left</option>
                         <option value="right">Right</option>
@@ -101,23 +89,23 @@
                 </div>
                 <div class="text-effect-options">
                     <label for="textOutlineColorInput">Outline:</label>
-                    <input type="color" id="textOutlineColorInput" value="#000000" title="Text Outline Color">
-                    <input type="number" id="textOutlineWidthInput" value="0" min="0" max="5" title="Text Outline Width">
-                    <button id="clearTextOutlineBtn" class="style-toggle-btn small-btn" title="Clear Outline"><i class='bx bx-brush-alt'></i></button>
+                    <input type="color" id="textOutlineColorInput" value="#000000" title="Text Outline Color" disabled>
+                    <input type="number" id="textOutlineWidthInput" value="0" min="0" max="5" title="Text Outline Width" disabled>
+                    <button id="clearTextOutlineBtn" class="style-toggle-btn small-btn" title="Clear Outline" disabled><i class='bx bx-brush-alt'></i></button>
                 </div>
                 <div class="text-effect-options">
                     <label for="textShadowColorInput">Shadow:</label>
-                    <input type="color" id="textShadowColorInput" value="#000000" title="Text Shadow Color">
-                    <input type="number" id="textShadowOffsetXInput" value="0" min="-10" max="10" title="Shadow Offset X">
-                    <input type="number" id="textShadowOffsetYInput" value="0" min="-10" max="10" title="Shadow Offset Y">
-                    <input type="number" id="textShadowBlurInput" value="0" min="0" max="20" title="Shadow Blur">
-                    <button id="clearTextShadowBtn" class="style-toggle-btn small-btn" title="Clear Shadow"><i class='bx bx-sun'></i></button>
+                    <input type="color" id="textShadowColorInput" value="#000000" title="Text Shadow Color" disabled>
+                    <input type="number" id="textShadowOffsetXInput" value="0" min="-10" max="10" title="Shadow Offset X" disabled>
+                    <input type="number" id="textShadowOffsetYInput" value="0" min="-10" max="10" title="Shadow Offset Y" disabled>
+                    <input type="number" id="textShadowBlurInput" value="0" min="0" max="20" title="Shadow Blur" disabled>
+                    <button id="clearTextShadowBtn" class="style-toggle-btn small-btn" title="Clear Shadow" disabled><i class='bx bx-sun'></i></button>
                 </div>
 
                 <button id="addTextBtn" class="action-btn">
                         <i class='bx bx-text'></i> Add Text
                 </button>
-                <button id="removeTextBtn" class="action-btn delete-btn" style="margin-top: 10px;"> 
+                <button id="removeTextBtn" class="action-btn delete-btn" disabled> 
                     <i class='bx bx-trash'></i> Remove Selected Text
                 </button>
                 <p class="tool-tip">Type your message, choose style, then add! Click on text on the canvas to select it, then click 'Remove Selected Text' to delete it.</p>
@@ -152,9 +140,6 @@
                 </div>
                 <button id="downloadStripBtn" class="download-btn">
                     <i class='bx bxs-download'></i> Download Strip
-                </button>
-                <button id="showQrCodeBtn" class="action-btn" style="margin-top: 10px;">
-                    <i class='bx bx-qr-scan'></i> Get QR Code
                 </button>
                 <button id="printStripBtn" class="action-btn" style="margin-top: 10px;">
                     <i class='bx bx-printer'></i> Print Strip
