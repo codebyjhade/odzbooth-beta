@@ -48,22 +48,44 @@
             </div>
 
             <div class="tool-section">
+                <h3><i class='bx bxs-color-fill'></i> Custom Frame Color</h3>
+                <div class="color-picker-group">
+                    <label for="customFrameColorInput">Background Color:</label>
+                    <input type="color" id="customFrameColorInput" value="#CCCCCC" title="Choose a custom frame background color">
+                </div>
+                <p class="tool-tip">Select 'Custom Color' from the 'Choose Frame' dropdown to apply this background color to your strip.</p>
+            </div>
+
+            <div class="tool-section">
+                <h3><i class='bx bx-calendar'></i> Date and Time</h3>
+                <div class="date-time-controls">
+                    <label for="showDateCheckbox">
+                        <input type="checkbox" id="showDateCheckbox"> Show Date on Strip
+                    </label>
+                    <div id="dateTimeDisplay" class="info-message" style="margin-top: 10px; display: none;">
+                        <p>Loading Date...</p>
+                    </div>
+                </div>
+                <p class="tool-tip">Toggle to display the current date and time (Philippines Standard Time) on your photo strip.</p>
+            </div>
+
+            <div class="tool-section">
                 <h3><i class='bx bxs-sticker'></i> Add Stickers</h3>
-                 <select id="stickerSelect" title="Select a sticker category">
+                <select id="stickerSelect" title="Select a sticker category">
                     <option value="">Select a sticker</option>
 
                     <optgroup label="Strand Stickers">
                         <option value="assets/stickers/stem.png">STEM Student</option>
                         <option value="assets/stickers/humss.png">HUMSS Student</option>
                         <option value="assets/stickers/abm.png">ABM Student</option>
-                        </optgroup>
+                    </optgroup>
 
                     <optgroup label="Hearts">
                         <option value="assets/stickers/heart-pink-1.png">heart-pink-1</option>
                         <option value="assets/stickers/heart-pink-2.png">heart-pink-2</option>
                         <option value="assets/stickers/loading-heart.png">loading-heart</option>
                         <option value="assets/stickers/blue-heart.png">blue-heart</option>
-                        </optgroup>
+                    </optgroup>
 
                     <optgroup label="Random">
                         <option value="assets/stickers/bunny.png">bunny-1</option>
@@ -72,13 +94,13 @@
                         <option value="assets/stickers/flower-bouquet.png">flower-bouquet</option>
                         <option value="assets/stickers/paper-airplane.png">paper-airplane</option>
                         <option value="assets/stickers/star.png">star</option>
-                        </optgroup>
+                    </optgroup>
 
                     <optgroup label="XOXO">
                         <option value="assets/stickers/xoxo.png">xoxo-1</option>
                         <option value="assets/stickers/xoxo-2.png">xoxo-2</option>
                         <option value="assets/stickers/xoxo-3.png">xoxo-3</option>
-                        </optgroup>
+                    </optgroup>
                 </select>
                 <button id="addStickerBtn" class="action-btn">
                     <i class='bx bxs-sticker'></i> Add Sticker
