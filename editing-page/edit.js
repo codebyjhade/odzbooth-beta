@@ -152,7 +152,9 @@ const DOMElements = {
     noPhotosMessage: document.getElementById('noPhotosMessage'),
     downloadSpinner: document.getElementById('downloadSpinner'),
 
-    // NEW: Background color input
+    // NEW: Background color controls
+    backgroundColorSelect: document.getElementById("backgroundColorSelect"),
+    customColorPickerContainer: document.getElementById("customColorPickerContainer"),
     backgroundColorInput: document.getElementById("backgroundColorInput"),
 };
 
@@ -186,7 +188,7 @@ const appState = {
     lastDrawX: 0,                  // Last X coordinate for drawing a continuous line
     lastDrawY: 0,                  // Last Y coordinate for drawing a continuous line
 
-    // NEW: Custom background color for the strip
+    // Custom background color for the strip
     customBackgroundColor: '#CCCCCC', 
 };
 
@@ -1302,12 +1304,43 @@ function setupEventListeners() {
         }
     });
 
-    // NEW: Background color picker
+    // NEW: Background color selector (dropdown)
+    if (DOMElements.backgroundColorSelect) {
+        DOMElements.backgroundColorSelect.addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+            if (selectedValue === 'custom') {
+                // Show the color picker
+                if (DOMElements.customColorPickerContainer) {
+                    DOMElements.customColorPickerContainer.style.display = 'block';
+                }
+                // If it's empty or invalid, set a distinct default custom color
+                if (!DOMElements.backgroundColorInput.value) {
+                     DOMElements.backgroundColorInput.value = '#FF00FF'; 
+                     appState.customBackgroundColor = '#FF00FF';
+                } else {
+                    appState.customBackgroundColor = DOMElements.backgroundColorInput.value;
+                }
+            } else {
+                // Hide the color picker
+                if (DOMElements.customColorPickerContainer) {
+                    DOMElements.customColorPickerContainer.style.display = 'none';
+                }
+                // Set predefined color
+                appState.customBackgroundColor = selectedValue;
+            }
+            renderCanvas();
+            logAnalytics('Background_Style_Changed', { style: selectedValue, color: appState.customBackgroundColor });
+        });
+    }
+
+    // Existing: Background color picker (for custom color) - now only updates if 'custom' is selected
     if (DOMElements.backgroundColorInput) {
         DOMElements.backgroundColorInput.addEventListener('input', (event) => {
-            appState.customBackgroundColor = event.target.value;
-            renderCanvas();
-            logAnalytics('Background_Color_Changed', { color: appState.customBackgroundColor });
+            if (DOMElements.backgroundColorSelect && DOMElements.backgroundColorSelect.value === 'custom') {
+                appState.customBackgroundColor = event.target.value;
+                renderCanvas();
+                logAnalytics('Custom_Background_Color_Picked', { color: appState.customBackgroundColor });
+            }
         });
     }
 }
@@ -1354,13 +1387,36 @@ async function initializeEditorPage() {
         : selectedPhotoCount.toString();
     appState.currentStripConfig = STRIP_LAYOUT_CONFIGS[configKey];
 
-    // NEW: Initialize custom background color from config or default
+    // NEW: Initialize custom background color and selector
     if (appState.currentStripConfig && appState.currentStripConfig.defaultBackground) {
         appState.customBackgroundColor = appState.currentStripConfig.defaultBackground;
     }
-    if (DOMElements.backgroundColorInput) {
+
+    if (DOMElements.backgroundColorSelect) {
+        // Set initial selection; if defaultBackground is known, try to match
+        const defaultBg = appState.customBackgroundColor;
+        if (defaultBg === '#CCCCCC' || defaultBg === '#FFFFFF' || defaultBg === '#000000') {
+            DOMElements.backgroundColorSelect.value = defaultBg;
+        } else {
+            // If it's not one of the predefined, assume custom and set value
+            DOMElements.backgroundColorSelect.value = 'custom';
+            if (DOMElements.backgroundColorInput) {
+                DOMElements.backgroundColorInput.value = defaultBg;
+            }
+            if (DOMElements.customColorPickerContainer) {
+                DOMElements.customColorPickerContainer.style.display = 'block';
+            }
+        }
+    } else if (DOMElements.backgroundColorInput) {
+        // Fallback if select is not present, just use the input
         DOMElements.backgroundColorInput.value = appState.customBackgroundColor;
     }
+
+    // Ensure custom color picker is hidden by default if not 'custom' initially
+    if (DOMElements.customColorPickerContainer && DOMElements.backgroundColorSelect.value !== 'custom') {
+        DOMElements.customColorPickerContainer.style.display = 'none';
+    }
+
 
     // Handle cases where no photos are found or layout is invalid
     if (appState.capturedPhotosBase64.length === 0 || !appState.currentStripConfig || typeof appState.currentStripConfig.stripWidth === 'undefined') {
