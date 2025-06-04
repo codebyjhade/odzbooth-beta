@@ -92,6 +92,7 @@ const STRIP_LAYOUT_CONFIGS = {
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-6-photo-option1.png', name: 'option-1' },
             { id: 'option2', src: 'assets/strip-frame-6-photo-option2.png', name: 'option-2' }
+            { id: 'option3', src: 'assets/strip-frame-6-photo-option3.png', name: 'option-3' }
         ]
     }
 };
