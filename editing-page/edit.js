@@ -35,9 +35,9 @@ const STRIP_LAYOUT_CONFIGS = {
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photo-option1.png', name: 'option-1' },
-            { id: 'option2', src: 'assets/strip-frame-2-photo-option2.png', name: 'option-2' },
-            { id: 'option3', src: 'assets/strip-frame-2-photo-option3.png', name: 'option-3' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'option-3' }
         ]
     },
     // Configuration for a 3-photo strip
@@ -52,9 +52,9 @@ const STRIP_LAYOUT_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photo-option1.png', name: 'option-1' },
-            { id: 'option2', src: 'assets/strip-frame-3-photo-option2.png', name: 'option-2' },
-            { id: 'option3', src: 'assets/strip-frame-3-photo-option3.png', name: 'option-3' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'option-3' }
         ]
     },
     // Configuration for a 4-photo strip
@@ -70,9 +70,9 @@ const STRIP_LAYOUT_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 226,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-4-photo-option1.png', name: 'option-1' },
-            { id: 'option2', src: 'assets/strip-frame-4-photo-option2.png', name: 'option-2' },
-            { id: 'option3', src: 'assets/strip-frame-4-photo-option3.png', name: 'option-3' }
+            { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'option-2' },
+            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'option-3' }
         ]
     },
     // Configuration for a 6-photo strip (2 columns)
@@ -90,9 +90,9 @@ const STRIP_LAYOUT_CONFIGS = {
         defaultBackground: '#CCCCCC',
         frameAspectRatio: 320 / 220,
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-6-photo-option1.png', name: 'option-1' },
-            { id: 'option2', src: 'assets/strip-frame-6-photo-option2.png', name: 'option-2' }
-            { id: 'option3', src: 'assets/strip-frame-6-photo-option3.png', name: 'option-3' }
+            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'option-1' },
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'option-2' }
+            { id: 'option3', src: 'assets/strip-frame-6-photos-option3.png', name: 'option-3' }
         ]
     }
 };
