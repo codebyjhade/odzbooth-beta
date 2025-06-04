@@ -20,9 +20,9 @@ const STRIP_LAYOUT_CONFIGS = {
         frames: [{ x: 40, y: 40, width: 320, height: 240 }],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-1-photo-option1.png', name: 'Original Single' },
-            { id: 'option2', src: 'assets/strip-frame-1-photo-option2.png', name: 'Clean White' },
-            { id: 'option3', src: 'assets/strip-frame-1-photo-option3.png', name: 'Styled Border' }
+            { id: 'option1', src: 'assets/strip-frame-1-photos-option1.png', name: 'Original Single' },
+            { id: 'option2', src: 'assets/strip-frame-1-photos-option2.png', name: 'Clean White' },
+            { id: 'option3', src: 'assets/strip-frame-1-photos-option3.png', name: 'Styled Border' }
         ]
     },
     // Configuration for a 2-photo strip
@@ -92,7 +92,6 @@ const STRIP_LAYOUT_CONFIGS = {
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'option-1' },
             { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'option-2' }
-            { id: 'option3', src: 'assets/strip-frame-6-photos-option3.png', name: 'option-3' }
         ]
     }
 };
