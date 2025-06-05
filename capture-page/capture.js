@@ -188,8 +188,11 @@ async function populateCameraList() {
             cameraSelect.appendChild(option);
         });
 
+        // MODIFIED: Start camera only once after populating the list
         if (cameraSelect.options.length > 0) {
-            startCamera(cameraSelect.options[0].value);
+            // Select the first option and then start the camera with its value
+            cameraSelect.selectedIndex = 0; 
+            startCamera(cameraSelect.value); // This is the single initial call
         } else {
             displayCameraMessage(
                 'No selectable cameras.',
@@ -252,10 +255,11 @@ async function startCamera(deviceId) {
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
+        console.log('Main Thread: Existing camera stream stopped.');
     }
 
     showCameraLoadingSpinner(true); 
-    console.log('Attempting to start camera stream...');
+    console.log('Main Thread: Attempting to start camera stream...');
 
     try {
         const constraints = {
@@ -278,7 +282,7 @@ async function startCamera(deviceId) {
             setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
             // Log the actual resolution obtained
-            console.log(`Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
+            console.log(`Main Thread: Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
             
             // NEW: Initialize OffscreenCanvas and Web Worker once video metadata is loaded
             initializeImageProcessorWorker();
@@ -300,6 +304,7 @@ function initializeImageProcessorWorker() {
         // If already initialized, send a message to clean up the old worker
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
+        console.log('Main Thread: Existing Web Worker terminated.');
     }
 
     // Create an OffscreenCanvas from a temporary HTML canvas element
@@ -310,7 +315,7 @@ function initializeImageProcessorWorker() {
     // Create the Web Worker
     // Make sure the path to image-processor.js is correct relative to capture.js
     imageProcessorWorker = new Worker('capture-page/image-processor.js');
-    console.log('Web Worker created.');
+    console.log('Main Thread: Web Worker created.');
 
     // Send the OffscreenCanvas to the worker (transferable)
     imageProcessorWorker.postMessage({
@@ -325,14 +330,14 @@ function initializeImageProcessorWorker() {
     imageProcessorWorker.onmessage = (event) => {
         if (event.data.type === 'FRAME_PROCESSED') {
             const { imgData, indexToReplace } = event.data.payload;
-            console.log('Photo data received from worker.');
+            console.log('Main Thread: Photo data received from worker.');
             handleProcessedPhoto(imgData, indexToReplace); // Process the photo on the main thread
             showPhotoProcessingSpinner(false); // Hide spinner after processing is done
         }
     };
 
     imageProcessorWorker.onerror = (error) => {
-        console.error('Web Worker error:', error);
+        console.error('Main Thread: Web Worker error:', error);
         showPhotoProcessingSpinner(false);
         // Handle worker errors, e.g., show an error message to the user
         displayCameraMessage(
@@ -424,7 +429,7 @@ function runCountdown(duration) {
  */
 async function sendFrameToWorker(indexToReplace = -1) {
     if (!imageProcessorWorker) {
-        console.error('Image processing worker not initialized. Cannot send frame.');
+        console.error('Main Thread: Image processing worker not initialized. Cannot send frame.');
         showPhotoProcessingSpinner(false);
         return;
     }
@@ -586,7 +591,7 @@ function prepareForRetake() {
 // NEW: Executes the single retake capture (countdown + take photo)
 async function executeRetakeCapture() {
     if (selectedPhotoIndexForRetake === -1) {
-        console.error("No photo selected for retake, but executeRetakeCapture was called.");
+        console.error("Main Thread: No photo selected for retake, but executeRetakeCapture was called.");
         exitRetakePreparationState();
         return;
     }
