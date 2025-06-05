@@ -28,73 +28,85 @@ const STRIP_LAYOUT_CONFIGS = {
     // Configuration for a 2-photo strip
     '2': {
         stripWidth: 400,
-        stripHeight: 40 + 240 + 20 + 240 + 150, // topPadding + photoHeight*2 + gap + bottomSpaceForLogo
+        stripHeight: 40 + (240 * 2) + (20 * 1) + 150, // topPadding + (photoHeight * 2) + gapBetweenPhotos + bottomSpaceForLogo
         frames: [
             { x: 40, y: 40, width: 320, height: 240 },
             { x: 40, y: 40 + 240 + 20, width: 320, height: 240 }
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Standard Pair' },
-            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Duo' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Double' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimalist Grid' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Photo Booth Classic' }
         ]
     },
     // Configuration for a 3-photo strip
     '3': {
         stripWidth: 400,
-        stripHeight: 40 + 220 + 20 + 220 + 20 + 220 + 150, // topPadding + photoHeight*3 + gap*2 + bottomSpaceForLogo
+        stripHeight: 40 + (240 * 3) + (20 * 2) + 150, // topPadding + (photoHeight * 3) + (gapBetweenPhotos * 2) + bottomSpaceForLogo
         frames: [
-            { x: 40, y: 40, width: 320, height: 220 },
-            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
-            { x: 40, y: 40 + 220 + 20 + 220 + 20, width: 320, height: 220 }
+            { x: 40, y: 40, width: 320, height: 240 },
+            { x: 40, y: 40 + 240 + 20, width: 320, height: 240 },
+            { x: 40, y: 40 + (240 * 2) + (20 * 2), width: 320, height: 240 }
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Classic Three' },
-            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Film Strip' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Standard Triple' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Retro Film' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Grayscale Elegance' }
         ]
     },
     // Configuration for a 4-photo strip
     '4': {
         stripWidth: 400,
-        stripHeight: 40 + 226 + 20 + 226 + 20 + 226 + 20 + 226 + 150, // topPadding + photoHeight*4 + gap*3 + bottomSpaceForLogo
+        stripHeight: 40 + (240 * 4) + (20 * 3) + 150, // topPadding + (photoHeight * 4) + (gapBetweenPhotos * 3) + bottomSpaceForLogo
         frames: [
-            { x: 40, y: 40, width: 320, height: 226 },
-            { x: 40, y: 40 + 226 + 20, width: 320, height: 226 },
-            { x: 40, y: 40 + 226 + 20 + 226 + 20, width: 320, height: 226 },
-            { x: 40, y: 40 + 226 + 20 + 226 + 20 + 226 + 20, width: 320, height: 226 }
+            { x: 40, y: 40, width: 320, height: 240 },
+            { x: 40, y: 40 + 240 + 20, width: 320, height: 240 },
+            { x: 40, y: 40 + (240 * 2) + (20 * 2), width: 320, height: 240 },
+            { x: 40, y: 40 + (240 * 3) + (20 * 3), width: 320, height: 240 }
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-4-photos.png', name: 'Grid Four' },
-            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Square Shots' }
-        ]
-    },
-    // Configuration for a 6-photo strip
-    '6': {
-        stripWidth: 400,
-        stripHeight: 40 + 220 + 20 + 220 + 20 + 220 + 20 + 220 + 20 + 220 + 20 + 220 + 150, // topPadding + photoHeight*6 + gap*5 + bottomSpaceForLogo
-        frames: [
-            { x: 40, y: 40, width: 320, height: 220 },
-            { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
-            { x: 40, y: 40 + (220 + 20) * 2, width: 320, height: 220 },
-            { x: 40, y: 40 + (220 + 20) * 3, width: 320, height: 220 },
-            { x: 40, y: 40 + (220 + 20) * 4, width: 320, height: 220 },
-            { x: 40, y: 40 + (220 + 20) * 5, width: 320, height: 220 }
-        ],
-        defaultBackground: '#CCCCCC',
-        availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Tall Six' },
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Even Six' }
+            { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'Classic Quad' },
+            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Vibrant Squares' },
+            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'Film Strip Look' }
         ]
     }
 };
 
-// --- DOM Element References ---
+const DEFAULT_TEXT_SETTINGS = {
+    font: "'Poppins', sans-serif",
+    size: 30,
+    color: "#333333",
+    shadowColor: "#000000",
+    shadowBlur: 0,
+    align: "center"
+};
+
+const DEFAULT_DRAWING_SETTINGS = {
+    color: "#FF0000",
+    size: 5
+};
+
+// --- State Variables ---
+let capturedImages = [];
+let currentConfig = null;
+let currentFrame = null;
+let customElements = []; // Stores text and sticker objects
+let selectedElement = null; // Stores the currently selected text/sticker element
+let isDrawingMode = false;
+let lastX = 0;
+let lastY = 0;
+let drawings = []; // Stores paths of drawings
+let showDateTimeOnStrip = false; // New state variable for date/time
+
+// --- DOM Elements ---
+// Caching DOM elements for efficient access.
 const DOMElements = {
     canvasContainer: document.getElementById('canvasContainer'),
     photoStripCanvas: document.getElementById('photoStripCanvas'),
-    backgroundSelect: document.getElementById('backgroundSelect'),
+    backgroundSelect: document.getElementById('backgroundSelect'), // This is an input type="color" now
     frameSelect: document.getElementById('frameSelect'),
     addTextBtn: document.getElementById('addTextBtn'),
     textInput: document.getElementById('textInput'),
@@ -118,161 +130,134 @@ const DOMElements = {
     downloadFormatSelect: document.getElementById('downloadFormatSelect'),
     printStripBtn: document.getElementById('printStripBtn'),
     retakeBtn: document.getElementById('retakeBtn'),
-    // NEW: Date/Time elements
-    toggleDateTime: document.getElementById('toggleDateTime')
+    toggleDateTime: document.getElementById('toggleDateTime'),
+    noPhotosMessage: document.getElementById('noPhotosMessage'),
+    downloadSpinner: document.getElementById('downloadSpinner')
 };
 
-// --- Canvas and Context ---
-let ctx;
-let currentConfig; // Stores the active layout configuration
-let capturedImages = []; // Stores loaded Image objects from capturedPhotos
-let activeElements = []; // Stores text, stickers, drawings, etc.
-let selectedElement = null; // Currently selected text or sticker for manipulation
-let isDragging = false;
-let dragOffsetX, dragOffsetY;
-
-// Drawing state
-let isDrawing = false;
-let drawings = []; // Stores individual drawing paths
-let currentPath = [];
-
-// NEW: Date/Time state
-let showDateTimeOnStrip = false;
-
-// --- Constants & Defaults ---
-const DEFAULT_TEXT_SETTINGS = {
-    font: 'Poppins',
-    size: 24,
-    color: '#000000',
-    shadowColor: '#000000',
-    shadowBlur: 0,
-    bold: false,
-    italic: false,
-    align: 'center'
-};
-
-const DEFAULT_DRAWING_SETTINGS = {
-    color: '#FF0000', // Red
-    size: 5
-};
-
-const STICKER_BASE_PATH = 'assets/stickers/';
-const STICKER_FILES = [
-    { id: 'star', src: 'star.png', name: 'Star' },
-    { id: 'heart', src: 'heart.png', name: 'Heart' },
-    { id: 'glasses', src: 'glasses.png', name: 'Glasses' },
-    { id: 'hat', src: 'hat.png', name: 'Party Hat' },
-    { id: 'moustache', src: 'moustache.png', name: 'Moustache' },
-    { id: 'arrow', src: 'arrow.png', name: 'Arrow' }
-];
+const ctx = DOMElements.photoStripCanvas ? DOMElements.photoStripCanvas.getContext('2d') : null;
 
 // --- Utility Functions ---
 
-/**
- * Logs an analytics event to the console.
- * In a real application, this would send data to an analytics service (e.g., Google Analytics).
- * @param {string} eventName - The name of the event (e.g., "Editor Loaded").
- * @param {object} [details={}] - Optional details related to the event.
- */
-function logAnalytics(eventName, details = {}) {
-    console.log(`ANALYTICS: ${eventName} -`, { timestamp: new Date().toISOString(), ...details });
-    // Example for real analytics (if you had Google Analytics initialized):
-    // gtag('event', eventName, {
-    //     'event_category': 'Editor Interactions',
-    //     'event_label': eventName,
-    //     ...details
-    // });
+// Function to log analytics events
+function logAnalytics(eventName, properties = {}) {
+    console.log(`ANALYTICS: ${eventName}`, properties);
+    // In a real application, this would send data to an analytics service
 }
 
-/**
- * Loads an image and returns a Promise that resolves with the Image object.
- * @param {string} src - The source URL of the image.
- * @returns {Promise<Image>} - A promise that resolves with the Image object.
- */
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
+// Function to get query parameters from the URL
+function getQueryParams() {
+    const params = {};
+    window.location.search.substring(1).split("&").forEach(param => {
+        const [key, value] = param.split("=");
+        params[key] = decodeURIComponent(value);
+    });
+    return params;
+}
+
+// Function to populate select options (uses innerHTML, not .add())
+function populateOptions(selectElement, optionsArray) {
+    if (!selectElement) {
+        console.error("populateOptions: selectElement is null.");
+        return;
+    }
+    let html = '';
+    if (selectElement.id === 'frameSelect') { // Check for frameSelect explicitly
+        html += '<option value="">Select a frame</option>';
+        html += '<option value="custom">Custom Color</option>';
+    } else if (selectElement.id === 'stickerSelect') {
+        html += '<option value="">Select a sticker</option>';
+    }
+    optionsArray.forEach(option => {
+        if (option.optgroup) {
+            html += `<optgroup label="${option.optgroup}">`;
+            option.options.forEach(subOption => {
+                html += `<option value="${subOption.value}">${subOption.name}</option>`;
+            });
+            html += `</optgroup>`;
+        } else {
+            html += `<option value="${option.value}">${option.name}</option>`;
+        }
+    });
+    selectElement.innerHTML = html;
+}
+
+// Function to load captured images from session storage
+function loadCapturedImages() {
+    const imagesJson = sessionStorage.getItem('capturedImages');
+    if (imagesJson) {
+        const loadedUrls = JSON.parse(imagesJson);
+        const imagePromises = loadedUrls.map(url => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                    console.error('Error loading image:', url);
+                    resolve(null); // Resolve with null to continue even if an image fails
+                };
+                img.src = url;
+            });
+        });
+
+        Promise.all(imagePromises).then(images => {
+            capturedImages = images.filter(img => img !== null); // Filter out failed images
+            console.log(`Loaded ${capturedImages.length} captured photos.`);
+            if (capturedImages.length > 0) {
+                initializeEditorPage();
+            } else {
+                displayNoPhotosMessage();
+            }
+        });
+    } else {
+        displayNoPhotosMessage();
+    }
+}
+
+// Function to display "No photos found" message
+function displayNoPhotosMessage() {
+    if (DOMElements.noPhotosMessage) {
+        DOMElements.noPhotosMessage.style.display = 'block';
+        DOMElements.photoStripCanvas.style.display = 'none'; // Hide canvas if no photos
+    }
+    // Optionally disable editing controls if no photos are available
+    disableAllControls();
+}
+
+// Function to disable all editing controls
+function disableAllControls() {
+    const controls = document.querySelectorAll('.tools-panel button, .tools-panel select, .tools-panel input');
+    controls.forEach(control => {
+        if (control.id !== 'retakeBtn') { // Keep retake button enabled
+            control.disabled = true;
+        }
     });
 }
 
-/**
- * Gets the mouse/touch coordinates relative to the canvas.
- * @param {Event} event - The mouse or touch event.
- * @returns {{x: number, y: number}} - The coordinates.
- */
-function getCanvasCoords(event) {
-    const rect = DOMElements.photoStripCanvas.getBoundingClientRect();
-    let clientX, clientY;
-
-    if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-    }
-
-    // Scale coordinates from CSS pixels to canvas pixels
-    const scaleX = DOMElements.photoStripCanvas.width / rect.width;
-    const scaleY = DOMElements.photoStripCanvas.height / rect.height;
-
-    return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-    };
+// Function to enable all editing controls
+function enableAllControls() {
+    const controls = document.querySelectorAll('.tools-panel button, .tools-panel select, .tools-panel input');
+    controls.forEach(control => {
+        if (control.id !== 'retakeBtn') { // Keep retake button enabled
+            control.disabled = false;
+        }
+    });
 }
 
-/**
- * Updates the disabled state of text editing controls based on selection.
- */
-function updateTextControlsFromSelection() {
-    const isTextSelected = selectedElement && selectedElement.type === 'text';
-    DOMElements.fontSelect.disabled = !isTextSelected;
-    DOMElements.fontSizeInput.disabled = !isTextSelected;
-    DOMElements.textColorInput.disabled = !isTextSelected;
-    DOMElements.textShadowColorInput.disabled = !isTextSelected;
-    DOMElements.textShadowBlurInput.disabled = !isTextSelected;
-    DOMElements.boldToggleBtn.disabled = !isTextSelected;
-    DOMElements.italicToggleBtn.disabled = !isTextSelected;
-    DOMElements.textAlignSelect.disabled = !isTextSelected;
-    DOMElements.removeTextBtn.disabled = !isTextSelected;
-
-    // The text input and add button should always be available to add NEW text
-    DOMElements.textInput.disabled = false;
-    DOMElements.addTextBtn.disabled = false;
-
-    // Update button active states
-    if (isTextSelected) {
-        DOMElements.boldToggleBtn.classList.toggle('active', selectedElement.bold);
-        DOMElements.italicToggleBtn.classList.toggle('active', selectedElement.italic);
-    } else {
-        DOMElements.boldToggleBtn.classList.remove('active');
-        DOMElements.italicToggleBtn.classList.remove('active');
-    }
+// Function to get current date in YYYY.MM.DD format
+function getFormattedDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    return `${year}.${month}.${day}`;
 }
 
-/**
- * Updates the disabled state of sticker controls based on selection.
- */
-function updateStickerControlsFromSelection() {
-    const isStickerSelected = selectedElement && selectedElement.type === 'sticker';
-    DOMElements.removeStickerBtn.disabled = !isStickerSelected;
-    // Sticker select and add button should always be available to add NEW stickers
-    DOMElements.stickerSelect.disabled = false;
-    DOMElements.addStickerBtn.disabled = false;
-}
+// --- Drawing Functions ---
 
-// --- Core Canvas Rendering ---
-
-/**
- * Clears the canvas and draws the background, frame, photos, text, stickers, and drawings.
- */
-async function renderCanvas() {
-    if (!ctx || !currentConfig) {
-        console.warn('Canvas context or config not initialized for rendering.');
+// Function to draw the entire photo strip
+function renderCanvas() {
+    if (!ctx || !currentConfig || capturedImages.length === 0) {
+        console.warn("Canvas context or config not ready, or no images to render.");
         return;
     }
 
@@ -283,714 +268,667 @@ async function renderCanvas() {
     // Clear canvas
     ctx.clearRect(0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
 
-    // Draw background color or image
-    const selectedBackgroundSrc = DOMElements.backgroundSelect.value;
-    if (selectedBackgroundSrc && selectedBackgroundSrc !== 'none') {
-        try {
-            const backgroundImg = await loadImage(selectedBackgroundSrc);
-            // Draw background to fill the whole strip
-            ctx.drawImage(backgroundImg, 0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
-        } catch (error) {
-            console.error('Error loading background image:', error);
-            ctx.fillStyle = currentConfig.defaultBackground || '#CCCCCC';
-            ctx.fillRect(0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
-        }
-    } else {
-        ctx.fillStyle = currentConfig.defaultBackground || '#CCCCCC';
-        ctx.fillRect(0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
-    }
+    // Draw background
+    ctx.fillStyle = currentFrame && currentFrame.id === 'custom' && DOMElements.backgroundSelect ? DOMElements.backgroundSelect.value : currentConfig.defaultBackground;
+    ctx.fillRect(0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
 
-    // Draw captured photos onto their respective frames
-    capturedImages.forEach((img, index) => {
-        if (currentConfig.frames[index]) {
-            const frame = currentConfig.frames[index];
+    // Draw frame image if available and not 'custom'
+    if (currentFrame && currentFrame.src && currentFrame.id !== 'custom') {
+        const frameImg = new Image();
+        frameImg.onload = () => {
+            ctx.drawImage(frameImg, 0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
+            drawPhotos();
+            drawCustomElements();
+            drawDrawings();
+            drawDateTime(); // Draw date/time after everything else
+        };
+        frameImg.onerror = () => {
+            console.error('Error loading frame image:', currentFrame.src);
+            drawPhotos(); // Draw photos even if frame fails to load
+            drawCustomElements();
+            drawDrawings();
+            drawDateTime();
+        };
+        frameImg.src = currentFrame.src;
+    } else {
+        // If no frame or custom frame, just draw photos and elements
+        drawPhotos();
+        drawCustomElements();
+        drawDrawings();
+        drawDateTime();
+    }
+}
+
+// Function to draw photos onto the canvas
+function drawPhotos() {
+    currentConfig.frames.forEach((frame, index) => {
+        if (capturedImages[index]) {
+            const img = capturedImages[index];
             // Calculate aspect ratios
             const imgAspectRatio = img.width / img.height;
             const frameAspectRatio = frame.width / frame.height;
 
-            let drawWidth = frame.width;
-            let drawHeight = frame.height;
-            let sx = 0; // Source X
-            let sy = 0; // Source Y
-            let sWidth = img.width; // Source Width
-            let sHeight = img.height; // Source Height
+            let sx, sy, sWidth, sHeight; // Source (image) coordinates and dimensions
+            let dx, dy, dWidth, dHeight; // Destination (canvas) coordinates and dimensions
 
-            // Maintain aspect ratio while covering the frame (cropping if necessary)
+            // Destination will be the frame dimensions
+            dx = frame.x;
+            dy = frame.y;
+            dWidth = frame.width;
+            dHeight = frame.height;
+
+            // Calculate source dimensions to "cover" the frame, maintaining aspect ratio
             if (imgAspectRatio > frameAspectRatio) {
-                // Image is wider than frame, crop horizontally
+                // Image is wider than frame, crop left/right
+                sHeight = img.height;
                 sWidth = img.height * frameAspectRatio;
                 sx = (img.width - sWidth) / 2;
+                sy = 0;
             } else {
-                // Image is taller than frame, crop vertically
+                // Image is taller than frame, crop top/bottom
+                sWidth = img.width;
                 sHeight = img.width / frameAspectRatio;
                 sy = (img.height - sHeight) / 2;
+                sx = 0;
             }
-
-            // Draw image to canvas
-            ctx.drawImage(img, sx, sy, sWidth, sHeight, frame.x, frame.y, drawWidth, drawHeight);
+            ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
         }
     });
+}
 
-    // Draw frame overlay
-    const selectedFrameSrc = DOMElements.frameSelect.value;
-    if (selectedFrameSrc && selectedFrameSrc !== 'none') {
-        try {
-            const frameImg = await loadImage(selectedFrameSrc);
-            ctx.drawImage(frameImg, 0, 0, DOMElements.photoStripCanvas.width, DOMElements.photoStripCanvas.height);
-        } catch (error) {
-            console.error('Error loading frame image:', error);
-        }
-    }
-
-    // Draw active elements (text, stickers)
-    activeElements.forEach(element => {
+// Function to draw custom text and stickers on the canvas
+function drawCustomElements() {
+    customElements.forEach(element => {
         if (element.type === 'text') {
-            drawText(element);
-        } else if (element.type === 'sticker') {
-            drawSticker(element);
-        }
-    });
+            ctx.font = `${element.settings.bold ? 'bold ' : ''}${element.settings.italic ? 'italic ' : ''}${element.settings.size}px ${element.settings.font}`;
+            ctx.fillStyle = element.settings.color;
+            ctx.textAlign = element.settings.align;
+            ctx.textBaseline = 'top'; // Align text from the top for consistent positioning
 
-    // Draw drawings
-    drawings.forEach(path => {
-        if (path.length > 1) {
-            ctx.beginPath();
-            ctx.moveTo(path[0].x, path[0].y);
-            for (let i = 1; i < path.length; i++) {
-                ctx.lineTo(path[i].x, path[i].y);
+            // Apply text shadow
+            if (element.settings.shadowBlur > 0) {
+                ctx.shadowColor = element.settings.shadowColor;
+                ctx.shadowBlur = element.settings.shadowBlur;
+            } else {
+                ctx.shadowColor = 'transparent'; // No shadow
+                ctx.shadowBlur = 0;
             }
-            ctx.strokeStyle = path[0].color;
-            ctx.lineWidth = path[0].size;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.stroke();
+            
+            const lines = element.text.split('\n');
+            let currentY = element.y;
+
+            // Calculate x-position based on alignment
+            let xPos;
+            if (element.settings.align === 'center') {
+                xPos = element.x;
+            } else if (element.settings.align === 'left') {
+                xPos = element.x - (element.width / 2); // Adjust from center point
+            } else { // right
+                xPos = element.x + (element.width / 2); // Adjust from center point
+            }
+
+            lines.forEach(line => {
+                ctx.fillText(line, xPos, currentY);
+                currentY += element.settings.size * 1.2; // Line height
+            });
+
+            // Handle underline (draw after text to ensure shadow doesn't affect it)
+            if (element.settings.underline) {
+                ctx.shadowColor = 'transparent'; // Disable shadow for underline
+                const textWidth = ctx.measureText(lines[lines.length - 1]).width;
+                const underlineY = element.y + (lines.length * element.settings.size * 1.2) - (element.settings.size * 0.2); // Position relative to last line
+                let underlineX;
+                if (element.settings.align === 'center') {
+                    underlineX = xPos - (textWidth / 2);
+                } else if (element.settings.align === 'left') {
+                    underlineX = xPos;
+                } else { // right
+                    underlineX = xPos - textWidth;
+                }
+                ctx.beginPath();
+                ctx.strokeStyle = element.settings.color;
+                ctx.lineWidth = element.settings.size * 0.08; // Adjust thickness
+                ctx.moveTo(underlineX, underlineY);
+                ctx.lineTo(underlineX + textWidth, underlineY);
+                ctx.stroke();
+            }
+
+            // Reset shadow settings for next elements
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+
+        } else if (element.type === 'sticker') {
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, element.x - element.width / 2, element.y - element.height / 2, element.width, element.height);
+                if (element === selectedElement) {
+                    drawBoundingBox(element);
+                }
+            };
+            img.src = element.src;
+        }
+
+        if (element === selectedElement) {
+            drawBoundingBox(element);
         }
     });
+}
 
-    // NEW: Draw real-time date
+// Function to draw doodles/drawings on the canvas
+function drawDrawings() {
+    drawings.forEach(path => {
+        ctx.strokeStyle = path.color;
+        ctx.lineWidth = path.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        if (path.points.length > 0) {
+            ctx.moveTo(path.points[0].x, path.points[0].y);
+            path.points.forEach(point => {
+                ctx.lineTo(point.x, point.y);
+            });
+        }
+        ctx.stroke();
+    });
+}
+
+// Function to draw the date/time stamp
+function drawDateTime() {
     if (showDateTimeOnStrip) {
-        drawDateTime();
-    }
+        ctx.font = "20px 'Poppins', sans-serif"; // Fixed font for date/time
+        ctx.fillStyle = "#000000"; // Fixed color for date/time
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-    // Draw selection handles for the selected element (if any)
-    if (selectedElement) {
-        drawSelectionHandles(selectedElement);
-    }
-}
+        const formattedDate = getFormattedDate();
+        const dateX = DOMElements.photoStripCanvas.width / 2;
+        // Position below the last photo, above the bottom space for logo
+        const dateY = currentConfig.stripHeight - currentConfig.bottomSpaceForLogo / 2;
 
-
-/**
- * Draws a text element on the canvas.
- * @param {object} textElement - The text element object.
- */
-function drawText(textElement) {
-    ctx.font = `${textElement.bold ? 'bold ' : ''}${textElement.italic ? 'italic ' : ''}${textElement.size}px ${textElement.font}`;
-    ctx.fillStyle = textElement.color;
-    ctx.textAlign = textElement.align;
-
-    // Calculate x position based on alignment
-    let x;
-    if (textElement.align === 'center') {
-        x = textElement.x || DOMElements.photoStripCanvas.width / 2;
-    } else if (textElement.align === 'left') {
-        x = textElement.x || currentConfig.common.photoSidePadding; // Align to left padding
-    } else { // right
-        x = textElement.x || DOMElements.photoStripCanvas.width - currentConfig.common.photoSidePadding; // Align to right padding
-    }
-
-    // Apply shadow if blur is greater than 0
-    if (textElement.shadowBlur > 0) {
-        ctx.shadowColor = textElement.shadowColor;
-        ctx.shadowBlur = textElement.shadowBlur;
-        ctx.shadowOffsetX = 2; // Fixed offset for shadow effect
-        ctx.shadowOffsetY = 2; // Fixed offset for shadow effect
-    } else {
-        ctx.shadowColor = 'transparent'; // No shadow
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-    }
-
-    ctx.fillText(textElement.text, x, textElement.y);
-
-    // Reset shadow properties after drawing text to avoid affecting other elements
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-}
-
-/**
- * Draws a sticker element on the canvas.
- * @param {object} stickerElement - The sticker element object.
- */
-function drawSticker(stickerElement) {
-    if (stickerElement.img) {
-        ctx.drawImage(stickerElement.img, stickerElement.x, stickerElement.y, stickerElement.width, stickerElement.height);
+        ctx.fillText(formattedDate, dateX, dateY);
     }
 }
 
-/**
- * Draws selection handles around the currently selected element.
- * @param {object} element - The selected element (text or sticker).
- */
-function drawSelectionHandles(element) {
-    ctx.strokeStyle = 'blue';
+
+// Function to draw a bounding box around a selected element
+function drawBoundingBox(element) {
+    if (!element) return;
+    ctx.strokeStyle = '#00FFFF'; // Cyan color
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]); // Dashed line
-
-    let x, y, width, height;
-
-    if (element.type === 'text') {
-        ctx.font = `${element.bold ? 'bold ' : ''}${element.italic ? 'italic ' : ''}${element.size}px ${element.font}`;
-        const metrics = ctx.measureText(element.text);
-        width = metrics.width;
-        height = element.size * 1.2; // Approximation for text height
-
-        // Adjust x based on alignment for selection box
-        if (element.align === 'center') {
-            x = element.x - width / 2;
-        } else if (element.align === 'left') {
-            x = element.x;
-        } else { // right
-            x = element.x - width;
-        }
-        y = element.y - element.size; // Adjust y to be at the top of the text
-    } else if (element.type === 'sticker') {
-        x = element.x;
-        y = element.y;
-        width = element.width;
-        height = element.height;
-    }
-
-    ctx.strokeRect(x, y, width, height);
+    ctx.strokeRect(element.x - element.width / 2, element.y - element.height / 2, element.width, element.height);
     ctx.setLineDash([]); // Reset line dash
 }
 
-/**
- * Draws the current date in YYYY.MM.DD format on the canvas.
- */
-function drawDateTime() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // 0-indexed month, add leading zero
-    const day = now.getDate().toString().padStart(2, '0'); // Add leading zero
-
-    const formattedDate = `${year}.${month}.${day}`;
-
-    ctx.font = 'bold 24px Poppins'; // Fixed font size and style for date
-    ctx.fillStyle = '#333333'; // Dark gray color
-    ctx.textAlign = 'center';
-
-    // Position it centrally in the bottom space, slightly above the very bottom
-    const x = DOMElements.photoStripCanvas.width / 2;
-    const y = currentConfig.stripHeight - (currentConfig.common.bottomSpaceForLogo / 2) + 20; // Adjust Y as needed
-
-    ctx.fillText(formattedDate, x, y);
-}
-
-
 // --- Event Handlers ---
 
-/**
- * Handles mouse/touch down events on the canvas for dragging and selection.
- * @param {Event} event - The mouse or touch event.
- */
-function handleCanvasMouseDown(event) {
-    const coords = getCanvasCoords(event);
-    let clickedOnElement = false;
+// Function to update text controls based on selected text
+function updateTextControlsFromSelection() {
+    const isTextSelected = selectedElement && selectedElement.type === 'text';
 
-    // Check if clicked on any active element (stickers or text)
-    // Iterate in reverse to select elements drawn on top
-    for (let i = activeElements.length - 1; i >= 0; i--) {
-        const element = activeElements[i];
-        let elementX, elementY, elementWidth, elementHeight;
+    DOMElements.boldToggleBtn.disabled = !isTextSelected;
+    DOMElements.italicToggleBtn.disabled = !isTextSelected;
+    // DOMElements.textUnderlineBtn.disabled = !isTextSelected; // Assuming textUnderlineBtn exists
+    DOMElements.textAlignSelect.disabled = !isTextSelected;
+    DOMElements.removeTextBtn.disabled = !isTextSelected;
 
-        if (element.type === 'text') {
-            ctx.font = `${element.bold ? 'bold ' : ''}${element.italic ? 'italic ' : ''}${element.size}px ${element.font}`;
-            const metrics = ctx.measureText(element.text);
-            elementWidth = metrics.width;
-            elementHeight = element.size * 1.2;
-            if (element.align === 'center') {
-                elementX = element.x - elementWidth / 2;
-            } else if (element.align === 'left') {
-                elementX = element.x;
-            } else {
-                elementX = element.x - elementWidth;
+    if (isTextSelected) {
+        DOMElements.textInput.value = selectedElement.text;
+        DOMElements.fontSelect.value = selectedElement.settings.font;
+        DOMElements.fontSizeInput.value = selectedElement.settings.size;
+        DOMElements.textColorInput.value = selectedElement.settings.color;
+        if (DOMElements.textShadowColorInput) DOMElements.textShadowColorInput.value = selectedElement.settings.shadowColor;
+        if (DOMElements.textShadowBlurInput) DOMElements.textShadowBlurInput.value = selectedElement.settings.shadowBlur;
+        DOMElements.textAlignSelect.value = selectedElement.settings.align;
+
+        // Update button active states
+        if (selectedElement.settings.bold) DOMElements.boldToggleBtn.classList.add('active');
+        else DOMElements.boldToggleBtn.classList.remove('active');
+
+        if (selectedElement.settings.italic) DOMElements.italicToggleBtn.classList.add('active');
+        else DOMElements.italicToggleBtn.classList.remove('active');
+
+        // if (selectedElement.settings.underline) DOMElements.textUnderlineBtn.classList.add('active'); // Assuming textUnderlineBtn exists
+        // else DOMElements.textUnderlineBtn.classList.remove('active');
+    } else {
+        // Reset controls if no text is selected
+        DOMElements.textInput.value = '';
+        DOMElements.boldToggleBtn.classList.remove('active');
+        DOMElements.italicToggleBtn.classList.remove('active');
+        // if (DOMElements.textUnderlineBtn) DOMElements.textUnderlineBtn.classList.remove('active');
+    }
+}
+
+// Function to update sticker controls based on selected sticker
+function updateStickerControlsFromSelection() {
+    const isStickerSelected = selectedElement && selectedElement.type === 'sticker';
+    DOMElements.removeStickerBtn.disabled = !isStickerSelected;
+}
+
+// Event listener for canvas mouse down
+function handleMouseDown(e) {
+    if (isDrawingMode) {
+        ctx.beginPath();
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+        drawings.push({ color: DOMElements.brushColorInput.value, size: DOMElements.brushSizeInput.value, points: [{ x: lastX, y: lastY }] });
+    } else {
+        selectedElement = null; // Deselect any existing element
+        const mouseX = e.offsetX;
+        const mouseY = e.offsetY;
+
+        // Check if a custom element is clicked
+        for (let i = customElements.length - 1; i >= 0; i--) {
+            const element = customElements[i];
+            const halfWidth = element.width / 2;
+            const halfHeight = element.height / 2;
+            if (mouseX >= element.x - halfWidth && mouseX <= element.x + halfWidth &&
+                mouseY >= element.y - halfHeight && mouseY <= element.y + halfHeight) {
+                selectedElement = element;
+                // Bring selected element to front for drawing and future interactions
+                customElements.splice(i, 1);
+                customElements.push(element);
+                break;
             }
-            elementY = element.y - element.size;
-        } else if (element.type === 'sticker') {
-            elementX = element.x;
-            elementY = element.y;
-            elementWidth = element.width;
-            elementHeight = element.height;
-        }
-
-        if (coords.x >= elementX && coords.x <= elementX + elementWidth &&
-            coords.y >= elementY && coords.y <= elementY + elementHeight) {
-            selectedElement = element;
-            dragOffsetX = coords.x - elementX;
-            dragOffsetY = coords.y - elementY;
-            isDragging = true;
-            clickedOnElement = true;
-            console.log('Element selected:', selectedElement);
-            updateTextControlsFromSelection();
-            updateStickerControlsFromSelection();
-            renderCanvas(); // Redraw to show selection handles
-            break;
         }
     }
-
-    if (!clickedOnElement) {
-        selectedElement = null; // Deselect if clicked outside any element
-        updateTextControlsFromSelection();
-        updateStickerControlsFromSelection();
-        renderCanvas(); // Redraw to hide selection handles
-    }
-
-    if (isDrawing) {
-        currentPath = [];
-        currentPath.push({ x: coords.x, y: coords.y, color: DOMElements.brushColorInput.value, size: parseInt(DOMElements.brushSizeInput.value) });
-        isDragging = true; // Use isDragging for drawing as well
-    }
+    renderCanvas();
+    updateTextControlsFromSelection();
+    updateStickerControlsFromSelection();
 }
 
-/**
- * Handles mouse/touch move events for dragging elements or drawing.
- * @param {Event} event - The mouse or touch event.
- */
-function handleCanvasMouseMove(event) {
-    if (!isDragging) return;
-
-    const coords = getCanvasCoords(event);
-
-    if (isDrawing) {
-        currentPath.push({ x: coords.x, y: coords.y, color: DOMElements.brushColorInput.value, size: parseInt(DOMElements.brushSizeInput.value) });
-        renderCanvas(); // Redraw constantly while drawing
-    } else if (selectedElement) {
-        // Update position of selected element
-        if (selectedElement.type === 'text') {
-            // Text position is based on baseline and alignment
-            // Need to reverse the adjustment done in drawText for x
-            if (selectedElement.align === 'center') {
-                selectedElement.x = coords.x; // Keep center X as coords.x
-            } else if (selectedElement.align === 'left') {
-                selectedElement.x = coords.x - dragOffsetX;
-            } else { // right
-                selectedElement.x = coords.x + (selectedElement.width - dragOffsetX); // This might need more precise calculation
-            }
-            selectedElement.y = coords.y - dragOffsetY + selectedElement.size; // Adjust Y back to baseline
-        } else if (selectedElement.type === 'sticker') {
-            selectedElement.x = coords.x - dragOffsetX;
-            selectedElement.y = coords.y - dragOffsetY;
-        }
-        renderCanvas(); // Redraw with new position
-    }
-}
-
-/**
- * Handles mouse/touch up events to stop dragging or drawing.
- */
-function handleCanvasMouseUp() {
-    isDragging = false;
-    if (isDrawing && currentPath.length > 1) {
-        drawings.push(currentPath); // Save the completed path
-    }
-    currentPath = [];
-    renderCanvas(); // Final redraw after move/drag/draw ends
-}
-
-/**
- * Handles adding a new text element to the canvas.
- */
-function handleAddText() {
-    const text = DOMElements.textInput.value.trim();
-    if (text) {
-        // Default position: center of the strip, just above the bottom logo area
-        const x = DOMElements.photoStripCanvas.width / 2;
-        const y = currentConfig.stripHeight - currentConfig.common.bottomSpaceForLogo - 30;
-
-        const newText = {
-            type: 'text',
-            text: text,
-            x: x,
-            y: y,
-            font: DOMElements.fontSelect.value,
-            size: parseInt(DOMElements.fontSizeInput.value),
-            color: DOMElements.textColorInput.value,
-            shadowColor: DOMElements.textShadowColorInput.value,
-            shadowBlur: parseInt(DOMElements.textShadowBlurInput.value),
-            bold: DOMElements.boldToggleBtn.classList.contains('active'),
-            italic: DOMElements.italicToggleBtn.classList.contains('active'),
-            align: DOMElements.textAlignSelect.value
-        };
-        activeElements.push(newText);
-        DOMElements.textInput.value = ''; // Clear input
-        selectedElement = newText; // Select the newly added text
-        updateTextControlsFromSelection();
+// Event listener for canvas mouse move
+function handleMouseMove(e) {
+    if (isDrawingMode && e.buttons === 1) { // Only draw if mouse button is down
+        const [x, y] = [e.offsetX, e.offsetY];
+        drawings[drawings.length - 1].points.push({ x: x, y: y });
+        lastX = x;
+        lastY = y;
         renderCanvas();
-        logAnalytics('Text_Added', { text: text });
-    } else {
-        alert('Please enter some text!');
-    }
-}
-
-/**
- * Handles removing the selected text element.
- */
-function handleRemoveText() {
-    if (selectedElement && selectedElement.type === 'text') {
-        activeElements = activeElements.filter(el => el !== selectedElement);
-        selectedElement = null; // Deselect
-        updateTextControlsFromSelection();
+    } else if (selectedElement && e.buttons === 1 && !isDrawingMode) {
+        // Move selected element
+        selectedElement.x += e.movementX;
+        selectedElement.y += e.movementY;
         renderCanvas();
-        logAnalytics('Text_Removed');
     }
 }
 
-/**
- * Handles adding a new sticker element to the canvas.
- */
-async function handleAddSticker() {
-    const stickerId = DOMElements.stickerSelect.value;
-    const stickerInfo = STICKER_FILES.find(s => s.id === stickerId);
-
-    if (stickerInfo) {
-        try {
-            const stickerImg = await loadImage(STICKER_BASE_PATH + stickerInfo.src);
-            // Default size and position (center)
-            const width = 100;
-            const height = (stickerImg.height / stickerImg.width) * width;
-            const x = (DOMElements.photoStripCanvas.width / 2) - (width / 2);
-            const y = (DOMElements.photoStripCanvas.height / 2) - (height / 2);
-
-            const newSticker = {
-                type: 'sticker',
-                id: stickerId,
-                img: stickerImg,
-                x: x,
-                y: y,
-                width: width,
-                height: height
-            };
-            activeElements.push(newSticker);
-            selectedElement = newSticker; // Select the newly added sticker
-            updateStickerControlsFromSelection();
-            renderCanvas();
-            logAnalytics('Sticker_Added', { stickerId: stickerId });
-        } catch (error) {
-            console.error('Error loading sticker image:', error);
-            alert('Failed to load sticker image.');
-        }
-    } else {
-        alert('Please select a sticker!');
-    }
+// Event listener for canvas mouse up
+function handleMouseUp() {
+    // No specific action needed on mouse up for drawing or moving
 }
 
-/**
- * Handles removing the selected sticker element.
- */
-function handleRemoveSticker() {
-    if (selectedElement && selectedElement.type === 'sticker') {
-        activeElements = activeElements.filter(el => el !== selectedElement);
-        selectedElement = null; // Deselect
-        updateStickerControlsFromSelection();
-        renderCanvas();
-        logAnalytics('Sticker_Removed');
-    }
-}
+// --- Main Initialization ---
 
-/**
- * Toggles drawing mode on/off.
- */
-function toggleDrawMode() {
-    isDrawing = !isDrawing;
-    if (isDrawing) {
-        DOMElements.toggleDrawModeBtn.classList.add('active');
-        DOMElements.canvasContainer.classList.add('drawing-mode');
-        // Deselect any active element when entering drawing mode
-        selectedElement = null;
-        updateTextControlsFromSelection();
-        updateStickerControlsFromSelection();
-        renderCanvas();
-        logAnalytics('Draw_Mode_Enabled');
-    } else {
-        DOMElements.toggleDrawModeBtn.classList.remove('active');
-        DOMElements.canvasContainer.classList.remove('drawing-mode');
-        logAnalytics('Draw_Mode_Disabled');
-    }
-}
-
-/**
- * Clears all drawings from the canvas.
- */
-function clearAllDrawings() {
-    if (confirm('Are you sure you want to clear all drawings? This cannot be undone.')) {
-        drawings = [];
-        renderCanvas();
-        logAnalytics('Drawings_Cleared');
-    }
-}
-
-/**
- * Populates dropdowns with available options (frames, backgrounds, stickers).
- */
-function populateOptions() {
-    // Populate Frame Select
-    DOMElements.frameSelect.innerHTML = '<option value="none">No Frame</option>';
-    currentConfig.availableFrames.forEach(frame => {
-        const option = document.createElement('option');
-        option.value = frame.src;
-        option.textContent = frame.name;
-        DOMElements.frameSelect.appendChild(option);
-    });
-
-    // Populate Background Select (example, you might expand this)
-    DOMElements.backgroundSelect.innerHTML = '<option value="none">Default Background</option>';
-    // Example backgrounds - you'd add more real options here
-    DOMElements.backgroundSelect.add(new Option('Light Gray', '#E0E0E0'));
-    DOMElements.backgroundSelect.add(new Option('Blue Gradient', 'assets/blue-gradient-bg.png')); // Example image background
-    DOMElements.backgroundSelect.add(new Option('Pink Gradient', 'assets/pink-gradient-bg.png')); // Example image background
-
-
-    // Populate Sticker Select
-    DOMElements.stickerSelect.innerHTML = '<option value="">Select Sticker</option>';
-    STICKER_FILES.forEach(sticker => {
-        const option = document.createElement('option');
-        option.value = sticker.id;
-        option.textContent = sticker.name;
-        DOMElements.stickerSelect.appendChild(option);
-    });
-}
-
-/**
- * Sets up all event listeners for UI interactions.
- */
+// Setup event listeners for UI controls
 function setupEventListeners() {
-    DOMElements.backgroundSelect.addEventListener('change', renderCanvas);
-    DOMElements.frameSelect.addEventListener('change', renderCanvas);
-
-    // Canvas interaction for dragging and drawing
-    DOMElements.photoStripCanvas.addEventListener('mousedown', handleCanvasMouseDown);
-    DOMElements.photoStripCanvas.addEventListener('mousemove', handleCanvasMouseMove);
-    DOMElements.photoStripCanvas.addEventListener('mouseup', handleCanvasMouseUp);
-    DOMElements.photoStripCanvas.addEventListener('mouseout', handleCanvasMouseUp); // End drag/draw if mouse leaves canvas
-
-    DOMElements.photoStripCanvas.addEventListener('touchstart', handleCanvasMouseDown, { passive: true });
-    DOMElements.photoStripCanvas.addEventListener('touchmove', handleCanvasMouseMove, { passive: true });
-    DOMElements.photoStripCanvas.addEventListener('touchend', handleCanvasMouseUp);
-    DOMElements.photoStripCanvas.addEventListener('touchcancel', handleCanvasMouseUp);
-
-    // Text controls
-    DOMElements.addTextBtn.addEventListener('click', handleAddText);
-    DOMElements.removeTextBtn.addEventListener('click', handleRemoveText);
-    DOMElements.textInput.addEventListener('input', () => { // Live update selected text
-        if (selectedElement && selectedElement.type === 'text') {
-            selectedElement.text = DOMElements.textInput.value;
-            renderCanvas();
-        }
-    });
-    DOMElements.fontSelect.addEventListener('change', (e) => {
-        if (selectedElement && selectedElement.type === 'text') selectedElement.font = e.target.value;
-        renderCanvas();
-    });
-    DOMElements.fontSizeInput.addEventListener('input', (e) => {
-        if (selectedElement && selectedElement.type === 'text') selectedElement.size = parseInt(e.target.value);
-        renderCanvas();
-    });
-    DOMElements.textColorInput.addEventListener('input', (e) => {
-        if (selectedElement && selectedElement.type === 'text') selectedElement.color = e.target.value;
-        renderCanvas();
-    });
-    DOMElements.textShadowColorInput.addEventListener('input', (e) => {
-        if (selectedElement && selectedElement.type === 'text') selectedElement.shadowColor = e.target.value;
-        renderCanvas();
-    });
-    DOMElements.textShadowBlurInput.addEventListener('input', (e) => {
-        if (selectedElement && selectedElement.type === 'text') selectedElement.shadowBlur = parseInt(e.target.value);
-        renderCanvas();
-    });
-    DOMElements.boldToggleBtn.addEventListener('click', () => {
-        if (selectedElement && selectedElement.type === 'text') {
-            selectedElement.bold = !selectedElement.bold;
-            DOMElements.boldToggleBtn.classList.toggle('active', selectedElement.bold);
-            renderCanvas();
-        }
-    });
-    DOMElements.italicToggleBtn.addEventListener('click', () => {
-        if (selectedElement && selectedElement.type === 'text') {
-            selectedElement.italic = !selectedElement.italic;
-            DOMElements.italicToggleBtn.classList.toggle('active', selectedElement.italic);
-            renderCanvas();
-        }
-    });
-    DOMElements.textAlignSelect.addEventListener('change', (e) => {
-        if (selectedElement && selectedElement.type === 'text') {
-            selectedElement.align = e.target.value;
-            // When alignment changes, recalculate x to keep it visually "in place"
-            // This is a rough estimation and can be improved for precise alignment transitions
-            if (e.target.value === 'center') {
-                selectedElement.x = DOMElements.photoStripCanvas.width / 2;
-            } else if (e.target.value === 'left') {
-                selectedElement.x = currentConfig.common.photoSidePadding;
-            } else { // right
-                selectedElement.x = DOMElements.photoStripCanvas.width - currentConfig.common.photoSidePadding;
-            }
-            renderCanvas();
-        }
-    });
-
-    // Sticker controls
-    DOMElements.addStickerBtn.addEventListener('click', handleAddSticker);
-    DOMElements.removeStickerBtn.addEventListener('click', handleRemoveSticker);
-
-    // Drawing controls
-    DOMElements.toggleDrawModeBtn.addEventListener('click', toggleDrawMode);
-    DOMElements.brushColorInput.addEventListener('input', () => {
-        // No direct effect on existing drawings, only for new strokes
-    });
-    DOMElements.brushSizeInput.addEventListener('input', () => {
-        // No direct effect on existing drawings, only for new strokes
-    });
-    DOMElements.clearDrawingsBtn.addEventListener('click', clearAllDrawings);
-
-    // Download and Print
-    DOMElements.downloadStripBtn.addEventListener('click', downloadStrip);
-    DOMElements.printStripBtn.addEventListener('click', printStrip);
-
-    // Back to Capture Page
-    DOMElements.retakeBtn.addEventListener('click', () => {
-        window.location.href = 'capture-page/capture-page.html';
-        logAnalytics('Retake_Photos_Navigated');
-    });
-
-    // NEW: Date/Time Event Listener
-    DOMElements.toggleDateTime.addEventListener('change', (e) => {
-        showDateTimeOnStrip = e.target.checked;
-        renderCanvas();
-        logAnalytics('DateTime_Toggle', { enabled: showDateTimeOnStrip });
-    });
-}
-
-/**
- * Downloads the generated photo strip as an image.
- */
-function downloadStrip() {
-    const format = DOMElements.downloadFormatSelect.value;
-    let mimeType = format;
-    let quality = 1.0; // Default for PNG
-
-    if (format.includes('image/jpeg')) {
-        [mimeType, quality] = format.split(';');
-        quality = parseFloat(quality);
-    }
-
-    const dataURL = DOMElements.photoStripCanvas.toDataURL(mimeType, quality);
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = `ODZ_PhotoStrip_${Date.now()}.${mimeType.split('/')[1].split(';')[0]}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    logAnalytics('Strip_Downloaded', { format: mimeType, quality: quality });
-}
-
-/**
- * Prints the generated photo strip.
- */
-function printStrip() {
-    const dataURL = DOMElements.photoStripCanvas.toDataURL('image/png'); // Always print PNG for quality
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Print Photo Strip</title>
-            <style>
-                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0; }
-                img { max-width: 100%; max-height: 90vh; display: block; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-                @media print {
-                    body { background: none; }
-                    img { page-break-after: always; }
-                }
-            </style>
-        </head>
-        <body>
-            <img src="${dataURL}" onload="window.print();window.close()" />
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-    logAnalytics('Strip_Printed');
-}
-
-
-// --- Initialization ---
-
-/**
- * Initializes the editing page: loads captured photos, sets up canvas, and renders the initial strip.
- */
-async function initializeEditorPage() {
-    // Get the selected photo count from localStorage
-    const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
-    const configKey = storedPhotoCount || '4'; // Default to 4 if not found
-
-    if (!STRIP_LAYOUT_CONFIGS[configKey]) {
-        console.error(`No configuration found for photo count: ${configKey}. Defaulting to '4'.`);
-        currentConfig = STRIP_LAYOUT_CONFIGS['4'];
-    } else {
-        currentConfig = STRIP_LAYOUT_CONFIGS[configKey];
-    }
-
-    // Get the canvas context
-    ctx = DOMElements.photoStripCanvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) {
-        console.error('Failed to get 2D canvas context.');
-        alert('Your browser does not support the canvas features required for editing.');
+        console.error("Cannot setup event listeners: Canvas context is null.");
         return;
     }
 
-    // Load captured photos from localStorage
-    const capturedPhotosData = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
-    if (capturedPhotosData.length === 0) {
-        alert('No photos captured! Please go back and capture some photos.');
-        DOMElements.retakeBtn.textContent = 'Capture Photos Now';
-        // Optionally disable editing controls if no photos
-        // For now, allow user to play with text/stickers even without photos
+    DOMElements.photoStripCanvas.addEventListener('mousedown', handleMouseDown);
+    DOMElements.photoStripCanvas.addEventListener('mousemove', handleMouseMove);
+    DOMElements.photoStripCanvas.addEventListener('mouseup', handleMouseUp);
+    DOMElements.photoStripCanvas.addEventListener('mouseleave', handleMouseUp); // End drawing if mouse leaves canvas
+
+    // Frame selection
+    DOMElements.frameSelect.addEventListener('change', () => {
+        const selectedFrameId = DOMElements.frameSelect.value;
+        const frame = currentConfig.availableFrames.find(f => f.id === selectedFrameId);
+        if (selectedFrameId === 'custom') {
+            currentFrame = { id: 'custom' };
+            if (DOMElements.backgroundSelect) DOMElements.backgroundSelect.style.display = 'block'; // Show color picker
+        } else {
+            currentFrame = frame;
+            if (DOMElements.backgroundSelect) DOMElements.backgroundSelect.style.display = 'none'; // Hide color picker
+        }
+        renderCanvas();
+    });
+
+    // Background color input for custom frame
+    if (DOMElements.backgroundSelect) {
+        DOMElements.backgroundSelect.addEventListener('input', renderCanvas);
     }
 
-    try {
-        capturedImages = await Promise.all(capturedPhotosData.map(dataURL => loadImage(dataURL)));
-        console.log(`Loaded ${capturedImages.length} captured photos.`);
-    } catch (error) {
-        console.error('Error loading captured photos:', error);
-        alert('Failed to load captured photos. Please try capturing them again.');
-        capturedImages = []; // Clear array if loading fails
+    // Toggle Date/Time Stamp
+    if (DOMElements.toggleDateTime) {
+        DOMElements.toggleDateTime.addEventListener('change', () => {
+            showDateTimeOnStrip = DOMElements.toggleDateTime.checked;
+            renderCanvas();
+        });
+    }
+
+    // Add Text
+    if (DOMElements.addTextBtn) {
+        DOMElements.addTextBtn.addEventListener('click', () => {
+            const text = DOMElements.textInput.value.trim();
+            if (text) {
+                const newTextElement = {
+                    id: Date.now(), // Unique ID
+                    type: 'text',
+                    text: text,
+                    x: DOMElements.photoStripCanvas.width / 2, // Center of canvas
+                    y: DOMElements.photoStripCanvas.height / 2, // Center of canvas
+                    width: 100, // Placeholder, will be measured
+                    height: 30, // Placeholder, will be measured
+                    settings: {
+                        font: DOMElements.fontSelect.value,
+                        size: parseInt(DOMElements.fontSizeInput.value),
+                        color: DOMElements.textColorInput.value,
+                        shadowColor: DOMElements.textShadowColorInput ? DOMElements.textShadowColorInput.value : DEFAULT_TEXT_SETTINGS.shadowColor,
+                        shadowBlur: DOMElements.textShadowBlurInput ? parseInt(DOMElements.textShadowBlurInput.value) : DEFAULT_TEXT_SETTINGS.shadowBlur,
+                        bold: DOMElements.boldToggleBtn.classList.contains('active'),
+                        italic: DOMElements.italicToggleBtn.classList.contains('active'),
+                        underline: false // Assuming underline is not yet implemented or managed
+                    }
+                };
+                customElements.push(newTextElement);
+                selectedElement = newTextElement;
+                renderCanvas();
+                DOMElements.textInput.value = ''; // Clear input after adding
+                updateTextControlsFromSelection();
+            }
+        });
+    }
+
+    // Text input changes
+    if (DOMElements.textInput) {
+        DOMElements.textInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.text = DOMElements.textInput.value;
+                renderCanvas();
+            }
+        });
+    }
+
+    // Text font select
+    if (DOMElements.fontSelect) {
+        DOMElements.fontSelect.addEventListener('change', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.font = DOMElements.fontSelect.value;
+                renderCanvas();
+            }
+        });
+    }
+
+    // Font size input
+    if (DOMElements.fontSizeInput) {
+        DOMElements.fontSizeInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.size = parseInt(DOMElements.fontSizeInput.value);
+                renderCanvas();
+            }
+        });
+    }
+
+    // Text color input
+    if (DOMElements.textColorInput) {
+        DOMElements.textColorInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.color = DOMElements.textColorInput.value;
+                renderCanvas();
+            }
+        });
+    }
+
+    // Text shadow color input
+    if (DOMElements.textShadowColorInput) {
+        DOMElements.textShadowColorInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.shadowColor = DOMElements.textShadowColorInput.value;
+                renderCanvas();
+            }
+        });
+    }
+
+    // Text shadow blur input
+    if (DOMElements.textShadowBlurInput) {
+        DOMElements.textShadowBlurInput.addEventListener('input', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.shadowBlur = parseInt(DOMElements.textShadowBlurInput.value);
+                renderCanvas();
+            }
+        });
+    }
+
+    // Bold toggle
+    if (DOMElements.boldToggleBtn) {
+        DOMElements.boldToggleBtn.addEventListener('click', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.bold = !selectedElement.settings.bold;
+                DOMElements.boldToggleBtn.classList.toggle('active', selectedElement.settings.bold);
+                renderCanvas();
+            }
+        });
+    }
+
+    // Italic toggle
+    if (DOMElements.italicToggleBtn) {
+        DOMElements.italicToggleBtn.addEventListener('click', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.italic = !selectedElement.settings.italic;
+                DOMElements.italicToggleBtn.classList.toggle('active', selectedElement.settings.italic);
+                renderCanvas();
+            }
+        });
+    }
+
+    // Text alignment
+    if (DOMElements.textAlignSelect) {
+        DOMElements.textAlignSelect.addEventListener('change', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                selectedElement.settings.align = DOMElements.textAlignSelect.value;
+                renderCanvas();
+            }
+        });
+    }
+
+    // Remove Text
+    if (DOMElements.removeTextBtn) {
+        DOMElements.removeTextBtn.addEventListener('click', () => {
+            if (selectedElement && selectedElement.type === 'text') {
+                customElements = customElements.filter(el => el !== selectedElement);
+                selectedElement = null; // Deselect
+                renderCanvas();
+                updateTextControlsFromSelection();
+            }
+        });
+    }
+
+
+    // Add Sticker
+    if (DOMElements.addStickerBtn) {
+        DOMElements.addStickerBtn.addEventListener('click', () => {
+            const selectedStickerSrc = DOMElements.stickerSelect.value;
+            if (selectedStickerSrc) {
+                const newStickerElement = {
+                    id: Date.now(),
+                    type: 'sticker',
+                    src: selectedStickerSrc,
+                    x: DOMElements.photoStripCanvas.width / 2, // Center of canvas
+                    y: DOMElements.photoStripCanvas.height / 2, // Center of canvas
+                    width: 100, // Default size for now
+                    height: 100 // Default size for now
+                };
+                customElements.push(newStickerElement);
+                selectedElement = newStickerElement;
+                renderCanvas();
+                DOMElements.stickerSelect.value = ''; // Reset sticker select
+                updateStickerControlsFromSelection();
+            }
+        });
+    }
+
+    // Remove Sticker
+    if (DOMElements.removeStickerBtn) {
+        DOMElements.removeStickerBtn.addEventListener('click', () => {
+            if (selectedElement && selectedElement.type === 'sticker') {
+                customElements = customElements.filter(el => el !== selectedElement);
+                selectedElement = null; // Deselect
+                renderCanvas();
+                updateStickerControlsFromSelection();
+            }
+        });
+    }
+
+    // Toggle Draw Mode
+    if (DOMElements.toggleDrawModeBtn) {
+        DOMElements.toggleDrawModeBtn.addEventListener('click', () => {
+            isDrawingMode = !isDrawingMode;
+            DOMElements.toggleDrawModeBtn.classList.toggle('active', isDrawingMode);
+            DOMElements.photoStripCanvas.style.cursor = isDrawingMode ? 'crosshair' : 'default';
+        });
+    }
+
+    // Brush color and size
+    if (DOMElements.brushColorInput) DOMElements.brushColorInput.addEventListener('input', renderCanvas); // Doesn't need to render, just sets strokeStyle
+    if (DOMElements.brushSizeInput) DOMElements.brushSizeInput.addEventListener('input', renderCanvas); // Doesn't need to render, just sets lineWidth
+
+    // Clear Drawings
+    if (DOMElements.clearDrawingsBtn) {
+        DOMElements.clearDrawingsBtn.addEventListener('click', () => {
+            drawings = []; // Clear all drawings
+            renderCanvas();
+        });
+    }
+
+
+    // Download Strip
+    if (DOMElements.downloadStripBtn) {
+        DOMElements.downloadStripBtn.addEventListener('click', () => {
+            // Show spinner
+            if (DOMElements.downloadSpinner) DOMElements.downloadSpinner.classList.remove('hidden-spinner');
+
+            // Ensure the canvas is fully rendered with all current elements
+            // A small delay might be needed for images/frames to load, if not already cached
+            setTimeout(() => {
+                const format = DOMElements.downloadFormatSelect.value;
+                const quality = parseFloat(format.split(';')[1]) || 1.0; // Get quality for JPEG
+                const mimeType = format.split(';')[0];
+
+                const dataURL = DOMElements.photoStripCanvas.toDataURL(mimeType, quality);
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = `ODZ_PhotoStrip_${new Date().toISOString().slice(0, 10)}.png`; // Default to png
+                if (mimeType === 'image/jpeg') {
+                    a.download = `ODZ_PhotoStrip_${new Date().toISOString().slice(0, 10)}.jpeg`;
+                }
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Hide spinner
+                if (DOMElements.downloadSpinner) DOMElements.downloadSpinner.classList.add('hidden-spinner');
+                logAnalytics('Strip_Downloaded', { format: mimeType, quality: quality });
+            }, 100); // Small delay to ensure render completes
+        });
+    }
+
+    // Print Strip
+    if (DOMElements.printStripBtn) {
+        DOMElements.printStripBtn.addEventListener('click', () => {
+            logAnalytics('Print_Initiated');
+            const dataURL = DOMElements.photoStripCanvas.toDataURL('image/png'); // Print as PNG for quality
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print Photo Strip</title>
+                        <style>
+                            body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                            img { max-width: 100%; max-height: 100vh; }
+                            @media print {
+                                body { margin: 0; }
+                                img { width: auto; height: auto; max-width: 100%; max-height: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <img src="${dataURL}" onload="window.print(); window.close();" />
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+    }
+
+
+    // Retake photos button
+    if (DOMElements.retakeBtn) {
+        DOMElements.retakeBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('capturedImages'); // Clear stored images
+            window.location.href = 'capture-page/capture-page.html'; // Redirect to capture page
+            logAnalytics('Retake_Photos');
+        });
+    }
+}
+
+// --- Initial Page Load Logic ---
+
+// Main function to initialize the editor page
+function initializeEditorPage() {
+    console.log("initializeEditorPage called.");
+
+    if (!ctx) {
+        console.error("Canvas context is null. Cannot initialize editor page.");
+        displayNoPhotosMessage();
+        return;
+    }
+
+    // Determine layout configuration based on number of photos
+    const numPhotos = capturedImages.length;
+    if (numPhotos === 0) {
+        displayNoPhotosMessage();
+        return;
+    }
+    currentConfig = STRIP_LAYOUT_CONFIGS[numPhotos.toString()];
+
+    if (!currentConfig) {
+        console.error(`No layout configuration found for ${numPhotos} photos.`);
+        displayNoPhotosMessage();
+        return;
+    }
+
+    // Set initial frame (first one in the available frames for the current config)
+    currentFrame = currentConfig.availableFrames[0];
+    if (DOMElements.frameSelect) {
+        // Populate options for frames and stickers
+        populateOptions(DOMElements.frameSelect, currentConfig.availableFrames);
+        DOMElements.frameSelect.value = currentFrame.id; // Select the default frame
+    }
+
+    const stickerCategories = [
+        { optgroup: "Strand Stickers", options: [{ value: "assets/stickers/stem.png", name: "STEM Student" }, { value: "assets/stickers/humss.png", name: "HUMSS Student" }, { value: "assets/stickers/abm.png", name: "ABM Student" }] },
+        { optgroup: "Hearts", options: [{ value: "assets/stickers/heart-pink-1.png", name: "heart-pink-1" }, { value: "assets/stickers/heart-pink-2.png", name: "heart-pink-2" }, { value: "assets/stickers/loading-heart.png", name: "loading-heart" }, { value: "assets/stickers/blue-heart.png", name: "blue-heart" }] },
+        { optgroup: "Random", options: [{ value: "assets/stickers/bunny.png", name: "bunny-1" }, { value: "assets/stickers/bunny-2.png", name: "bunny-2" }, { value: "assets/stickers/pink-ribbbon.png", name: "pink-ribbon" }, { value: "assets/stickers/flower-bouquet.png", name: "flower-bouquet" }, { value: "assets/stickers/paper-airplane.png", name: "paper-airplane" }, { value: "assets/stickers/star.png", name: "star" }] },
+        { optgroup: "XOXO", options: [{ value: "assets/stickers/xoxo.png", name: "xoxo-1" }, { value: "assets/stickers/xoxo-2.png", name: "xoxo-2" }, { value: "assets/stickers/xoxo-3.png", name: "xoxo-3" }] }
+    ];
+    if (DOMElements.stickerSelect) {
+        populateOptions(DOMElements.stickerSelect, stickerCategories);
     }
 
     // Initialize UI controls with default values
-    DOMElements.fontSelect.value = DEFAULT_TEXT_SETTINGS.font;
-    DOMElements.fontSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
-    DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
-    DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
-    DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
-    DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+    if (DOMElements.fontSelect) DOMElements.fontSelect.value = DEFAULT_TEXT_SETTINGS.font;
+    if (DOMElements.fontSizeInput) DOMElements.fontSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
+    if (DOMElements.textColorInput) DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
+    if (DOMElements.textShadowColorInput) DOMElements.textShadowColorInput.value = DEFAULT_TEXT_SETTINGS.shadowColor;
+    if (DOMElements.textShadowBlurInput) DOMElements.textShadowBlurInput.value = DEFAULT_TEXT_SETTINGS.shadowBlur;
+    if (DOMElements.textAlignSelect) DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
     if (DOMElements.brushColorInput) DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
     if (DOMElements.brushSizeInput) DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
 
     // Initially disable controls that depend on selection or specific modes
     updateTextControlsFromSelection();
-    // IMPORTANT: Explicitly ensure text input and add button are ENABLED after the above call
-    // This handles the case where there ARE photos, but no text is selected initially.
     if (DOMElements.textInput) DOMElements.textInput.disabled = false;
     if (DOMElements.addTextBtn) DOMElements.addTextBtn.disabled = false;
 
     updateStickerControlsFromSelection(); // This will disable remove sticker button initially
     if (DOMElements.toggleDrawModeBtn) DOMElements.toggleDrawModeBtn.classList.remove('active'); // Ensure draw button isn't active by default
 
-    // NEW: Initialize date/time controls
-    DOMElements.toggleDateTime.checked = showDateTimeOnStrip; // This will be false by default
+    // Initialize date/time controls
+    if (DOMElements.toggleDateTime) DOMElements.toggleDateTime.checked = showDateTimeOnStrip;
 
-    populateOptions(); // Fill dropdowns with relevant options
     setupEventListeners(); // Attach all event listeners
     renderCanvas(); // Initial render of the photo strip
     logAnalytics('Editor_Page_Loaded_Successfully', { layout: configKey });
@@ -998,4 +936,4 @@ async function initializeEditorPage() {
 
 // Ensure the `initializeEditorPage` function runs only after the entire HTML document is loaded.
 // This prevents errors where JavaScript tries to find elements before they exist on the page.
-document.addEventListener('DOMContentLoaded', initializeEditorPage);
+document.addEventListener('DOMContentLoaded', loadCapturedImages);
