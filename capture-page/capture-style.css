@@ -309,6 +309,69 @@ button:disabled {
     line-height: 1.4;
 }
 
+/* --- NEW: Visual Countdown Styles --- */
+.visual-countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-fredoka); /* Use your special title font */
+    font-size: 8em; /* Large size */
+    color: var(--text-light); /* White text for contrast */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Strong shadow for visibility */
+    z-index: 10; /* Above video, below flash */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Allows clicks to pass through */
+    transition: opacity 0.3s ease-in-out; /* Smooth fade in/out */
+}
+
+/* Animation for the countdown numbers */
+@keyframes countdownPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+.visual-countdown.animate {
+    animation: countdownPulse 1s ease-out forwards; /* Apply animation */
+}
+
+/* --- NEW: Flash Overlay Styles --- */
+.flash-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 1); /* Solid white */
+    z-index: 20; /* Above everything else */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Allows clicks to pass through */
+    transition: opacity 0.1s ease-out; /* Quick fade out */
+}
+
+.flash-overlay.active {
+    opacity: 1; /* Show the flash */
+    transition: none; /* No transition when activating for instant flash */
+}
+
+/* Hide the old text countdown */
+#countdown {
+    display: none;
+}
+
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
     .photo-booth-wrapper {
