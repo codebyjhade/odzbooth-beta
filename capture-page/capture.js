@@ -563,6 +563,12 @@ async function handleRetakeBtnClick() {
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // START OF FIX: Clear any previously captured photos from localStorage and the display
+    // This ensures a clean slate when the capture page is loaded, preventing old photos from showing.
+    localStorage.removeItem('capturedPhotos'); 
+    photoGrid.innerHTML = ''; 
+    // END OF FIX
+
     const storedAspectRatio = localStorage.getItem('selectedFrameAspectRatio');
     if (storedAspectRatio) {
         photoFrameAspectRatio = parseFloat(storedAspectRatio);
@@ -575,6 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePhotoProgressText(); 
     updateRetakeButtonState(); 
 
+    // The following block was previously trying to load photos, which contradicts the
+    // desired behavior of starting fresh. It has been removed.
+    /*
     const storedPhotos = localStorage.getItem('capturedPhotos');
     if (storedPhotos) {
         capturedPhotos = JSON.parse(storedPhotos);
@@ -593,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
             enterRetakeMode();
         }
     }
+    */
 });
 
 cameraSelect.addEventListener('change', (event) => {
