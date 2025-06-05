@@ -15,14 +15,16 @@ const subCameraMsg = document.getElementById('sub-camera-msg');
 
 const cameraLoadingSpinner = document.getElementById('camera-loading-spinner'); 
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
-const undoLastPhotoBtn = document.getElementById('undoLastPhotoBtn'); 
+
+// Changed from undoLastPhotoBtn to retakeSelectedPhotoBtn
+const retakeSelectedPhotoBtn = document.getElementById('retakeSelectedPhotoBtn'); 
 const invertCameraButton = document.getElementById('invertCameraButton'); 
 
-// NEW: Visual Countdown and Flash Overlay Elements
+// Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
 const flashOverlay = document.getElementById('flashOverlay');
 
-// NEW: Photo Progress Text Element
+// Photo Progress Text Element
 const photoProgressText = document.getElementById('photoProgressText');
 
 
@@ -32,6 +34,10 @@ let capturedPhotos = []; // Stores base64 image data
 let photosToCapture = 0; 
 let photosCapturedCount = 0; 
 let photoFrameAspectRatio = 4 / 3; 
+
+// NEW: For selective retake functionality
+let selectedPhotoIndexForRetake = -1; // -1 means no photo is selected for retake
+
 
 // --- Utility Functions ---
 
@@ -93,6 +99,7 @@ function showPhotoProcessingSpinner(show) {
 
 /**
  * Disables/enables capture controls (buttons, selects).
+ * This function will now also control the retake button.
  * @param {boolean} disabled - True to disable, false to enable.
  */
 function setCaptureControlsEnabled(disabled) {
@@ -100,6 +107,7 @@ function setCaptureControlsEnabled(disabled) {
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
     invertCameraButton.disabled = disabled; 
+    retakeSelectedPhotoBtn.disabled = disabled || selectedPhotoIndexForRetake === -1; // NEW: Also disable retake if no selection
 }
 
 /**
@@ -114,14 +122,22 @@ function updateVideoAspectRatio(aspectRatio) {
     }
 }
 
-// NEW: Function to update the photo progress text
+/**
+ * Updates the photo progress text (e.g., "Captured: 2 of 4").
+ */
 function updatePhotoProgressText() {
     photoProgressText.textContent = `Captured: ${capturedPhotos.length} of ${photosToCapture}`;
     if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
         photoProgressText.textContent += ' - All photos captured!';
+    } else if (photosToCapture > 0 && capturedPhotos.length < photosToCapture) {
+        photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
     }
 }
 
+// NEW: Updates the disabled state of the retake button based on selection
+function updateRetakeButtonState() {
+    retakeSelectedPhotoBtn.disabled = (selectedPhotoIndexForRetake === -1);
+}
 
 // --- Camera Management ---
 
@@ -130,10 +146,9 @@ function updatePhotoProgressText() {
  */
 async function populateCameraList() {
     showCameraLoadingSpinner(true); 
-    setCaptureControlsEnabled(true); 
+    setCaptureControlsEnabled(true); // Temporarily enable to allow spinner to show up
 
     try {
-        // Request media devices to get permission prompt early and enumerate devices
         const devices = await navigator.mediaDevices.enumerateDevices();
         cameraSelect.innerHTML = ''; 
 
@@ -145,7 +160,7 @@ async function populateCameraList() {
                 'error',
                 'Please ensure your webcam is connected and enabled, then refresh the page.'
             );
-            setCaptureControlsEnabled(true);
+            setCaptureControlsEnabled(true); // Still allow controls if no camera, user might try refresh
             return;
         }
 
@@ -159,7 +174,6 @@ async function populateCameraList() {
         if (cameraSelect.options.length > 0) {
             startCamera(cameraSelect.options[0].value);
         } else {
-            // This case should ideally not be reached if videoInputDevices.length > 0
             displayCameraMessage(
                 'No selectable cameras.',
                 'error',
@@ -217,9 +231,6 @@ function handleCameraError(error) {
 
 /**
  * Starts the camera stream for the given device ID.
- * It requests the highest available resolution *that the device is capable of providing by default*.
- * No explicit width/height constraints are set here to allow the browser to select the optimal
- * resolution for the camera, which is usually the best "good resolution" without forcing maxes.
  */
 async function startCamera(deviceId) {
     if (currentStream) {
@@ -233,11 +244,8 @@ async function startCamera(deviceId) {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                // By omitting specific width/height, the browser will attempt to use the camera's
-                // native and typically highest available resolution that is considered "good" for streaming.
-                // This aligns with "what the device is capable of, but at a good resolution."
             },
-            audio: false // Ensure audio is not requested
+            audio: false 
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
@@ -246,7 +254,7 @@ async function startCamera(deviceId) {
         video.onloadedmetadata = () => {
             video.play();
             hideCameraMessage();
-            setCaptureControlsEnabled(false);
+            setCaptureControlsEnabled(false); // Controls enabled only if camera is ready
             showCameraLoadingSpinner(false); 
             console.log(`Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
         };
@@ -259,57 +267,47 @@ async function startCamera(deviceId) {
     }
 }
 
-// --- Photo Capture Logic ---
+// --- Photo Capture and Management Logic ---
 
 /**
- * Manages the entire photo capture sequence with countdowns and multiple shots.
+ * Adds a captured photo to the grid and the capturedPhotos array.
+ * @param {string} imgData - Base64 data URL of the image.
+ * @param {number} index - The index in the capturedPhotos array this photo belongs to.
  */
-async function initiateCaptureSequence() {
-    if (!currentStream || video.srcObject === null || video.paused) {
-        displayCameraMessage(
-            'Camera not active or paused.',
-            'warning',
-            'Please ensure camera access is granted and the live feed is visible before starting.'
-        );
-        return;
+function addPhotoToGrid(imgData, index) {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('captured-photo-wrapper');
+    wrapper.dataset.index = index; // Store the original index
+
+    const imgElement = document.createElement('img');
+    imgElement.src = imgData;
+    imgElement.alt = `Captured Photo ${index + 1}`;
+    
+    wrapper.appendChild(imgElement);
+
+    // If it's a replacement, find the existing element and replace it
+    const existingWrapper = photoGrid.querySelector(`[data-index="${index}"]`);
+    if (existingWrapper) {
+        photoGrid.replaceChild(wrapper, existingWrapper);
+    } else {
+        // For initial captures, append to the grid.
+        // The order might appear reversed visually due to CSS if using flex-direction: row-reverse etc.
+        // But the data-index ensures we always know which element corresponds to which array index.
+        photoGrid.appendChild(wrapper); 
     }
+}
 
-    const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
-    photosToCapture = parseInt(storedPhotoCount, 10);
-
-    if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture > 6 || photosToCapture === 5) {
-        console.warn(`Invalid or missing selectedPhotoCount (${storedPhotoCount}) from localStorage. Defaulting to 3 photos.`);
-        photosToCapture = 3;
-    }
-
-    setCaptureControlsEnabled(true); // Disable all controls during capture
-    captureBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
-    undoLastPhotoBtn.style.display = 'none'; 
-
-    photosCapturedCount = 0;
-    capturedPhotos = []; // Clear previously captured photos
-    photoGrid.innerHTML = ''; // Clear displayed photos
-    updatePhotoProgressText(); // NEW: Initialize photo progress text
-
-
-    while (photosCapturedCount < photosToCapture) {
-        await runCountdown(3);
-        showPhotoProcessingSpinner(true); 
-        takePhoto();
-        showPhotoProcessingSpinner(false); 
-        photosCapturedCount++;
-        updatePhotoProgressText(); // NEW: Update photo progress text after each capture
-
-        if (photosCapturedCount < photosToCapture) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between shots
+/**
+ * Renders all photos currently in the capturedPhotos array to the grid.
+ * This is useful after a retake to ensure the grid is up-to-date.
+ */
+function renderPhotoGrid() {
+    photoGrid.innerHTML = ''; // Clear existing photos
+    capturedPhotos.forEach((imgData, index) => {
+        if (imgData) { // Only render if not null/empty (e.g., if we had placeholders)
+            addPhotoToGrid(imgData, index);
         }
-    }
-
-    setCaptureControlsEnabled(false); // Re-enable controls if appropriate
-    captureBtn.style.display = 'block'; // Show capture button again
-    nextBtn.style.display = 'block'; // Show next button
-    updateUndoButtonVisibility(); 
+    });
 }
 
 /**
@@ -318,25 +316,23 @@ async function initiateCaptureSequence() {
 function runCountdown(duration) {
     return new Promise(resolve => {
         let count = duration;
-        // Show the visual countdown element and ensure its opacity is 1
         visualCountdown.style.opacity = 1;
-        visualCountdown.style.display = 'block'; // Ensure it's visible if hidden by other states
+        visualCountdown.style.display = 'block'; 
         visualCountdown.textContent = count;
-        visualCountdown.classList.add('animate'); // Trigger the pulse animation for the first number
+        visualCountdown.classList.add('animate'); 
 
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
                 visualCountdown.textContent = count;
-                // Reset and re-apply animation class to trigger animation for subsequent numbers
                 visualCountdown.classList.remove('animate');
-                void visualCountdown.offsetWidth; // Trigger reflow to restart CSS animation
+                void visualCountdown.offsetWidth; 
                 visualCountdown.classList.add('animate');
             } else {
                 clearInterval(timer);
-                visualCountdown.classList.remove('animate'); // Clean up animation class
-                visualCountdown.style.opacity = 0; // Fade out the last number/countdown
-                visualCountdown.style.display = 'none'; // Hide it completely after fade
+                visualCountdown.classList.remove('animate'); 
+                visualCountdown.style.opacity = 0; 
+                visualCountdown.style.display = 'none'; 
                 resolve();
             }
         }, 1000);
@@ -344,14 +340,12 @@ function runCountdown(duration) {
 }
 
 /**
- * Captures a single frame from the video feed at its *actual active resolution*,
- * applies the selected filter, and crops it to the desired frame aspect ratio
- * before adding to the display and `capturedPhotos` array.
+ * Captures a single frame from the video feed.
+ * @param {number} [indexToReplace=-1] - The index in capturedPhotos array to replace. If -1, a new photo is added.
  */
-function takePhoto() {
-    // NEW: Trigger flash effect
+function takePhoto(indexToReplace = -1) {
+    // Trigger flash effect
     flashOverlay.classList.add('active');
-    // Remove flash after a very short delay (e.g., 100ms)
     setTimeout(() => {
         flashOverlay.classList.remove('active');
     }, 100); 
@@ -377,35 +371,156 @@ function takePhoto() {
         sy = (videoActualHeight - sHeight) / 2; 
     }
 
-    // Set canvas dimensions to the *effective* resolution of the cropped image
     canvas.width = sWidth; 
     canvas.height = sHeight;
 
     ctx.filter = filterSelect.value;
-    // Draw the cropped portion of the video onto the canvas
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
 
     const imgData = canvas.toDataURL('image/png');
-    capturedPhotos.push(imgData);
 
-    const imgElement = document.createElement('img');
-    imgElement.src = imgData;
-    imgElement.alt = `Captured Photo ${capturedPhotos.length}`; // Use actual length for alt text
-    imgElement.classList.add('captured-photo-item');
-    photoGrid.prepend(imgElement); // Prepend to show newest on top
-    updateUndoButtonVisibility(); 
+    if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
+        capturedPhotos[indexToReplace] = imgData; // Replace existing photo
+        // Find the specific DOM element and update its src
+        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
+        if (imgElementInDom) {
+            imgElementInDom.src = imgData;
+        }
+        // Deselect the photo after it's retaken
+        const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
+        if (selectedWrapper) {
+            selectedWrapper.classList.remove('selected');
+        }
+        selectedPhotoIndexForRetake = -1; // Clear selection
+        updateRetakeButtonState(); // Update button state
+    } else {
+        capturedPhotos.push(imgData); // Add new photo
+        photosCapturedCount++; // Only increment for initial capture
+        addPhotoToGrid(imgData, capturedPhotos.length - 1); // Add to DOM and set data-index
+    }
+    updatePhotoProgressText(); 
 }
 
 /**
- * Updates the visibility of the undo button based on whether photos have been captured.
+ * Manages the initial photo capture sequence with countdowns and multiple shots.
  */
-function updateUndoButtonVisibility() {
-    if (capturedPhotos.length > 0) {
-        undoLastPhotoBtn.style.display = 'block';
-    } else {
-        undoLastPhotoBtn.style.display = 'none';
+async function initiateCaptureSequence() {
+    if (!currentStream || video.srcObject === null || video.paused) {
+        displayCameraMessage(
+            'Camera not active or paused.',
+            'warning',
+            'Please ensure camera access is granted and the live feed is visible before starting.'
+        );
+        return;
     }
+
+    // Only start a *new* sequence if not all photos are captured yet
+    if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
+        alert('All photos have already been captured. Use "Retake Selected Photo" to replace a shot.');
+        return;
+    }
+
+    const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
+    photosToCapture = parseInt(storedPhotoCount, 10);
+
+    if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture > 6 || photosToCapture === 5) {
+        console.warn(`Invalid or missing selectedPhotoCount (${storedPhotoCount}) from localStorage. Defaulting to 3 photos.`);
+        photosToCapture = 3;
+    }
+
+    setCaptureControlsEnabled(true); // Disable all controls during capture
+    captureBtn.style.display = 'none'; // Hide main capture button
+    nextBtn.style.display = 'none'; // Hide next button
+    retakeSelectedPhotoBtn.style.display = 'none'; // Ensure retake button is hidden during initial capture
+
+    // If starting fresh, clear previous photos
+    if (capturedPhotos.length === 0) {
+        photoGrid.innerHTML = ''; 
+    }
+    
+    // Fill up the remaining slots or start fresh if no photos
+    while (capturedPhotos.length < photosToCapture) {
+        await runCountdown(3);
+        showPhotoProcessingSpinner(true); 
+        takePhoto(); // This now handles adding and updating photosCapturedCount internally
+        showPhotoProcessingSpinner(false); 
+        
+        if (capturedPhotos.length < photosToCapture) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between shots
+        }
+    }
+
+    enterRetakeMode(); // Transition to retake mode after all initial photos are taken
 }
+
+/**
+ * Transitions the UI into a state where photos can be selected for retake.
+ */
+function enterRetakeMode() {
+    setCaptureControlsEnabled(false); // Re-enable general controls
+    captureBtn.style.display = 'none'; // Keep primary capture button hidden
+    nextBtn.style.display = 'block'; // Show next button
+    retakeSelectedPhotoBtn.style.display = 'block'; // Show retake button
+    updateRetakeButtonState(); // Set initial state of retake button
+}
+
+/**
+ * Handles selection/deselection of photos in the grid for retake.
+ * @param {Event} event - The click event.
+ */
+function handlePhotoSelection(event) {
+    const clickedWrapper = event.target.closest('.captured-photo-wrapper');
+    if (!clickedWrapper) return; // Clicked outside a photo wrapper
+
+    const clickedIndex = parseInt(clickedWrapper.dataset.index, 10);
+
+    // If the same photo is clicked, deselect it
+    if (selectedPhotoIndexForRetake === clickedIndex) {
+        clickedWrapper.classList.remove('selected');
+        selectedPhotoIndexForRetake = -1;
+    } else {
+        // Deselect any previously selected photo
+        const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+        if (currentlySelected) {
+            currentlySelected.classList.remove('selected');
+        }
+        // Select the new photo
+        clickedWrapper.classList.add('selected');
+        selectedPhotoIndexForRetake = clickedIndex;
+    }
+    updateRetakeButtonState(); // Update the button state
+}
+
+/**
+ * Handles the click event for the "Retake Selected Photo" button.
+ */
+async function handleRetakeBtnClick() {
+    if (selectedPhotoIndexForRetake === -1) {
+        alert('Please select a photo to retake first!');
+        return;
+    }
+
+    const confirmRetake = confirm(`Are you sure you want to retake photo ${selectedPhotoIndexForRetake + 1}?`);
+    if (!confirmRetake) {
+        return;
+    }
+
+    setCaptureControlsEnabled(true); // Disable all controls during retake process
+    retakeSelectedPhotoBtn.disabled = true; // Explicitly disable during capture
+    nextBtn.style.display = 'none'; // Hide next button during retake
+
+    await runCountdown(3);
+    showPhotoProcessingSpinner(true);
+    takePhoto(selectedPhotoIndexForRetake); // Capture and replace the selected photo
+    showPhotoProcessingSpinner(false);
+
+    setCaptureControlsEnabled(false); // Re-enable controls
+    retakeSelectedPhotoBtn.style.display = 'block'; // Show retake button again
+    nextBtn.style.display = 'block'; // Show next button again
+    updateRetakeButtonState(); // Update button state after retake
+    updatePhotoProgressText(); // Update progress text
+}
+
 
 // --- Event Listeners ---
 
@@ -419,8 +534,29 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVideoAspectRatio(4 / 3); // Ensure a default is applied
     }
     populateCameraList();
-    updateUndoButtonVisibility(); 
-    updatePhotoProgressText(); // NEW: Call on DOMContentLoaded to set initial text
+    updatePhotoProgressText(); // Call on DOMContentLoaded to set initial text
+    updateRetakeButtonState(); // Initialize retake button state
+
+    // If returning from editor, load previously captured photos
+    const storedPhotos = localStorage.getItem('capturedPhotos');
+    if (storedPhotos) {
+        capturedPhotos = JSON.parse(storedPhotos);
+        photosCapturedCount = capturedPhotos.length; // Ensure count matches loaded photos
+        
+        const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
+        photosToCapture = parseInt(storedPhotoCount, 10);
+        if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture === 5) {
+            photosToCapture = capturedPhotos.length > 0 ? capturedPhotos.length : 3; // Fallback
+        }
+
+        renderPhotoGrid(); // Render loaded photos
+        updatePhotoProgressText(); // Update text based on loaded photos
+
+        // If all photos were captured, enter retake mode directly
+        if (capturedPhotos.length === photosToCapture) {
+            enterRetakeMode();
+        }
+    }
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -433,56 +569,23 @@ filterSelect.addEventListener('change', () => {
 
 captureBtn.addEventListener('click', initiateCaptureSequence);
 
+// NEW: Event listener for the retake selected photo button
+retakeSelectedPhotoBtn.addEventListener('click', handleRetakeBtnClick);
+
 nextBtn.addEventListener('click', () => {
     // Only proceed if all required photos are captured
-    if (capturedPhotos.length === photosToCapture) { // NEW: Ensure all photos are captured
+    if (capturedPhotos.length === photosToCapture) { 
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
-        alert(`Please capture ${photosToCapture - capturedPhotos.length} more photo(s) before proceeding to the editor!`); // NEW: More specific alert
+        alert(`Please capture ${photosToCapture - capturedPhotos.length} more photo(s) before proceeding to the editor!`); 
     }
 });
 
-undoLastPhotoBtn.addEventListener('click', () => {
-    if (capturedPhotos.length > 0) {
-        capturedPhotos.pop(); 
-        
-        // Remove the last photo's image element from the DOM (which was prepended, so it's firstChild)
-        if (photoGrid.firstChild) {
-            photoGrid.removeChild(photoGrid.firstChild);
-        }
-        
-        photosCapturedCount--; // Decrement the counter
-        
-        updateUndoButtonVisibility(); 
-        updatePhotoProgressText(); // NEW: Update text after undo
-        
-        // If all photos are undone, re-enable capture button and hide next/undo
-        if (capturedPhotos.length === 0) {
-            captureBtn.style.display = 'block';
-            nextBtn.style.display = 'none';
-            // Re-enable camera and filter selects only if a stream is active
-            if (currentStream && video.srcObject && cameraAccessMessage.style.display === 'none') {
-                 filterSelect.disabled = false;
-                 cameraSelect.disabled = false;
-                 invertCameraButton.disabled = false; 
-            }
-        }
-    } else {
-        alert("No photos to undo!");
-    }
-});
+// NEW: Event listener for clicking on a photo in the grid (using event delegation)
+photoGrid.addEventListener('click', handlePhotoSelection);
 
 // Invert Camera Button Listener
 invertCameraButton.addEventListener('click', () => {
     video.classList.toggle('inverted');
-    // You might also want to save this preference if the user moves between pages
-    // localStorage.setItem('isCameraInverted', video.classList.contains('inverted'));
 });
-
-// Optional: Apply initial inversion if saved preference exists
-// document.addEventListener('DOMContentLoaded', () => {
-//     if (localStorage.getItem('isCameraInverted') === 'true') {
-//         video.classList.add('inverted');
-//     }
-// });
