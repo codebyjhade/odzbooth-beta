@@ -19,13 +19,14 @@
 
     <div class="photo-booth-wrapper">
         <div class="photobooth-container">
-            <div class="video-preview-area">
+           <div class="video-preview-area">
                 <video id="cameraFeed" autoplay playsinline></video>
-                <p id="countdown"></p>
-                <div id="camera-access-message" class="message">
-                    <p id="main-camera-msg">Attempting to access camera...</p>
-                    <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
-                </div>
+                <div id="flashOverlay" class="flash-overlay"></div>
+                <div id="visualCountdown" class="visual-countdown"></div>
+                <p id="countdown"></p> <div id="camera-access-message" class="message">
+                <p id="main-camera-msg">Attempting to access camera...</p>
+                <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
+            </div>
                 <div id="camera-loading-spinner" class="spinner-overlay">
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
