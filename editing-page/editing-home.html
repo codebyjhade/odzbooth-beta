@@ -23,7 +23,7 @@
     <main class="editor-wrapper">
         <div class="photo-strip-preview">
             <div id="canvasContainer" class="canvas-container">
-                <canvas id="photoStripCanvas"></canvas>
+                <canvas id="photoCanvas"></canvas>
                 
                 <div id="noPhotosMessage" class="info-message" style="display: none;">
                     <p>No photos found.</p> 
@@ -44,54 +44,42 @@
                 <h3><i class='bx bx-border-all'></i> Choose Frame</h3>
                 <select id="frameSelect" title="Select a frame design">
                     </select>
-                <label for="backgroundSelect" style="display: none;">Background Color (for Custom Frame):</label>
-                <input type="color" id="backgroundSelect" value="#FFFFFF" title="Custom Background Color" style="display: none;">
                 <p class="tool-tip">Select a different frame design for your photo strip. Choose 'Custom Color' to use the color picker below for the background.</p>
-            </div>
-
-            <div class="tool-section date-time-section">
-                <h3>Date Stamp (Fixed Format)</h3>
-                <div class="control-group">
-                    <label for="toggleDateTime">
-                        <input type="checkbox" id="toggleDateTime"> Add Current Date (YYYY.MM.DD)
-                    </label>
-                </div>
-                <p class="tool-tip">Display the current date on your photo strip in 'YYYY.MM.DD' format.</p>
             </div>
 
             <div class="tool-section">
                 <h3><i class='bx bxs-sticker'></i> Add Stickers</h3>
-                   <select id="stickerSelect" title="Select a sticker category">
-                        <option value="">Select a sticker</option>
+                 <select id="stickerSelect" title="Select a sticker category">
+                    <option value="">Select a sticker</option>
 
-                        <optgroup label="Strand Stickers">
-                            <option value="assets/stickers/stem.png">STEM Student</option>
-                            <option value="assets/stickers/humss.png">HUMSS Student</option>
-                            <option value="assets/stickers/abm.png">ABM Student</option>
-                            </optgroup>
+                    <optgroup label="Strand Stickers">
+                        <option value="assets/stickers/stem.png">STEM Student</option>
+                        <option value="assets/stickers/humss.png">HUMSS Student</option>
+                        <option value="assets/stickers/abm.png">ABM Student</option>
+                        </optgroup>
 
-                        <optgroup label="Hearts">
-                            <option value="assets/stickers/heart-pink-1.png">heart-pink-1</option>
-                            <option value="assets/stickers/heart-pink-2.png">heart-pink-2</option>
-                            <option value="assets/stickers/loading-heart.png">loading-heart</option>
-                            <option value="assets/stickers/blue-heart.png">blue-heart</option>
-                            </optgroup>
+                    <optgroup label="Hearts">
+                        <option value="assets/stickers/heart-pink-1.png">heart-pink-1</option>
+                        <option value="assets/stickers/heart-pink-2.png">heart-pink-2</option>
+                        <option value="assets/stickers/loading-heart.png">loading-heart</option>
+                        <option value="assets/stickers/blue-heart.png">blue-heart</option>
+                        </optgroup>
 
-                        <optgroup label="Random">
-                            <option value="assets/stickers/bunny.png">bunny-1</option>
-                            <option value="assets/stickers/bunny-2.png">bunny-2</option>
-                            <option value="assets/stickers/pink-ribbbon.png">pink-ribbon</option>
-                            <option value="assets/stickers/flower-bouquet.png">flower-bouquet</option>
-                            <option value="assets/stickers/paper-airplane.png">paper-airplane</option>
-                            <option value="assets/stickers/star.png">star</option>
-                            </optgroup>
+                    <optgroup label="Random">
+                        <option value="assets/stickers/bunny.png">bunny-1</option>
+                        <option value="assets/stickers/bunny-2.png">bunny-2</option>
+                        <option value="assets/stickers/pink-ribbbon.png">pink-ribbon</option>
+                        <option value="assets/stickers/flower-bouquet.png">flower-bouquet</option>
+                        <option value="assets/stickers/paper-airplane.png">paper-airplane</option>
+                        <option value="assets/stickers/star.png">star</option>
+                        </optgroup>
 
-                        <optgroup label="XOXO">
-                            <option value="assets/stickers/xoxo.png">xoxo-1</option>
-                            <option value="assets/stickers/xoxo-2.png">xoxo-2</option>
-                            <option value="assets/stickers/xoxo-3.png">xoxo-3</option>
-                            </optgroup>
-                    </select>
+                    <optgroup label="XOXO">
+                        <option value="assets/stickers/xoxo.png">xoxo-1</option>
+                        <option value="assets/stickers/xoxo-2.png">xoxo-2</option>
+                        <option value="assets/stickers/xoxo-3.png">xoxo-3</option>
+                        </optgroup>
+                </select>
                 <button id="addStickerBtn" class="action-btn">
                     <i class='bx bxs-sticker'></i> Add Sticker
                 </button>
@@ -105,22 +93,17 @@
                 <h3><i class='bx bx-text'></i> Add Text</h3>
                 <input type="text" id="textInput" placeholder="Enter text here">
                 <input type="color" id="textColorInput" value="#333333" title="Text Color">
-                <select id="fontSelect">
+                <select id="textFontSelect">
                     <option value="'Poppins', sans-serif">Poppins</option>
                     <option value="'Fredoka', cursive">Fredoka</option>
                     <option value="Arial, sans-serif">Arial</option>
                     <option value="Impact, sans-serif">Impact</option>
                 </select>
-                <input type="number" id="fontSizeInput" value="30" min="10" max="100" title="Text Size">
+                <input type="number" id="textSizeInput" value="30" min="10" max="100" title="Text Size">
                 
                 <div class="text-style-options">
-                    <label for="textShadowColorInput">Shadow Color:</label>
-                    <input type="color" id="textShadowColorInput" value="#000000" title="Text Shadow Color">
-                    <label for="textShadowBlurInput">Shadow Blur:</label>
-                    <input type="range" id="textShadowBlurInput" min="0" max="20" value="0" title="Text Shadow Blur">
-
-                    <button id="boldToggleBtn" class="style-toggle-btn" title="Bold" disabled><i class='bx bx-bold'></i></button>
-                    <button id="italicToggleBtn" class="style-toggle-btn" title="Italic" disabled><i class='bx bx-italic'></i></button>
+                    <button id="textBoldBtn" class="style-toggle-btn" title="Bold" disabled><i class='bx bx-bold'></i></button>
+                    <button id="textItalicBtn" class="style-toggle-btn" title="Italic" disabled><i class='bx bx-italic'></i></button>
                     <button id="textUnderlineBtn" class="style-toggle-btn" title="Underline" disabled><i class='bx bx-underline'></i></button>
                     <select id="textAlignSelect" title="Text Alignment" disabled>
                         <option value="center">Center</option>
@@ -148,7 +131,7 @@
                 <button id="toggleDrawModeBtn" class="action-btn">
                     <i class='bx bx-pencil'></i> Toggle Draw Mode
                 </button>
-                <button id="clearDrawingsBtn" class="action-btn delete-btn" style="margin-top: 10px;">
+                <button id="clearDrawingBtn" class="action-btn delete-btn" style="margin-top: 10px;">
                     <i class='bx bx-eraser'></i> Clear All Drawings
                 </button>
                 <p class="tool-tip">Click 'Toggle Draw Mode' to start drawing directly on the canvas. Adjust color and size. Click again to exit draw mode. 'Clear All Drawings' will remove your doodles.</p>
