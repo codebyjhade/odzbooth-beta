@@ -381,6 +381,74 @@ button:disabled {
     font-weight: 600;
 }
 
+/* --- NEW: Styles for Selectable Photos in Grid --- */
+.captured-photo-wrapper {
+    position: relative;
+    cursor: pointer; /* Indicate it's clickable */
+    border: 3px solid transparent; /* Default border, transparent */
+    border-radius: var(--border-radius-soft);
+    overflow: hidden; /* Ensures border-radius applies to image */
+    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
+}
+
+.captured-photo-wrapper:hover {
+    transform: scale(1.03);
+    border-color: var(--secondary-brand-color); /* Highlight on hover */
+}
+
+.captured-photo-wrapper.selected {
+    border-color: var(--primary-brand-color); /* Blue border when selected */
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Outer glow for selection */
+    transform: scale(1.05); /* Slightly larger when selected */
+}
+
+.captured-photo-wrapper.selected:hover {
+    border-color: var(--primary-brand-color); /* Keep selected border on hover */
+}
+
+/* Ensure the image fills its wrapper */
+.captured-photo-wrapper img {
+    display: block; /* Remove extra space below image */
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the wrapper while maintaining aspect ratio */
+    border-radius: var(--border-radius-soft); /* Inherit border radius */
+}
+
+/* Style for the retake button */
+#retakeSelectedPhotoBtn {
+    background-color: var(--accent-color); /* Use accent color for this button */
+    color: var(--text-light);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-medium);
+}
+
+#retakeSelectedPhotoBtn:hover:not(:disabled) {
+    background-color: var(--button-hover-accent); /* Darker accent on hover */
+    transform: translateY(-2px);
+}
+
+#retakeSelectedPhotoBtn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+#retakeSelectedPhotoBtn i {
+    font-size: 1.2em;
+}
+
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
     .photo-booth-wrapper {
