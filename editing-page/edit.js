@@ -28,21 +28,22 @@ const STRIP_LAYOUT_CONFIGS = {
     // Configuration for a 2-photo strip
     '2': {
         stripWidth: 400,
-        stripHeight: 40 + 240 + 20 + 240 + 150, // 2 photos
+        stripHeight: 40 + 240 + 20 + 240 + 150, // topPadding + photoHeight1 + gap + photoHeight2 + bottomSpaceForLogo
         frames: [
             { x: 40, y: 40, width: 320, height: 240 },
             { x: 40, y: 40 + 240 + 20, width: 320, height: 240 }
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Dual Classic' },
-            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Minimal Duo' }
+            { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Original Two' },
+            { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Clean White' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Styled Border' }
         ]
     },
     // Configuration for a 3-photo strip
     '3': {
         stripWidth: 400,
-        stripHeight: 40 + 220 + 20 + 220 + 20 + 220 + 150, // 3 photos
+        stripHeight: 40 + 220 + 20 + 220 + 20 + 220 + 150, // topPadding + 3*photoHeight + 2*gap + bottomSpaceForLogo
         frames: [
             { x: 40, y: 40, width: 320, height: 220 },
             { x: 40, y: 40 + 220 + 20, width: 320, height: 220 },
@@ -50,14 +51,15 @@ const STRIP_LAYOUT_CONFIGS = {
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Triple View' },
-            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Elegant Three' }
+            { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Original Three' },
+            { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Clean White' },
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'Styled Border' }
         ]
     },
     // Configuration for a 4-photo strip
     '4': {
         stripWidth: 400,
-        stripHeight: 40 + 226 + 20 + 226 + 20 + 226 + 20 + 226 + 150, // 4 photos
+        stripHeight: 40 + 226 + 20 + 226 + 20 + 226 + 20 + 226 + 150, // topPadding + 4*photoHeight + 3*gap + bottomSpaceForLogo
         frames: [
             { x: 40, y: 40, width: 320, height: 226 },
             { x: 40, y: 40 + 226 + 20, width: 320, height: 226 },
@@ -66,131 +68,157 @@ const STRIP_LAYOUT_CONFIGS = {
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-4-photos.png', name: 'Quad Classic' },
-            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Four Square' }
+            { id: 'option1', src: 'assets/strip-frame-4-photos.png', name: 'Original Four' },
+            { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Clean White' },
+            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'Styled Border' }
         ]
     },
-    // Configuration for a 6-photo strip
+    // Configuration for a 6-photo strip (2 columns of 3 photos)
     '6': {
-        stripWidth: 400,
-        stripHeight: 40 + (220 * 2) + (20 * 1) + 150, // Top padding + (2 photo rows with gap) + bottom space. Each row has 3 photos.
+        stripWidth: 700, // Wider for two columns
+        stripHeight: 40 + 220 + 20 + 220 + 20 + 220 + 150, // topPadding + 3*photoHeight + 2*gap + bottomSpaceForLogo (same height as 3-photo for vertical arrangement)
         frames: [
-            { x: 40, y: 40, width: 93, height: 220 },
-            { x: 40 + 93 + 20, y: 40, width: 93, height: 220 },
-            { x: 40 + 93 + 20 + 93 + 20, y: 40, width: 93, height: 220 },
-            { x: 40, y: 40 + 220 + 20, width: 93, height: 220 },
-            { x: 40 + 93 + 20, y: 40 + 220 + 20, width: 93, height: 220 },
-            { x: 40 + 93 + 20 + 93 + 20, y: 40 + 220 + 20, width: 93, height: 220 }
+            // Column 1
+            { x: 40, y: 40, width: 280, height: 200 }, // Adjusted width/height for 2 columns
+            { x: 40, y: 40 + 200 + 20, width: 280, height: 200 },
+            { x: 40, y: 40 + 200 + 20 + 200 + 20, width: 280, height: 200 },
+            // Column 2
+            { x: 40 + 280 + 20, y: 40, width: 280, height: 200 }, // 20px gap between columns
+            { x: 40 + 280 + 20, y: 40 + 200 + 20, width: 280, height: 200 },
+            { x: 40 + 280 + 20, y: 40 + 200 + 20 + 200 + 20, width: 280, height: 200 }
         ],
         defaultBackground: '#CCCCCC',
         availableFrames: [
-            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Six Grid' },
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Photo Story' }
+            { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'Original Six' },
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Clean White' },
+            { id: 'option3', src: 'assets/strip-frame-6-photos-option3.png', name: 'Styled Border' }
         ]
     }
 };
 
+// Default settings for text and drawing tools
 const DEFAULT_TEXT_SETTINGS = {
     fontFamily: 'Poppins',
-    fontSize: 40,
+    size: 32,
     color: '#000000',
     align: 'center',
     bold: false,
     italic: false,
-    shadow: false
+    outline: false,
+    shadow: false,
+    rotation: 0,
+    x: 0, // Will be calculated based on canvas/photo
+    y: 0, // Will be calculated based on canvas/photo
 };
 
 const DEFAULT_DRAWING_SETTINGS = {
     color: '#FF0000',
-    size: 5,
-    mode: 'brush' // 'brush' or 'eraser'
+    size: 10,
 };
 
-// --- DOM Element References ---
+// Available stickers
+const STICKERS = [
+    { id: 'star', src: 'assets/sticker-star.png', name: 'Star', defaultSize: 80 },
+    { id: 'heart', src: 'assets/sticker-heart.png', name: 'Heart', defaultSize: 80 },
+    { id: 'sunglasses', src: 'assets/sticker-sunglasses.png', name: 'Sunglasses', defaultSize: 100 },
+    { id: 'hat', src: 'assets/sticker-hat.png', name: 'Party Hat', defaultSize: 120 },
+    { id: 'speech-bubble', src: 'assets/sticker-speech-bubble.png', name: 'Speech Bubble', defaultSize: 150 },
+    { id: 'mustache', src: 'assets/sticker-mustache.png', name: 'Mustache', defaultSize: 80 },
+    { id: 'crown', src: 'assets/sticker-crown.png', name: 'Crown', defaultSize: 100 },
+    { id: 'flower', src: 'assets/sticker-flower.png', name: 'Flower', defaultSize: 70 },
+    { id: 'arrow', src: 'assets/sticker-arrow.png', name: 'Arrow', defaultSize: 90 },
+    { id: 'lightning', src: 'assets/sticker-lightning.png', name: 'Lightning', defaultSize: 80 },
+];
+
+
+// --- Global State Variables ---
+let currentStripConfig = null;
+let capturedPhotos = []; // Stores base64 image data
+let textElements = []; // Stores text objects { text, x, y, settings, rotation, selected }
+let selectedTextIndex = -1; // Index of the currently selected text element
+let stickers = []; // Stores sticker objects { image, x, y, size, rotation, selected }
+let selectedStickerIndex = -1; // Index of the currently selected sticker
+let drawingMode = false;
+let lastX = 0;
+let lastY = 0;
+let isDrawing = false;
+let drawings = []; // Stores drawing paths [{x, y, color, size, newPath: true/false}]
+
+// --- DOM Element References (Declared globally) ---
 const DOMElements = {
-    canvasContainer: document.getElementById('canvasContainer'),
-    photoCanvas: document.getElementById('photoCanvas'),
-    ctx: null, // Initialized later
-    frameSelect: document.getElementById('frameSelect'),
-    capturedPhotosGrid: document.getElementById('capturedPhotosGrid'),
-    retakeBtn: document.getElementById('retakeBtn'),
-    downloadStripBtn: document.getElementById('downloadStripBtn'),
-    downloadFormatSelect: document.getElementById('downloadFormatSelect'),
-    printStripBtn: document.getElementById('printStripBtn'),
-    undoLastStickerBtn: document.getElementById('undoLastStickerBtn'),
-    removeSelectedStickerBtn: document.getElementById('removeSelectedStickerBtn'),
-    addStickerInput: document.getElementById('addStickerInput'),
-    addStickerBtn: document.getElementById('addStickerBtn'),
-    stickerSizeSlider: document.getElementById('stickerSizeSlider'),
-    stickerRotationSlider: document.getElementById('stickerRotationSlider'),
-    stickerOpacitySlider: document.getElementById('stickerOpacitySlider'),
-    addTextBtn: document.getElementById('addTextBtn'),
-    textInput: document.getElementById('textInput'),
-    textFontSelect: document.getElementById('textFontSelect'),
-    fontSizeSlider: document.getElementById('fontSizeSlider'),
-    textColorInput: document.getElementById('textColorInput'),
-    textAlignSelect: document.getElementById('textAlignSelect'),
-    textBoldToggle: document.getElementById('textBoldToggle'),
-    textItalicToggle: document.getElementById('textItalicToggle'),
-    textShadowToggle: document.getElementById('textShadowToggle'),
-    removeSelectedTextBtn: document.getElementById('removeSelectedTextBtn'),
-    toggleDrawModeBtn: document.getElementById('toggleDrawModeBtn'),
-    brushColorInput: document.getElementById('brushColorInput'),
-    brushSizeInput: document.getElementById('brushSizeInput'),
-    clearDrawingsBtn: document.getElementById('clearDrawingsBtn'),
-    drawModeControls: document.getElementById('drawModeControls'), // Container for draw controls
-    textControls: document.getElementById('textControls'), // Container for text controls
-    stickerControls: document.getElementById('stickerControls'), // Container for sticker controls
-    messageOverlay: document.getElementById('messageOverlay'), // New: for displaying canvas messages
-    messageText: document.getElementById('messageText') // New: for displaying canvas messages
+    canvas: null,
+    ctx: null,
+    downloadStripBtn: null,
+    printStripBtn: null,
+    retakeBtn: null,
+    // Text controls
+    addTextBtn: null,
+    textInput: null,
+    removeTextBtn: null,
+    fontFamilySelect: null,
+    fontSizeInput: null,
+    textColorInput: null,
+    textAlignSelect: null,
+    textBoldToggle: null,
+    textItalicToggle: null,
+    textOutlineToggle: null,
+    textShadowToggle: null,
+    textRotateSlider: null,
+    // Sticker controls
+    stickerSelect: null,
+    addStickerBtn: null,
+    removeStickerBtn: null,
+    stickerSizeSlider: null,
+    stickerRotateSlider: null,
+    // Drawing controls
+    toggleDrawModeBtn: null,
+    brushColorInput: null,
+    brushSizeInput: null,
+    clearDrawingsBtn: null,
+    // Other
+    downloadFormatSelect: null,
+    framesSelect: null,
+    backgroundColorInput: null,
+    stripTitleInput: null,
+    stripSubtitleInput: null,
+    stripLogoInput: null,
+    toggleLogoVisibilityBtn: null,
+    logoPreview: null,
 };
 
-// --- App State ---
-const appState = {
-    capturedPhotos: [], // Array of Image objects (or base64 strings if loaded from localStorage)
-    currentStripConfig: null,
-    selectedFrameId: null,
-    isDragging: false,
-    isResizing: false,
-    isRotating: false,
-    currentHandle: null, // 'tl', 'tr', 'bl', 'br', 'rot', 'move'
-    lastX: 0,
-    lastY: 0,
-    selectedDraggable: null, // The currently selected sticker or text object
-    stickers: [], // Array of { id, src, x, y, width, height, angle, opacity, image }
-    texts: [], // Array of { id, x, y, text, fontFamily, fontSize, color, align, bold, italic, shadow, width, height, angle }
-    nextStickerId: 1,
-    nextTextId: 1,
-    isDrawMode: false,
-    isDrawing: false,
-    drawings: [], // Array of { color, size, points: [{x, y, isStart}] }
-    currentDrawing: null, // The drawing currently being created
-    undoStack: [], // For undoing operations
-    redoStack: [], // For redoing operations
-};
 
 // --- Utility Functions ---
 
 /**
  * Logs an analytics event to the console.
  * In a real application, this would send data to an analytics service (e.g., Google Analytics).
- * @param {string} eventName - The name of the event (e.g., "Session Started").
+ * @param {string} eventName - The name of the event (e.g., "Editor Loaded").
  * @param {object} [details={}] - Optional details related to the event.
  */
 function logAnalytics(eventName, details = {}) {
     console.log(`ANALYTICS: ${eventName} -`, { timestamp: new Date().toISOString(), ...details });
     // Example for real analytics (if you had Google Analytics initialized):
     // gtag('event', eventName, {
-    //     'event_category': 'User Engagement',
+    //     'event_category': 'Editor Engagement',
     //     'event_label': eventName,
     //     ...details
     // });
 }
 
 /**
+ * Helper to get query parameters from the URL.
+ * @param {string} name - The name of the query parameter.
+ * @returns {string|null} The value of the query parameter or null if not found.
+ */
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+/**
  * Loads an image and returns a Promise that resolves with the Image object.
  * @param {string} src - The source URL of the image.
- * @returns {Promise<HTMLImageElement>} A Promise that resolves with the loaded Image object.
+ * @returns {Promise<HTMLImageElement>} A promise that resolves with the loaded Image object.
  */
 function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -202,1203 +230,847 @@ function loadImage(src) {
 }
 
 /**
- * Preloads captured photos from localStorage into Image objects.
+ * Converts a base64 string to an Image object.
+ * @param {string} base64String - The base64 encoded image data.
+ * @returns {Promise<HTMLImageElement>} A promise that resolves with the loaded Image object.
  */
-async function preloadCapturedPhotos() {
-    const storedPhotos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
-    appState.capturedPhotos = []; // Clear existing
-    DOMElements.capturedPhotosGrid.innerHTML = ''; // Clear display
-
-    for (const base64Data of storedPhotos) {
-        try {
-            const img = await loadImage(base64Data);
-            appState.capturedPhotos.push(img);
-
-            // Add thumbnail to the left grid
-            const thumbDiv = document.createElement('div');
-            thumbDiv.classList.add('captured-photo-thumbnail');
-            const thumbImg = document.createElement('img');
-            thumbImg.src = base64Data;
-            thumbDiv.appendChild(thumbImg);
-            DOMElements.capturedPhotosGrid.appendChild(thumbDiv);
-
-        } catch (error) {
-            console.error("Error loading captured photo:", error);
-        }
-    }
+async function base64ToImage(base64String) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = base64String;
+    });
 }
 
 /**
- * Gets mouse or touch coordinates relative to the canvas.
- * @param {Event} event - The mouse or touch event.
- * @returns {{x: number, y: number}} Coordinates.
+ * Downloads the current canvas content as an image.
+ * @param {string} format - The image format (e.g., 'image/png', 'image/jpeg;0.9').
  */
-function getEventCoordinates(event) {
-    const rect = DOMElements.photoCanvas.getBoundingClientRect();
-    let clientX, clientY;
-
-    if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-    }
-
-    return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-    };
+function downloadStrip(format) {
+    const quality = format.includes('jpeg') ? parseFloat(format.split(';')[1]) : 1.0;
+    const mimeType = format.split(';')[0];
+    const dataURL = DOMElements.canvas.toDataURL(mimeType, quality);
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `ODZ_Booth_Strip_${Date.now()}.${mimeType.split('/')[1]}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    logAnalytics('Photo_Strip_Downloaded', { format: mimeType });
 }
 
 /**
- * Checks if a point is inside a rotated rectangle.
- * @param {object} point - {x, y}
- * @param {object} rect - {x, y, width, height, angle (radians)}
- * @returns {boolean}
+ * Initiates the print process for the canvas content.
  */
-function isPointInRotatedRect(point, rect) {
-    const cos = Math.cos(-rect.angle);
-    const sin = Math.sin(-rect.angle);
-
-    const cx = rect.x + rect.width / 2;
-    const cy = rect.y + rect.height / 2;
-
-    // Translate point to origin (relative to rect's center)
-    const translatedX = point.x - cx;
-    const translatedY = point.y - cy;
-
-    // Rotate point back
-    const rotatedX = translatedX * cos - translatedY * sin;
-    const rotatedY = translatedX * sin + translatedY * cos;
-
-    // Check if the rotated point is within the unrotated bounds
-    return rotatedX >= -rect.width / 2 && rotatedX <= rect.width / 2 &&
-           rotatedY >= -rect.height / 2 && rotatedY <= rect.height / 2;
-}
-
-/**
- * Checks if a point is within a handle area for resizing/rotating.
- * @param {object} point - {x, y}
- * @param {object} draggable - The draggable object.
- * @param {string} handleType - The type of handle ('tl', 'tr', 'bl', 'br', 'rot').
- * @returns {boolean}
- */
-function checkHandleClick(point, draggable, handleType) {
-    if (!draggable) return false;
-    const handleSize = 10; // Must match handle size in drawSelectionHandles
-    const handles = getHandlePositions(draggable, handleSize);
-    const handle = handles[handleType];
-
-    if (!handle) return false;
-
-    // Check if the point is within the square handle area
-    return point.x >= handle.x && point.x <= handle.x + handleSize &&
-           point.y >= handle.y && point.y <= handle.y + handleSize;
-}
-
-/**
- * Creates a unique ID for stickers and text.
- * @param {string} type - 'sticker' or 'text'
- */
-function generateUniqueId(type) {
-    if (type === 'sticker') {
-        return `sticker-${appState.nextStickerId++}`;
-    } else if (type === 'text') {
-        return `text-${appState.nextTextId++}`;
-    }
-    return `item-${Date.now()}`; // Fallback
-}
-
-/**
- * Pushes the current app state onto the undo stack.
- */
-function pushStateForUndo() {
-    // Clone relevant parts of the state deeply if necessary
-    const stateToSave = {
-        stickers: JSON.parse(JSON.stringify(appState.stickers.map(s => ({...s, image: null})))), // Avoid circular references
-        texts: JSON.parse(JSON.stringify(appState.texts)),
-        drawings: JSON.parse(JSON.stringify(appState.drawings)),
-        // Only save properties that are simple JSON serializable for images
-        capturedPhotos: appState.capturedPhotos.map(img => img.src)
-    };
-    appState.undoStack.push(stateToSave);
-    appState.redoStack = []; // Clear redo stack on new action
-    // console.log("State pushed for undo. Undo stack size:", appState.undoStack.length);
-}
-
-/**
- * Restores a state from the undo stack.
- */
-async function undoLastAction() {
-    if (appState.undoStack.length > 0) {
-        const lastState = appState.undoStack.pop();
-        // Restore photos (need to reload images)
-        appState.capturedPhotos = [];
-        for(const src of lastState.capturedPhotos) {
-            const img = await loadImage(src);
-            appState.capturedPhotos.push(img);
-        }
-
-        // Restore stickers (need to reload images)
-        appState.stickers = [];
-        for (const s of lastState.stickers) {
-            const img = await loadImage(s.src); // Reload image for sticker
-            appState.stickers.push({ ...s, image: img });
-        }
-        appState.texts = lastState.texts;
-        appState.drawings = lastState.drawings;
-
-        appState.selectedDraggable = null; // Deselect after undo
-        renderCanvas();
-        updateTextControlsFromSelection();
-        updateStickerControlsFromSelection();
-        // console.log("Undo performed. Undo stack size:", appState.undoStack.length);
-    } else {
-        console.log("Nothing to undo.");
-    }
+function printStrip() {
+    const dataURL = DOMElements.canvas.toDataURL('image/png');
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Print ODZ Booth Strip</title>
+            <style>
+                @page { size: auto; margin: 0mm; }
+                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #eee; }
+                img { max-width: 100%; max-height: 95vh; display: block; margin: auto; }
+            </style>
+        </head>
+        <body>
+            <img src="${dataURL}" onload="window.print();window.onafterprint=function(){window.close()};" />
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    // The actual print event is handled by the onload in the new window
+    logAnalytics('Photo_Strip_Printed');
 }
 
 
-// --- UI Feedback & State Update Functions ---
+// --- Core Logic Functions ---
 
 /**
- * Displays a message on the canvas overlay.
- * @param {string} message - The message to display.
- */
-function displayCanvasMessage(message) {
-    DOMElements.messageText.textContent = message;
-    DOMElements.messageOverlay.style.display = 'flex';
-}
-
-/**
- * Hides the canvas message overlay.
- */
-function hideCanvasMessage() {
-    DOMElements.messageOverlay.style.display = 'none';
-}
-
-/**
- * Toggles the visibility of the download spinner.
- * @param {boolean} show - True to show, false to hide.
- */
-function toggleDownloadSpinner(show) {
-    const spinner = document.getElementById('downloadSpinner');
-    if (spinner) {
-        if (show) {
-            spinner.classList.remove('hidden-spinner');
-        } else {
-            spinner.classList.add('hidden-spinner');
-        }
-    }
-}
-
-/**
- * Populates the frame selection dropdown based on the current strip configuration.
- */
-function populateFrameOptions() {
-    DOMElements.frameSelect.innerHTML = ''; // Clear existing options
-    if (appState.currentStripConfig && appState.currentStripConfig.availableFrames) {
-        appState.currentStripConfig.availableFrames.forEach(frame => {
-            const option = document.createElement('option');
-            option.value = frame.id;
-            option.textContent = frame.name;
-            DOMElements.frameSelect.appendChild(option);
-        });
-        // Select the first option by default
-        if (appState.currentStripConfig.availableFrames.length > 0) {
-            appState.selectedFrameId = appState.currentStripConfig.availableFrames[0].id;
-            DOMElements.frameSelect.value = appState.selectedFrameId;
-        }
-    }
-}
-
-/**
- * Updates the text controls based on the selected text object.
- */
-function updateTextControlsFromSelection() {
-    const selectedText = appState.selectedDraggable && appState.selectedDraggable.type === 'text' ? appState.selectedDraggable : null;
-
-    if (selectedText) {
-        DOMElements.textInput.value = selectedText.text;
-        DOMElements.textFontSelect.value = selectedText.fontFamily || DEFAULT_TEXT_SETTINGS.fontFamily;
-        DOMElements.fontSizeSlider.value = selectedText.fontSize || DEFAULT_TEXT_SETTINGS.fontSize;
-        DOMElements.textColorInput.value = selectedText.color || DEFAULT_TEXT_SETTINGS.color;
-        DOMElements.textAlignSelect.value = selectedText.align || DEFAULT_TEXT_SETTINGS.align;
-
-        // Toggle classes for styling buttons
-        DOMElements.textBoldToggle.classList.toggle('active', selectedText.bold);
-        DOMElements.textItalicToggle.classList.toggle('active', selectedText.italic);
-        DOMElements.textShadowToggle.classList.toggle('active', selectedText.shadow);
-
-        DOMElements.removeSelectedTextBtn.disabled = false;
-        // Enable editing controls for selected text
-        DOMElements.textInput.disabled = false;
-        DOMElements.textFontSelect.disabled = false;
-        DOMElements.fontSizeSlider.disabled = false;
-        DOMElements.textColorInput.disabled = false;
-        DOMElements.textAlignSelect.disabled = false;
-        DOMElements.textBoldToggle.disabled = false;
-        DOMElements.textItalicToggle.disabled = false;
-        DOMElements.textShadowToggle.disabled = false;
-
-    } else {
-        // Reset to default and disable if no text is selected
-        DOMElements.textInput.value = '';
-        DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.fontFamily;
-        DOMElements.fontSizeSlider.value = DEFAULT_TEXT_SETTINGS.fontSize;
-        DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
-        DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
-
-        DOMElements.textBoldToggle.classList.remove('active');
-        DOMElements.textItalicToggle.classList.remove('active');
-        DOMElements.textShadowToggle.classList.remove('active');
-
-        DOMElements.removeSelectedTextBtn.disabled = true;
-        // Keep add button and input enabled always, but disable editing controls
-        DOMElements.textFontSelect.disabled = true;
-        DOMElements.fontSizeSlider.disabled = true;
-        DOMElements.textColorInput.disabled = true;
-        DOMElements.textAlignSelect.disabled = true;
-        DOMElements.textBoldToggle.disabled = true;
-        DOMElements.textItalicToggle.disabled = true;
-        DOMElements.textShadowToggle.disabled = true;
-    }
-    // These should always be enabled unless there are no photos at all
-    DOMElements.textInput.disabled = appState.capturedPhotos.length === 0;
-    DOMElements.addTextBtn.disabled = appState.capturedPhotos.length === 0;
-}
-
-/**
- * Updates the sticker controls based on the selected sticker object.
- */
-function updateStickerControlsFromSelection() {
-    const selectedSticker = appState.selectedDraggable && appState.selectedDraggable.type === 'sticker' ? appState.selectedDraggable : null;
-
-    if (selectedSticker) {
-        DOMElements.stickerSizeSlider.value = selectedSticker.width; // Assuming width represents size
-        DOMElements.stickerRotationSlider.value = selectedSticker.angle * (180 / Math.PI); // Convert radians to degrees
-        DOMElements.stickerOpacitySlider.value = selectedSticker.opacity;
-        DOMElements.removeSelectedStickerBtn.disabled = false;
-        DOMElements.stickerSizeSlider.disabled = false;
-        DOMElements.stickerRotationSlider.disabled = false;
-        DOMElements.stickerOpacitySlider.disabled = false;
-    } else {
-        DOMElements.stickerSizeSlider.value = 100; // Reset to default
-        DOMElements.stickerRotationSlider.value = 0;
-        DOMElements.stickerOpacitySlider.value = 1;
-        DOMElements.removeSelectedStickerBtn.disabled = true;
-        DOMElements.stickerSizeSlider.disabled = true;
-        DOMElements.stickerRotationSlider.disabled = true;
-        DOMElements.stickerOpacitySlider.disabled = true;
-    }
-    // These should always be enabled unless there are no photos at all
-    DOMElements.addStickerInput.disabled = appState.capturedPhotos.length === 0;
-    DOMElements.addStickerBtn.disabled = appState.capturedPhotos.length === 0;
-    DOMElements.undoLastStickerBtn.disabled = appState.stickers.length === 0;
-}
-
-/**
- * Updates the cursor style based on current interaction mode.
- */
-function updateCanvasCursor() {
-    if (appState.isDrawing) {
-        DOMElements.photoCanvas.style.cursor = 'crosshair';
-    } else if (appState.isResizing || appState.isRotating) {
-        DOMElements.photoCanvas.style.cursor = 'grabbing'; // Or specific resize/rotate cursors if desired
-    } else if (appState.isDragging) {
-        DOMElements.photoCanvas.style.cursor = 'grabbing';
-    } else if (appState.selectedDraggable) {
-        DOMElements.photoCanvas.style.cursor = 'grab'; // Indicate it can be dragged
-    } else {
-        DOMElements.photoCanvas.style.cursor = 'default';
-    }
-}
-
-/**
- * Toggles the visibility of drawing controls and text/sticker controls.
- */
-function toggleControlPanels() {
-    if (appState.isDrawMode) {
-        DOMElements.drawModeControls.style.display = 'block';
-        DOMElements.textControls.style.display = 'none';
-        DOMElements.stickerControls.style.display = 'none';
-        // Deselect any draggable object when entering draw mode
-        appState.selectedDraggable = null;
-    } else {
-        DOMElements.drawModeControls.style.display = 'none';
-        DOMElements.textControls.style.display = 'block';
-        DOMElements.stickerControls.style.display = 'block';
-    }
-    renderCanvas(); // Re-render to clear selection handles if draw mode is entered
-}
-
-// --- Canvas Drawing Functions ---
-
-/**
- * Draws the current date on the canvas at the bottom of the strip.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
- */
-function drawDateOnCanvas(targetCtx) {
-    if (!appState.currentStripConfig || !STRIP_LAYOUT_CONFIGS.common) return;
-
-    const date = new Date();
-    // Format: Month Day, Year (e.g., June 05, 2025)
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    const formattedDate = date.toLocaleDateString('en-US', options);
-
-    const commonConfig = STRIP_LAYOUT_CONFIGS.common;
-    const stripWidth = appState.currentStripConfig.stripWidth;
-    const stripHeight = appState.currentStripConfig.stripHeight;
-    const bottomSpaceForLogo = commonConfig.bottomSpaceForLogo;
-
-    targetCtx.save();
-    targetCtx.fillStyle = '#000000'; // Set date color to black
-    targetCtx.font = '20px "Poppins", sans-serif'; // Set date font and size
-    targetCtx.textAlign = 'center'; // Center the date horizontally
-    targetCtx.textBaseline = 'bottom'; // Position the text's baseline at the calculated Y
-
-    // Calculate Y position: Place it 30px from the top of the logo area (which is `stripHeight - bottomSpaceForLogo`)
-    const dateY = stripHeight - bottomSpaceForLogo + 30;
-
-    targetCtx.fillText(formattedDate, stripWidth / 2, dateY);
-    targetCtx.restore();
-}
-
-/**
- * Clears the canvas and redraws all elements (background, photos, frame, stickers, text, drawings).
- * This is the main rendering loop.
+ * Renders the entire photo strip on the canvas, including photos, frames, text, stickers, and drawings.
  */
 async function renderCanvas() {
-    DOMElements.ctx.clearRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+    DOMElements.ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
 
-    // Draw background color
-    if (appState.currentStripConfig && appState.currentStripConfig.defaultBackground) {
-        DOMElements.ctx.fillStyle = appState.currentStripConfig.defaultBackground;
-        DOMElements.ctx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+    // Draw background color if selected
+    if (DOMElements.backgroundColorInput && DOMElements.backgroundColorInput.value) {
+        DOMElements.ctx.fillStyle = DOMElements.backgroundColorInput.value;
+        DOMElements.ctx.fillRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
+    } else {
+        DOMElements.ctx.fillStyle = currentStripConfig.defaultBackground;
+        DOMElements.ctx.fillRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
     }
 
-    // Draw the selected frame image
-    await drawFrameOnCanvas(DOMElements.ctx);
 
-    // Draw captured photos within their respective frames
-    drawPhotosOnCanvas(DOMElements.ctx);
-
-    // Draw all active stickers
-    drawDraggableObjectsOnCanvas(DOMElements.ctx, appState.stickers);
-
-    // Draw all active text elements
-    drawDraggableObjectsOnCanvas(DOMElements.ctx, appState.texts);
-
-    // Draw all user drawings
-    drawDrawingsOnCanvas(DOMElements.ctx, appState.drawings);
-
-    // Draw the current date on the canvas
-    drawDateOnCanvas(DOMElements.ctx);
-
-    // Draw selection handles for the currently selected draggable object
-    if (appState.selectedDraggable && !appState.isDrawMode) {
-        drawSelectionHandles(DOMElements.ctx, appState.selectedDraggable);
-    }
-}
-
-/**
- * Draws the selected frame image onto the canvas.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context.
- */
-async function drawFrameOnCanvas(targetCtx) {
-    if (!appState.currentStripConfig || !appState.selectedFrameId) return;
-
-    const frame = appState.currentStripConfig.availableFrames.find(f => f.id === appState.selectedFrameId);
-    if (frame && frame.src) {
+    // Load the selected frame image first
+    let frameImage = null;
+    const selectedFrameId = DOMElements.framesSelect ? DOMElements.framesSelect.value : 'option1'; // Default to option1
+    const frameData = currentStripConfig.availableFrames.find(f => f.id === selectedFrameId);
+    if (frameData) {
         try {
-            const frameImg = await loadImage(frame.src);
-            targetCtx.drawImage(frameImg, 0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+            frameImage = await loadImage(frameData.src);
+            // Draw the frame image across the entire strip canvas
+            DOMElements.ctx.drawImage(frameImage, 0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
         } catch (error) {
-            console.error("Error drawing frame:", error);
-            // Fallback to background color if frame fails to load
-            if (appState.currentStripConfig.defaultBackground) {
-                targetCtx.fillStyle = appState.currentStripConfig.defaultBackground;
-                targetCtx.fillRect(0, 0, DOMElements.photoCanvas.width, DOMElements.photoCanvas.height);
+            console.error('Error loading frame image:', error);
+            // Fallback: draw a basic border if frame image fails to load
+            DOMElements.ctx.strokeStyle = 'black';
+            DOMElements.ctx.lineWidth = 5;
+            DOMElements.ctx.strokeRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
+        }
+    }
+
+
+    // Draw captured photos within their frames
+    for (let i = 0; i < capturedPhotos.length && i < currentStripConfig.frames.length; i++) {
+        const photoDataUrl = capturedPhotos[i];
+        const frame = currentStripConfig.frames[i];
+
+        if (photoDataUrl) {
+            try {
+                const img = await base64ToImage(photoDataUrl);
+
+                // Calculate aspect ratios
+                const imgAspectRatio = img.width / img.height;
+                const frameAspectRatio = frame.width / frame.height;
+
+                let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
+                let dx = frame.x, dy = frame.y, dWidth = frame.width, dHeight = frame.height;
+
+                // Center and crop/fit image within the frame while maintaining aspect ratio
+                if (imgAspectRatio > frameAspectRatio) {
+                    // Image is wider than frame, crop width
+                    sWidth = img.height * frameAspectRatio;
+                    sx = (img.width - sWidth) / 2;
+                } else {
+                    // Image is taller than frame, crop height
+                    sHeight = img.width / frameAspectRatio;
+                    sy = (img.height - sHeight) / 2;
+                }
+                DOMElements.ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+
+            } catch (error) {
+                console.error('Error drawing captured photo:', error);
+                // Draw a placeholder if image fails to load
+                DOMElements.ctx.fillStyle = '#EEE';
+                DOMElements.ctx.fillRect(frame.x, frame.y, frame.width, frame.height);
+                DOMElements.ctx.font = '20px Poppins';
+                DOMElements.ctx.fillStyle = '#AAA';
+                DOMElements.ctx.textAlign = 'center';
+                DOMElements.ctx.fillText('Image Error', frame.x + frame.width / 2, frame.y + frame.height / 2);
+            }
+        }
+    }
+
+
+    // Draw drawings first, so text and stickers appear on top
+    drawings.forEach(draw => {
+        DOMElements.ctx.strokeStyle = draw.color;
+        DOMElements.ctx.lineWidth = draw.size;
+        DOMElements.ctx.lineCap = 'round';
+        DOMElements.ctx.lineJoin = 'round';
+
+        if (draw.newPath) {
+            DOMElements.ctx.beginPath();
+            DOMElements.ctx.moveTo(draw.x, draw.y);
+        } else {
+            DOMElements.ctx.lineTo(draw.x, draw.y);
+            DOMElements.ctx.stroke();
+        }
+    });
+
+
+    // Draw text elements
+    textElements.forEach((textEl, index) => {
+        DOMElements.ctx.save(); // Save context state before applying transformations
+        DOMElements.ctx.font = `${textEl.settings.bold ? 'bold ' : ''}${textEl.settings.italic ? 'italic ' : ''}${textEl.settings.size}px ${textEl.settings.fontFamily}`;
+        DOMElements.ctx.fillStyle = textEl.settings.color;
+        DOMElements.ctx.textAlign = textEl.settings.align;
+        DOMElements.ctx.textBaseline = 'top'; // Align text from the top
+
+        let textX = textEl.x;
+        let textY = textEl.y;
+
+        // Apply rotation around the text element's center
+        const textMetrics = DOMElements.ctx.measureText(textEl.text);
+        const textWidth = textMetrics.width;
+        const textHeight = textEl.settings.size; // Approximation for height
+
+        const centerX = textX + (textWidth / 2);
+        const centerY = textY + (textHeight / 2);
+
+        DOMElements.ctx.translate(centerX, centerY);
+        DOMElements.ctx.rotate(textEl.rotation * Math.PI / 180);
+        DOMElements.ctx.translate(-centerX, -centerY);
+
+
+        if (textEl.settings.shadow) {
+            DOMElements.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            DOMElements.ctx.shadowBlur = 5;
+            DOMElements.ctx.shadowOffsetX = 3;
+            DOMElements.ctx.shadowOffsetY = 3;
+        } else {
+            DOMElements.ctx.shadowColor = 'transparent'; // Reset shadow
+            DOMElements.ctx.shadowBlur = 0;
+            DOMElements.ctx.shadowOffsetX = 0;
+            DOMElements.ctx.shadowOffsetY = 0;
+        }
+
+        DOMElements.ctx.fillText(textEl.text, textX, textY);
+
+        if (textEl.settings.outline) {
+            DOMElements.ctx.strokeStyle = '#FFFFFF'; // White outline
+            DOMElements.ctx.lineWidth = 1;
+            DOMElements.ctx.strokeText(textEl.text, textX, textY);
+        }
+
+        // Draw selection border if selected
+        if (index === selectedTextIndex) {
+            DOMElements.ctx.strokeStyle = 'var(--accent-color)';
+            DOMElements.ctx.lineWidth = 2;
+            const padding = 5;
+            const bounds = {
+                x: textX,
+                y: textY,
+                width: textWidth,
+                height: textHeight,
+            };
+            DOMElements.ctx.strokeRect(bounds.x - padding, bounds.y - padding, bounds.width + padding * 2, bounds.height + padding * 2);
+        }
+        DOMElements.ctx.restore(); // Restore context state
+    });
+
+    // Draw stickers
+    for (const sticker of stickers) {
+        if (sticker.image) {
+            DOMElements.ctx.save();
+            const centerX = sticker.x + sticker.size / 2;
+            const centerY = sticker.y + sticker.size / 2;
+
+            DOMElements.ctx.translate(centerX, centerY);
+            DOMElements.ctx.rotate(sticker.rotation * Math.PI / 180);
+            DOMElements.ctx.translate(-centerX, -centerY);
+
+            DOMElements.ctx.drawImage(sticker.image, sticker.x, sticker.y, sticker.size, sticker.size);
+
+            // Draw selection border if selected
+            if (sticker === stickers[selectedStickerIndex]) {
+                DOMElements.ctx.strokeStyle = 'var(--accent-color)';
+                DOMElements.ctx.lineWidth = 2;
+                const padding = 5;
+                DOMElements.ctx.strokeRect(sticker.x - padding, sticker.y - padding, sticker.size + padding * 2, sticker.size + padding * 2);
+            }
+            DOMElements.ctx.restore();
+        }
+    }
+
+
+    // Draw custom title and subtitle (optional)
+    const stripTitle = DOMElements.stripTitleInput ? DOMElements.stripTitleInput.value : '';
+    const stripSubtitle = DOMElements.stripSubtitleInput ? DOMElements.stripSubtitleInput.value : '';
+
+    if (stripTitle) {
+        DOMElements.ctx.font = 'bold 48px Fredoka';
+        DOMElements.ctx.fillStyle = 'var(--primary-brand-color)';
+        DOMElements.ctx.textAlign = 'center';
+        DOMElements.ctx.fillText(stripTitle, DOMElements.canvas.width / 2, 80);
+    }
+
+    if (stripSubtitle) {
+        DOMElements.ctx.font = 'normal 24px Poppins';
+        DOMElements.ctx.fillStyle = 'var(--text-dark)';
+        DOMElements.ctx.textAlign = 'center';
+        DOMElements.ctx.fillText(stripSubtitle, DOMElements.canvas.width / 2, 120);
+    }
+
+    // Draw ODZ BOOTH logo (fixed at the bottom)
+    const logoText = "ODZ BOOTH";
+    const logoFontSize = 50;
+    const logoFontFamily = 'Fredoka';
+    const logoColor = 'var(--primary-brand-color)';
+    const logoBottomPadding = 60; // Distance from the bottom of the strip
+
+    const logoX = DOMElements.canvas.width / 2;
+    const logoY = DOMElements.canvas.height - logoBottomPadding;
+
+    if (DOMElements.toggleLogoVisibilityBtn && DOMElements.toggleLogoVisibilityBtn.dataset.visible === 'true') {
+        DOMElements.ctx.font = `${logoFontSize}px ${logoFontFamily}`;
+        DOMElements.ctx.fillStyle = logoColor;
+        DOMElements.ctx.textAlign = 'center';
+        DOMElements.ctx.textBaseline = 'alphabetic'; // Ensure consistent baseline
+        DOMElements.ctx.fillText(logoText, logoX, logoY);
+    }
+
+    // Draw custom logo image if provided and visible
+    if (DOMElements.stripLogoInput && DOMElements.stripLogoInput.files.length > 0 && DOMElements.logoPreview.src) {
+        if (DOMElements.toggleLogoVisibilityBtn && DOMElements.toggleLogoVisibilityBtn.dataset.customLogoVisible === 'true') {
+            try {
+                const customLogoImg = await loadImage(DOMElements.logoPreview.src);
+                const logoWidth = 100; // Fixed width for the custom logo
+                const logoHeight = (customLogoImg.height / customLogoImg.width) * logoWidth; // Maintain aspect ratio
+
+                const customLogoX = DOMElements.canvas.width / 2 - logoWidth / 2;
+                const customLogoY = DOMElements.canvas.height - logoBottomPadding - logoHeight - 10; // Above ODZ BOOTH text
+
+                DOMElements.ctx.drawImage(customLogoImg, customLogoX, customLogoY, logoWidth, logoHeight);
+            } catch (error) {
+                console.error('Error drawing custom logo:', error);
             }
         }
     }
 }
 
-/**
- * Draws the captured photos onto the canvas within their designated frames.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context.
- */
-function drawPhotosOnCanvas(targetCtx) {
-    if (!appState.currentStripConfig || appState.capturedPhotos.length === 0) return;
-
-    appState.currentStripConfig.frames.forEach((frame, index) => {
-        const photo = appState.capturedPhotos[index];
-        if (photo) {
-            // Draw photo covering the frame area
-            targetCtx.drawImage(photo, frame.x, frame.y, frame.width, frame.height);
-        }
-    });
-}
 
 /**
- * Draws draggable objects (stickers and text) on the canvas.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context.
- * @param {Array<object>} objects - Array of draggable objects (stickers or text).
+ * Sets up all canvas event listeners for text and sticker manipulation.
  */
-function drawDraggableObjectsOnCanvas(targetCtx, objects) {
-    objects.forEach(obj => {
-        targetCtx.save();
-        const cx = obj.x + obj.width / 2;
-        const cy = obj.y + obj.height / 2;
+function setupCanvasEventListeners() {
+    let isDraggingText = false;
+    let isDraggingSticker = false;
+    let dragStartX, dragStartY;
 
-        targetCtx.translate(cx, cy);
-        targetCtx.rotate(obj.angle || 0);
-        targetCtx.translate(-cx, -cy);
+    DOMElements.canvas.addEventListener('mousedown', (e) => {
+        const mouseX = e.offsetX;
+        const mouseY = e.offsetY;
 
-        if (obj.type === 'sticker' && obj.image) {
-            targetCtx.globalAlpha = obj.opacity !== undefined ? obj.opacity : 1;
-            targetCtx.drawImage(obj.image, obj.x, obj.y, obj.width, obj.height);
-            targetCtx.globalAlpha = 1; // Reset alpha
-        } else if (obj.type === 'text') {
-            targetCtx.fillStyle = obj.color || DEFAULT_TEXT_SETTINGS.color;
-            targetCtx.font = `${obj.bold ? 'bold ' : ''}${obj.italic ? 'italic ' : ''}${obj.fontSize || DEFAULT_TEXT_SETTINGS.fontSize}px ${obj.fontFamily || DEFAULT_TEXT_SETTINGS.fontFamily}`;
-            targetCtx.textAlign = obj.align || DEFAULT_TEXT_SETTINGS.align;
+        if (drawingMode) {
+            isDrawing = true;
+            lastX = mouseX;
+            lastY = mouseY;
+            drawings.push({ x: mouseX, y: mouseY, color: DOMElements.brushColorInput.value, size: DOMElements.brushSizeInput.value, newPath: true });
+        } else {
+            // Check if clicking on an existing sticker
+            selectedStickerIndex = -1; // Deselect previous sticker
+            for (let i = stickers.length - 1; i >= 0; i--) { // Iterate backwards to select top-most sticker
+                const sticker = stickers[i];
+                const stickerLeft = sticker.x;
+                const stickerRight = sticker.x + sticker.size;
+                const stickerTop = sticker.y;
+                const stickerBottom = sticker.y + sticker.size;
 
-            if (obj.shadow) {
-                targetCtx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                targetCtx.shadowOffsetX = 2;
-                targetCtx.shadowOffsetY = 2;
-                targetCtx.shadowBlur = 4;
-            }
-
-            // Text alignment adjustments for fillText
-            let textX = obj.x;
-            if (obj.align === 'center') textX = obj.x + obj.width / 2;
-            if (obj.align === 'right') textX = obj.x + obj.width;
-
-            // Draw text, ensuring it wraps within its bounding box if multi-line.
-            // For simplicity, this assumes a single line for now as text input is single line.
-            // For multi-line text, you'd need to split by \n and calculate line heights.
-            targetCtx.fillText(obj.text, textX, obj.y + obj.height / 2); // Center vertically approx
-            targetCtx.shadowColor = 'transparent'; // Reset shadow
-            targetCtx.shadowOffsetX = 0;
-            targetCtx.shadowOffsetY = 0;
-            targetCtx.shadowBlur = 0;
-        }
-        targetCtx.restore();
-
-        // For debugging: Draw bounding box
-        // targetCtx.save();
-        // targetCtx.strokeStyle = 'blue';
-        // targetCtx.lineWidth = 1;
-        // targetCtx.translate(cx, cy);
-        // targetCtx.rotate(obj.angle || 0);
-        // targetCtx.strokeRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
-        // targetCtx.restore();
-    });
-}
-
-/**
- * Draws user drawings on the canvas.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context.
- * @param {Array<object>} drawings - Array of drawing objects.
- */
-function drawDrawingsOnCanvas(targetCtx, drawings) {
-    drawings.forEach(drawing => {
-        targetCtx.save();
-        targetCtx.strokeStyle = drawing.color;
-        targetCtx.lineWidth = drawing.size;
-        targetCtx.lineCap = 'round';
-        targetCtx.lineJoin = 'round';
-
-        targetCtx.beginPath();
-        if (drawing.points.length > 0) {
-            targetCtx.moveTo(drawing.points[0].x, drawing.points[0].y);
-            for (let i = 1; i < drawing.points.length; i++) {
-                const p = drawing.points[i];
-                if (p.isStart) {
-                    targetCtx.stroke();
-                    targetCtx.beginPath();
-                    targetCtx.moveTo(p.x, p.y);
-                } else {
-                    targetCtx.lineTo(p.x, p.y);
+                if (mouseX >= stickerLeft && mouseX <= stickerRight &&
+                    mouseY >= stickerTop && mouseY <= stickerBottom) {
+                    selectedStickerIndex = i;
+                    isDraggingSticker = true;
+                    dragStartX = mouseX - sticker.x;
+                    dragStartY = mouseY - sticker.y;
+                    updateStickerControlsFromSelection();
+                    renderCanvas();
+                    logAnalytics('Sticker_Selected', { stickerId: sticker.id });
+                    return; // Stop checking further if a sticker is found
                 }
             }
-        }
-        targetCtx.stroke();
-        targetCtx.restore();
-    });
-}
 
-/**
- * Calculates and returns the positions of the selection handles.
- * @param {object} draggable - The draggable object.
- * @param {number} handleSize - The size of the handles.
- * @returns {object} An object containing handle positions.
- */
-function getHandlePositions(draggable, handleSize) {
-    const halfWidth = draggable.width / 2;
-    const halfHeight = draggable.height / 2;
-    const cx = draggable.x + halfWidth;
-    const cy = draggable.y + halfHeight;
+            // If no sticker was selected, check if clicking on existing text
+            selectedTextIndex = -1; // Deselect previous text
+            for (let i = textElements.length - 1; i >= 0; i--) { // Iterate backwards to select top-most text
+                const textEl = textElements[i];
+                DOMElements.ctx.font = `${textEl.settings.bold ? 'bold ' : ''}${textEl.settings.italic ? 'italic ' : ''}${textEl.settings.size}px ${textEl.settings.fontFamily}`;
+                const textMetrics = DOMElements.ctx.measureText(textEl.text);
+                const textWidth = textMetrics.width;
+                const textHeight = textEl.settings.size; // Approximation
 
-    // Helper to rotate a point around a center
-    const rotatePoint = (px, py, angle, originX, originY) => {
-        const dx = px - originX;
-        const dy = py - originY;
-        const rotatedX = dx * Math.cos(angle) - dy * Math.sin(angle);
-        const rotatedY = dx * Math.sin(angle) + dy * Math.cos(angle);
-        return { x: rotatedX + originX, y: rotatedY + originY };
-    };
+                // Adjust textX based on alignment for accurate bounding box
+                let actualTextX = textEl.x;
+                if (textEl.settings.align === 'center') {
+                    actualTextX -= textWidth / 2;
+                } else if (textEl.settings.align === 'right') {
+                    actualTextX -= textWidth;
+                }
 
-    // Unrotated corners
-    const tl = { x: draggable.x, y: draggable.y };
-    const tr = { x: draggable.x + draggable.width, y: draggable.y };
-    const bl = { x: draggable.x, y: draggable.y + draggable.height };
-    const br = { x: draggable.x + draggable.width, y: draggable.y + draggable.height };
-
-    // Apply rotation to corner points
-    const rotatedTl = rotatePoint(tl.x, tl.y, draggable.angle, cx, cy);
-    const rotatedTr = rotatePoint(tr.x, tr.y, draggable.angle, cx, cy);
-    const rotatedBl = rotatePoint(bl.x, bl.y, draggable.angle, cx, cy);
-    const rotatedBr = rotatePoint(br.x, br.y, draggable.angle, cx, cy);
-
-    // Rotation handle position (above top center)
-    const rotHandleY = draggable.y - 20; // 20px above the top edge
-    const rotatedRot = rotatePoint(cx, rotHandleY, draggable.angle, cx, cy);
-
-
-    return {
-        tl: { x: rotatedTl.x - handleSize / 2, y: rotatedTl.y - handleSize / 2 },
-        tr: { x: rotatedTr.x - handleSize / 2, y: rotatedTr.y - handleSize / 2 },
-        bl: { x: rotatedBl.x - handleSize / 2, y: rotatedBl.y - handleSize / 2 },
-        br: { x: rotatedBr.x - handleSize / 2, y: rotatedBr.y - handleSize / 2 },
-        rot: { x: rotatedRot.x - handleSize / 2, y: rotatedRot.y - handleSize / 2 }
-    };
-}
-
-
-/**
- * Draws selection handles and bounding box for the selected draggable object.
- * @param {CanvasRenderingContext2D} targetCtx - The canvas context.
- * @param {object} draggable - The currently selected draggable object.
- */
-function drawSelectionHandles(targetCtx, draggable) {
-    if (!draggable) return;
-
-    targetCtx.save();
-    targetCtx.strokeStyle = '#33A4C9'; // ODZ Blue
-    targetCtx.lineWidth = 2;
-    targetCtx.setLineDash([5, 5]); // Dashed line
-
-    const halfWidth = draggable.width / 2;
-    const halfHeight = draggable.height / 2;
-    const cx = draggable.x + halfWidth;
-    const cy = draggable.y + halfHeight;
-
-    // Draw rotated bounding box
-    targetCtx.translate(cx, cy);
-    targetCtx.rotate(draggable.angle || 0);
-    targetCtx.strokeRect(-halfWidth, -halfHeight, draggable.width, draggable.height);
-    targetCtx.restore();
-
-    targetCtx.fillStyle = '#33A4C9'; // ODZ Blue for handles
-    const handleSize = 10;
-    const handles = getHandlePositions(draggable, handleSize);
-
-    // Draw handles
-    for (const type in handles) {
-        const h = handles[type];
-        targetCtx.fillRect(h.x, h.y, handleSize, handleSize);
-    }
-
-    // Draw line to rotation handle
-    targetCtx.beginPath();
-    targetCtx.strokeStyle = '#33A4C9';
-    targetCtx.setLineDash([]); // Solid line
-    targetCtx.moveTo(cx, cy); // From center
-    targetCtx.lineTo(handles.rot.x + handleSize / 2, handles.rot.y + handleSize / 2); // To rotation handle center
-    targetCtx.stroke();
-
-    targetCtx.restore(); // Restore to previous state
-}
-
-// --- Event Handling ---
-
-/**
- * Handles mouse down events on the canvas for dragging, resizing, and rotating.
- * @param {MouseEvent} event
- */
-function handleMouseDown(event) {
-    if (appState.isDrawMode) {
-        pushStateForUndo(); // Save state before drawing
-        appState.isDrawing = true;
-        const coords = getEventCoordinates(event);
-        appState.currentDrawing = {
-            color: DOMElements.brushColorInput.value,
-            size: parseInt(DOMElements.brushSizeInput.value),
-            points: [{ x: coords.x, y: coords.y, isStart: true }]
-        };
-        appState.drawings.push(appState.currentDrawing);
-        renderCanvas();
-        return;
-    }
-
-    const coords = getEventCoordinates(event);
-    appState.lastX = coords.x;
-    appState.lastY = coords.y;
-
-    appState.selectedDraggable = null; // Assume no selection initially
-    appState.isResizing = false;
-    appState.isRotating = false;
-    appState.isDragging = false;
-    appState.currentHandle = null;
-
-    // Check handles first (in reverse order of drawing to prioritize top-most)
-    const objects = [...appState.texts, ...appState.stickers]; // Check text then stickers
-    const allDraggables = [...objects].reverse(); // Reverse to pick top-most if overlapping
-
-    for (const obj of allDraggables) {
-        if (checkHandleClick(coords, obj, 'rot')) {
-            appState.selectedDraggable = obj;
-            appState.isRotating = true;
-            appState.currentHandle = 'rot';
-            pushStateForUndo(); // Save state before action
-            break;
-        } else if (checkHandleClick(coords, obj, 'tl')) {
-            appState.selectedDraggable = obj;
-            appState.isResizing = true;
-            appState.currentHandle = 'tl';
-            pushStateForUndo();
-            break;
-        } else if (checkHandleClick(coords, obj, 'tr')) {
-            appState.selectedDraggable = obj;
-            appState.isResizing = true;
-            appState.currentHandle = 'tr';
-            pushStateForUndo();
-            break;
-        } else if (checkHandleClick(coords, obj, 'bl')) {
-            appState.selectedDraggable = obj;
-            appState.isResizing = true;
-            appState.currentHandle = 'bl';
-            pushStateForUndo();
-            break;
-        } else if (checkHandleClick(coords, obj, 'br')) {
-            appState.selectedDraggable = obj;
-            appState.isResizing = true;
-            appState.currentHandle = 'br';
-            pushStateForUndo();
-            break;
-        }
-    }
-
-    // If no handle was clicked, check if an object was clicked for dragging
-    if (!appState.selectedDraggable) {
-        for (const obj of allDraggables) {
-            if (isPointInRotatedRect(coords, obj)) {
-                appState.selectedDraggable = obj;
-                appState.isDragging = true;
-                pushStateForUndo(); // Save state before action
-                break;
+                // Check bounds for text selection (add some padding for easier clicking)
+                const padding = 5;
+                if (mouseX >= actualTextX - padding && mouseX <= actualTextX + textWidth + padding &&
+                    mouseY >= textEl.y - padding && mouseY <= textEl.y + textHeight + padding) {
+                    selectedTextIndex = i;
+                    isDraggingText = true;
+                    dragStartX = mouseX - textEl.x;
+                    dragStartY = mouseY - textEl.y;
+                    updateTextControlsFromSelection();
+                    renderCanvas();
+                    logAnalytics('Text_Selected', { text: textEl.text });
+                    return; // Stop checking further if text is found
+                }
             }
+            // If neither text nor sticker is selected, ensure controls are disabled
+            updateTextControlsFromSelection();
+            updateStickerControlsFromSelection();
+            renderCanvas(); // Redraw to remove any selection borders
         }
-    }
+    });
 
-    // Update UI controls for the newly selected object
-    updateTextControlsFromSelection();
-    updateStickerControlsFromSelection();
-    renderCanvas(); // Re-render to show selection handles
-    updateCanvasCursor();
-}
+    DOMElements.canvas.addEventListener('mousemove', (e) => {
+        const mouseX = e.offsetX;
+        const mouseY = e.offsetY;
 
-/**
- * Handles mouse move events for dragging, resizing, and rotating.
- * @param {MouseEvent} event
- */
-function handleMouseMove(event) {
-    const coords = getEventCoordinates(event);
-    const deltaX = coords.x - appState.lastX;
-    const deltaY = coords.y - appState.lastY;
-
-    if (appState.isDrawing && appState.currentDrawing) {
-        appState.currentDrawing.points.push({ x: coords.x, y: coords.y });
-        renderCanvas();
-    } else if (appState.selectedDraggable) {
-        const obj = appState.selectedDraggable;
-        const centerX = obj.x + obj.width / 2;
-        const centerY = obj.y + obj.height / 2;
-
-        if (appState.isDragging) {
-            obj.x += deltaX;
-            obj.y += deltaY;
+        if (drawingMode && isDrawing) {
+            drawings.push({ x: mouseX, y: mouseY, color: DOMElements.brushColorInput.value, size: DOMElements.brushSizeInput.value, newPath: false });
             renderCanvas();
-        } else if (appState.isResizing) {
-            // Translate mouse coords to object's local, unrotated space
-            const angle = obj.angle || 0;
-            const cos = Math.cos(-angle);
-            const sin = Math.sin(-angle);
-
-            const rotatedMouseX = (coords.x - centerX) * cos - (coords.y - centerY) * sin;
-            const rotatedMouseY = (coords.x - centerX) * sin + (coords.y - centerY) * cos;
-
-            const rotatedLastX = (appState.lastX - centerX) * cos - (appState.lastY - centerY) * sin;
-            const rotatedLastY = (appState.lastX - centerX) * sin + (appState.lastY - centerY) * cos;
-
-            const rotatedDeltaX = rotatedMouseX - rotatedLastX;
-            const rotatedDeltaY = rotatedMouseY - rotatedLastY;
-
-            let newX = obj.x;
-            let newY = obj.y;
-            let newWidth = obj.width;
-            let newHeight = obj.height;
-
-            switch (appState.currentHandle) {
-                case 'br': // Bottom Right
-                    newWidth += rotatedDeltaX;
-                    newHeight += rotatedDeltaY;
-                    break;
-                case 'bl': // Bottom Left
-                    newWidth -= rotatedDeltaX;
-                    newHeight += rotatedDeltaY;
-                    newX += rotatedDeltaX * Math.cos(angle) + rotatedDeltaY * Math.sin(angle);
-                    newY += rotatedDeltaY * Math.cos(angle) - rotatedDeltaX * Math.sin(angle);
-                    break;
-                case 'tr': // Top Right
-                    newWidth += rotatedDeltaX;
-                    newHeight -= rotatedDeltaY;
-                    newY += rotatedDeltaX * Math.sin(angle) + rotatedDeltaY * Math.cos(angle);
-                    newX += rotatedDeltaX * Math.cos(angle) - rotatedDeltaY * Math.sin(angle);
-                    break;
-                case 'tl': // Top Left
-                    newWidth -= rotatedDeltaX;
-                    newHeight -= rotatedDeltaY;
-                    newX += rotatedDeltaX * Math.cos(angle) + rotatedDeltaY * Math.sin(angle);
-                    newY += rotatedDeltaY * Math.cos(angle) - rotatedDeltaX * Math.sin(angle);
-                    break;
-            }
-
-            // Ensure min dimensions
-            const minDim = 20;
-            obj.width = Math.max(minDim, newWidth);
-            obj.height = Math.max(minDim, newHeight);
-
-            // Re-calculate x,y to keep top-left corner correct after rotation-aware resizing
-            // This is simplified: for rotation-aware resizing, one typically re-calculates the center
-            // and then transforms back to the top-left based on new dimensions and angle.
-            // For now, we'll apply the calculated newX, newY directly.
-            obj.x = newX;
-            obj.y = newY;
-
-
+            lastX = mouseX;
+            lastY = mouseY;
+        } else if (isDraggingText && selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].x = mouseX - dragStartX;
+            textElements[selectedTextIndex].y = mouseY - dragStartY;
             renderCanvas();
-        } else if (appState.isRotating) {
-            // Calculate angle relative to the center of the object
-            const dx = coords.x - centerX;
-            const dy = coords.y - centerY;
-            const newAngle = Math.atan2(dy, dx) + Math.PI / 2; // + PI/2 to align with top handle
-
-            obj.angle = newAngle;
+        } else if (isDraggingSticker && selectedStickerIndex !== -1) {
+            stickers[selectedStickerIndex].x = mouseX - dragStartX;
+            stickers[selectedStickerIndex].y = mouseY - dragStartY;
             renderCanvas();
         }
-    }
-    appState.lastX = coords.x;
-    appState.lastY = coords.y;
-    updateCanvasCursor();
-}
+    });
 
+    DOMElements.canvas.addEventListener('mouseup', () => {
+        isDraggingText = false;
+        isDraggingSticker = false;
+        isDrawing = false;
+    });
 
-/**
- * Handles mouse up events to stop dragging/resizing/rotating.
- * @param {MouseEvent} event
- */
-function handleMouseUp() {
-    if (appState.isDrawing) {
-        appState.isDrawing = false;
-    }
-    appState.isDragging = false;
-    appState.isResizing = false;
-    appState.isRotating = false;
-    appState.currentHandle = null; // Clear active handle
-    renderCanvas(); // Final render to remove any active visual cues
-    updateCanvasCursor();
-}
-
-/**
- * Handles touch start events.
- * @param {TouchEvent} event
- */
-function handleTouchStart(event) {
-    event.preventDefault(); // Prevent scrolling/zooming
-    handleMouseDown({
-        clientX: event.touches[0].clientX,
-        clientY: event.touches[0].clientY,
-        target: event.target
+    DOMElements.canvas.addEventListener('mouseleave', () => {
+        isDraggingText = false;
+        isDraggingSticker = false;
+        isDrawing = false; // Stop drawing if mouse leaves canvas
     });
 }
 
 /**
- * Handles touch move events.
- * @param {TouchEvent} event
+ * Updates the state of text editing controls based on whether a text element is selected.
  */
-function handleTouchMove(event) {
-    event.preventDefault(); // Prevent scrolling/zooming
-    handleMouseMove({
-        clientX: event.touches[0].clientX,
-        clientY: event.touches[0].clientY,
-        target: event.target
-    });
+function updateTextControlsFromSelection() {
+    const isSelected = selectedTextIndex !== -1;
+    const selectedText = isSelected ? textElements[selectedTextIndex] : null;
+
+    DOMElements.removeTextBtn.disabled = !isSelected;
+    DOMElements.fontFamilySelect.disabled = !isSelected;
+    DOMElements.fontSizeInput.disabled = !isSelected;
+    DOMElements.textColorInput.disabled = !isSelected;
+    DOMElements.textAlignSelect.disabled = !isSelected;
+    DOMElements.textBoldToggle.disabled = !isSelected;
+    DOMElements.textItalicToggle.disabled = !isSelected;
+    DOMElements.textOutlineToggle.disabled = !isSelected;
+    DOMElements.textShadowToggle.disabled = !isSelected;
+    DOMElements.textRotateSlider.disabled = !isSelected;
+
+    if (isSelected) {
+        DOMElements.textInput.value = selectedText.text;
+        DOMElements.fontFamilySelect.value = selectedText.settings.fontFamily;
+        DOMElements.fontSizeInput.value = selectedText.settings.size;
+        DOMElements.textColorInput.value = selectedText.settings.color;
+        DOMElements.textAlignSelect.value = selectedText.settings.align;
+        DOMElements.textBoldToggle.classList.toggle('active', selectedText.settings.bold);
+        DOMElements.textItalicToggle.classList.toggle('active', selectedText.settings.italic);
+        DOMElements.textOutlineToggle.classList.toggle('active', selectedText.settings.outline);
+        DOMElements.textShadowToggle.classList.toggle('active', selectedText.settings.shadow);
+        DOMElements.textRotateSlider.value = selectedText.rotation;
+    } else {
+        DOMElements.textInput.value = '';
+        // Reset to defaults or initial empty state when nothing is selected
+        DOMElements.fontFamilySelect.value = DEFAULT_TEXT_SETTINGS.fontFamily;
+        DOMElements.fontSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
+        DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
+        DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
+        DOMElements.textBoldToggle.classList.remove('active');
+        DOMElements.textItalicToggle.classList.remove('active');
+        DOMEElements.textOutlineToggle.classList.remove('active');
+        DOMElements.textShadowToggle.classList.remove('active');
+        DOMElements.textRotateSlider.value = 0;
+    }
 }
 
 /**
- * Handles touch end events.
- * @param {TouchEvent} event
+ * Updates the state of sticker editing controls based on whether a sticker is selected.
  */
-function handleTouchEnd() {
-    handleMouseUp();
+function updateStickerControlsFromSelection() {
+    const isSelected = selectedStickerIndex !== -1;
+    const selectedSticker = isSelected ? stickers[selectedStickerIndex] : null;
+
+    DOMElements.removeStickerBtn.disabled = !isSelected;
+    DOMElements.stickerSizeSlider.disabled = !isSelected;
+    DOMElements.stickerRotateSlider.disabled = !isSelected;
+
+    if (isSelected && selectedSticker) {
+        DOMElements.stickerSizeSlider.value = selectedSticker.size;
+        DOMElements.stickerRotateSlider.value = selectedSticker.rotation;
+    } else {
+        DOMElements.stickerSizeSlider.value = 100; // Default size
+        DOMElements.stickerRotateSlider.value = 0; // Default rotation
+    }
 }
 
 
 /**
- * Sets up all event listeners for the editing page.
+ * Sets up all event listeners for UI controls.
  */
 function setupEventListeners() {
-    // Canvas interaction for draggable elements
-    DOMElements.photoCanvas.addEventListener('mousedown', handleMouseDown);
-    DOMElements.photoCanvas.addEventListener('mousemove', handleMouseMove);
-    DOMElements.photoCanvas.addEventListener('mouseup', handleMouseUp);
-    DOMElements.photoCanvas.addEventListener('mouseout', handleMouseUp); // End action if mouse leaves canvas
-
-    // Touch event listeners for mobile
-    DOMElements.photoCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    DOMElements.photoCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    DOMElements.photoCanvas.addEventListener('touchend', handleTouchEnd);
-    DOMElements.photoCanvas.addEventListener('touchcancel', handleTouchEnd);
-
-    // Frame selection
-    DOMElements.frameSelect.addEventListener('change', (event) => {
-        appState.selectedFrameId = event.target.value;
-        renderCanvas();
-        logAnalytics('Frame_Changed', { frameId: appState.selectedFrameId });
+    DOMElements.downloadStripBtn.addEventListener('click', () => {
+        const format = DOMElements.downloadFormatSelect.value;
+        downloadStrip(format);
     });
 
-    // Retake photos button
+    DOMElements.printStripBtn.addEventListener('click', printStrip);
     DOMElements.retakeBtn.addEventListener('click', () => {
-        logAnalytics('Retake_Photos_Clicked');
-        // Clear captured photos and return to capture page
-        localStorage.removeItem('capturedPhotos');
-        localStorage.removeItem('selectedPhotoCount');
-        localStorage.removeItem('selectedFrameAspectRatio');
+        logAnalytics('Retake_Photos');
         window.location.href = 'capture-page/capture-page.html';
     });
 
-    // Download strip button
-    DOMElements.downloadStripBtn.addEventListener('click', async () => {
-        logAnalytics('Download_Strip_Clicked', { format: DOMElements.downloadFormatSelect.value });
-        displayCanvasMessage("Preparing download...");
-        toggleDownloadSpinner(true);
 
-        // Ensure all images (frames, stickers) are loaded before attempting to download
-        await Promise.allSettled([
-            drawFrameOnCanvas(DOMElements.ctx) // Ensure frame is drawn
-            // No need to wait for stickers/photos as they are already Image objects
-        ]);
-
-        const format = DOMElements.downloadFormatSelect.value;
-        let mimeType = 'image/png';
-        let quality = 1.0; // Default for PNG
-
-        if (format.startsWith('image/jpeg')) {
-            mimeType = 'image/jpeg';
-            quality = parseFloat(format.split(';')[1]) || 0.9;
-        }
-
-        const dataURL = DOMElements.photoCanvas.toDataURL(mimeType, quality);
-        const a = document.createElement('a');
-        a.href = dataURL;
-        a.download = `odz_photostrip_${Date.now()}.${mimeType.split('/')[1].split(';')[0]}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        toggleDownloadSpinner(false);
-        hideCanvasMessage();
-        displayCanvasMessage("Download complete!");
-        setTimeout(hideCanvasMessage, 2000); // Hide message after 2 seconds
-    });
-
-    // Print strip button
-    DOMElements.printStripBtn.addEventListener('click', () => {
-        logAnalytics('Print_Strip_Clicked');
-        displayCanvasMessage("Preparing for print...");
-        const dataURL = DOMElements.photoCanvas.toDataURL('image/png'); // Print as PNG
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write('<html><head><title>Print Photo Strip</title>');
-        printWindow.document.write('<style>body{display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}</style>');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write('<img src="' + dataURL + '" style="max-width:100%; height:auto;">');
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-        hideCanvasMessage();
-    });
-
-    // Sticker controls
-    DOMElements.addStickerInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            pushStateForUndo(); // Save state before adding sticker
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const img = await loadImage(e.target.result);
-                    const newSticker = {
-                        id: generateUniqueId('sticker'),
-                        type: 'sticker',
-                        src: e.target.result, // Store base64 for reloads/undo
-                        image: img, // Store actual image object for drawing
-                        x: (DOMElements.photoCanvas.width / 2) - 50, // Center initially
-                        y: (DOMElements.photoCanvas.height / 2) - 50,
-                        width: 100,
-                        height: 100,
-                        angle: 0,
-                        opacity: 1
-                    };
-                    appState.stickers.push(newSticker);
-                    appState.selectedDraggable = newSticker;
-                    renderCanvas();
-                    updateStickerControlsFromSelection();
-                    logAnalytics('Sticker_Added');
-                } catch (error) {
-                    console.error("Error loading sticker image:", error);
-                    displayCanvasMessage("Failed to load sticker image.");
-                    setTimeout(hideCanvasMessage, 2000);
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    DOMElements.addStickerBtn.addEventListener('click', () => {
-        DOMElements.addStickerInput.click(); // Trigger file input
-    });
-
-    DOMElements.removeSelectedStickerBtn.addEventListener('click', () => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'sticker') {
-            pushStateForUndo(); // Save state before removing
-            appState.stickers = appState.stickers.filter(s => s.id !== appState.selectedDraggable.id);
-            appState.selectedDraggable = null; // Deselect
-            renderCanvas();
-            updateStickerControlsFromSelection();
-            logAnalytics('Sticker_Removed');
-        }
-    });
-
-    DOMElements.undoLastStickerBtn.addEventListener('click', undoLastAction);
-
-
-    DOMElements.stickerSizeSlider.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'sticker') {
-            const newSize = parseInt(event.target.value);
-            // Maintain aspect ratio, assuming initial sticker is square or resize proportionally
-            // For simplicity, we just set width/height to newSize
-            appState.selectedDraggable.width = newSize;
-            appState.selectedDraggable.height = newSize;
-            renderCanvas();
-        }
-    });
-
-    DOMElements.stickerRotationSlider.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'sticker') {
-            appState.selectedDraggable.angle = parseFloat(event.target.value) * (Math.PI / 180); // Convert degrees to radians
-            renderCanvas();
-        }
-    });
-
-    DOMElements.stickerOpacitySlider.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'sticker') {
-            appState.selectedDraggable.opacity = parseFloat(event.target.value);
-            renderCanvas();
-        }
-    });
-
-
-    // Text controls
+    // Text Controls
     DOMElements.addTextBtn.addEventListener('click', () => {
-        pushStateForUndo(); // Save state before adding text
-        const newText = {
-            id: generateUniqueId('text'),
-            type: 'text',
-            x: DOMElements.photoCanvas.width / 4, // Left quarter
-            y: DOMElements.photoCanvas.height / 2, // Center
-            width: DOMElements.photoCanvas.width / 2, // Half width
-            height: 50, // Default height, will adjust based on font size later
-            text: DOMElements.textInput.value || 'New Text',
-            fontFamily: DOMElements.textFontSelect.value,
-            fontSize: parseInt(DOMElements.fontSizeSlider.value),
-            color: DOMElements.textColorInput.value,
-            align: DOMElements.textAlignSelect.value,
-            bold: DOMElements.textBoldToggle.classList.contains('active'),
-            italic: DOMElements.textItalicToggle.classList.contains('active'),
-            shadow: DOMElements.textShadowToggle.classList.contains('active'),
-            angle: 0
-        };
-        appState.texts.push(newText);
-        appState.selectedDraggable = newText; // Select the newly added text
-        renderCanvas();
-        updateTextControlsFromSelection();
-        logAnalytics('Text_Added', { text: newText.text });
+        const text = DOMElements.textInput.value.trim();
+        if (text) {
+            // Position new text element in the middle of the first photo frame if available
+            let initialX = DOMElements.canvas.width / 2;
+            let initialY = DOMElements.canvas.height / 2;
+
+            if (currentStripConfig.frames && currentStripConfig.frames.length > 0) {
+                const firstFrame = currentStripConfig.frames[0];
+                initialX = firstFrame.x + firstFrame.width / 2;
+                initialY = firstFrame.y + firstFrame.height / 2;
+            }
+
+            textElements.push({
+                text: text,
+                x: initialX,
+                y: initialY,
+                settings: { ...DEFAULT_TEXT_SETTINGS }, // Copy default settings
+                rotation: 0
+            });
+            selectedTextIndex = textElements.length - 1; // Select the newly added text
+            DOMElements.textInput.value = ''; // Clear input
+            updateTextControlsFromSelection();
+            renderCanvas();
+            logAnalytics('Text_Added', { text: text });
+        } else {
+            alert('Please enter some text!');
+        }
+    });
+
+    DOMElements.removeTextBtn.addEventListener('click', () => {
+        if (selectedTextIndex !== -1) {
+            const removedText = textElements.splice(selectedTextIndex, 1);
+            selectedTextIndex = -1; // Deselect
+            updateTextControlsFromSelection();
+            renderCanvas();
+            logAnalytics('Text_Removed', { text: removedText[0].text });
+        }
     });
 
     // Update text content live
-    DOMElements.textInput.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.text = event.target.value;
+    DOMElements.textInput.addEventListener('input', () => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].text = DOMElements.textInput.value;
             renderCanvas();
         }
     });
 
-    DOMElements.textFontSelect.addEventListener('change', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.fontFamily = event.target.value;
+    // Event listeners for text settings
+    DOMElements.fontFamilySelect.addEventListener('change', (e) => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].settings.fontFamily = e.target.value;
+            renderCanvas();
+            logAnalytics('Text_Font_Changed', { font: e.target.value });
+        }
+    });
+    DOMElements.fontSizeInput.addEventListener('input', (e) => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].settings.size = parseInt(e.target.value);
             renderCanvas();
         }
     });
-
-    DOMElements.fontSizeSlider.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.fontSize = parseInt(event.target.value);
+    DOMElements.textColorInput.addEventListener('input', (e) => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].settings.color = e.target.value;
             renderCanvas();
         }
     });
-
-    DOMElements.textColorInput.addEventListener('input', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.color = event.target.value;
+    DOMElements.textAlignSelect.addEventListener('change', (e) => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].settings.align = e.target.value;
             renderCanvas();
         }
     });
-
-    DOMElements.textAlignSelect.addEventListener('change', (event) => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.align = event.target.value;
-            renderCanvas();
-        }
-    });
-
     DOMElements.textBoldToggle.addEventListener('click', () => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.bold = !appState.selectedDraggable.bold;
-            DOMElements.textBoldToggle.classList.toggle('active', appState.selectedDraggable.bold);
+        if (selectedTextIndex !== -1) {
+            const current = textElements[selectedTextIndex].settings.bold;
+            textElements[selectedTextIndex].settings.bold = !current;
+            DOMElements.textBoldToggle.classList.toggle('active', !current);
             renderCanvas();
+            logAnalytics('Text_Bold_Toggled', { value: !current });
         }
     });
-
     DOMElements.textItalicToggle.addEventListener('click', () => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.italic = !appState.selectedDraggable.italic;
-            DOMElements.textItalicToggle.classList.toggle('active', appState.selectedDraggable.italic);
+        if (selectedTextIndex !== -1) {
+            const current = textElements[selectedTextIndex].settings.italic;
+            textElements[selectedTextIndex].settings.italic = !current;
+            DOMElements.textItalicToggle.classList.toggle('active', !current);
             renderCanvas();
+            logAnalytics('Text_Italic_Toggled', { value: !current });
         }
     });
-
+    DOMElements.textOutlineToggle.addEventListener('click', () => {
+        if (selectedTextIndex !== -1) {
+            const current = textElements[selectedTextIndex].settings.outline;
+            textElements[selectedTextIndex].settings.outline = !current;
+            DOMElements.textOutlineToggle.classList.toggle('active', !current);
+            renderCanvas();
+            logAnalytics('Text_Outline_Toggled', { value: !current });
+        }
+    });
     DOMElements.textShadowToggle.addEventListener('click', () => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            appState.selectedDraggable.shadow = !appState.selectedDraggable.shadow;
-            DOMElements.textShadowToggle.classList.toggle('active', appState.selectedDraggable.shadow);
+        if (selectedTextIndex !== -1) {
+            const current = textElements[selectedTextIndex].settings.shadow;
+            textElements[selectedTextIndex].settings.shadow = !current;
+            DOMElements.textShadowToggle.classList.toggle('active', !current);
+            renderCanvas();
+            logAnalytics('Text_Shadow_Toggled', { value: !current });
+        }
+    });
+    DOMElements.textRotateSlider.addEventListener('input', (e) => {
+        if (selectedTextIndex !== -1) {
+            textElements[selectedTextIndex].rotation = parseInt(e.target.value);
             renderCanvas();
         }
     });
 
-    DOMElements.removeSelectedTextBtn.addEventListener('click', () => {
-        if (appState.selectedDraggable && appState.selectedDraggable.type === 'text') {
-            pushStateForUndo(); // Save state before removing
-            appState.texts = appState.texts.filter(t => t.id !== appState.selectedDraggable.id);
-            appState.selectedDraggable = null; // Deselect
-            renderCanvas();
-            updateTextControlsFromSelection();
-            logAnalytics('Text_Removed');
+
+    // Sticker Controls
+    // Populate sticker select options
+    if (DOMElements.stickerSelect) {
+        STICKERS.forEach(sticker => {
+            const option = document.createElement('option');
+            option.value = sticker.id;
+            option.textContent = sticker.name;
+            DOMElements.stickerSelect.appendChild(option);
+        });
+    }
+
+    DOMElements.addStickerBtn.addEventListener('click', async () => {
+        const selectedStickerId = DOMElements.stickerSelect.value;
+        const stickerData = STICKERS.find(s => s.id === selectedStickerId);
+
+        if (stickerData) {
+            try {
+                const img = await loadImage(stickerData.src);
+                // Position new sticker in the middle of the first photo frame
+                let initialX = DOMElements.canvas.width / 2 - stickerData.defaultSize / 2;
+                let initialY = DOMElements.canvas.height / 2 - stickerData.defaultSize / 2;
+
+                if (currentStripConfig.frames && currentStripConfig.frames.length > 0) {
+                    const firstFrame = currentStripConfig.frames[0];
+                    initialX = firstFrame.x + firstFrame.width / 2 - stickerData.defaultSize / 2;
+                    initialY = firstFrame.y + firstFrame.height / 2 - stickerData.defaultSize / 2;
+                }
+
+                stickers.push({
+                    id: stickerData.id,
+                    image: img,
+                    x: initialX,
+                    y: initialY,
+                    size: stickerData.defaultSize,
+                    rotation: 0,
+                    selected: false
+                });
+                selectedStickerIndex = stickers.length - 1;
+                updateStickerControlsFromSelection();
+                renderCanvas();
+                logAnalytics('Sticker_Added', { stickerId: stickerData.id });
+            } catch (error) {
+                console.error('Failed to load sticker image:', error);
+                alert('Failed to add sticker. Please try again.');
+            }
         }
     });
 
-    // Drawing controls
+    DOMElements.removeStickerBtn.addEventListener('click', () => {
+        if (selectedStickerIndex !== -1) {
+            const removedSticker = stickers.splice(selectedStickerIndex, 1);
+            selectedStickerIndex = -1;
+            updateStickerControlsFromSelection();
+            renderCanvas();
+            logAnalytics('Sticker_Removed', { stickerId: removedSticker[0].id });
+        }
+    });
+
+    DOMElements.stickerSizeSlider.addEventListener('input', (e) => {
+        if (selectedStickerIndex !== -1) {
+            stickers[selectedStickerIndex].size = parseInt(e.target.value);
+            renderCanvas();
+        }
+    });
+
+    DOMElements.stickerRotateSlider.addEventListener('input', (e) => {
+        if (selectedStickerIndex !== -1) {
+            stickers[selectedStickerIndex].rotation = parseInt(e.target.value);
+            renderCanvas();
+        }
+    });
+
+
+    // Drawing Controls
     DOMElements.toggleDrawModeBtn.addEventListener('click', () => {
-        appState.isDrawMode = !appState.isDrawMode;
-        DOMElements.toggleDrawModeBtn.classList.toggle('active', appState.isDrawMode);
-        toggleControlPanels(); // Show/hide relevant controls
-        logAnalytics('Draw_Mode_Toggled', { mode: appState.isDrawMode ? 'on' : 'off' });
-    });
-
-    DOMElements.brushColorInput.addEventListener('input', (event) => {
-        DEFAULT_DRAWING_SETTINGS.color = event.target.value; // Update default for new strokes
-        // If actively drawing, could apply to current stroke, but simpler to apply to new ones
-    });
-
-    DOMElements.brushSizeInput.addEventListener('input', (event) => {
-        DEFAULT_DRAWING_SETTINGS.size = parseInt(event.target.value); // Update default for new strokes
+        drawingMode = !drawingMode;
+        DOMElements.toggleDrawModeBtn.classList.toggle('active', drawingMode);
+        // Disable text/sticker manipulation when in drawing mode
+        DOMElements.canvas.style.cursor = drawingMode ? 'crosshair' : 'default';
+        logAnalytics('Drawing_Mode_Toggled', { enabled: drawingMode });
     });
 
     DOMElements.clearDrawingsBtn.addEventListener('click', () => {
-        pushStateForUndo(); // Save state before clearing
-        appState.drawings = [];
-        appState.currentDrawing = null;
-        renderCanvas();
-        logAnalytics('Drawings_Cleared');
+        if (confirm('Are you sure you want to clear all drawings?')) {
+            drawings = [];
+            renderCanvas();
+            logAnalytics('All_Drawings_Cleared');
+        }
     });
 
-    // Undo/Redo - basic functionality, could be expanded for more granular control
-    document.addEventListener('keydown', (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-            // console.log("Ctrl+Z pressed");
-            undoLastAction();
+    DOMElements.brushColorInput.addEventListener('input', renderCanvas);
+    DOMElements.brushSizeInput.addEventListener('input', renderCanvas);
+
+
+    // Other controls
+    DOMElements.framesSelect.addEventListener('change', renderCanvas);
+    DOMElements.backgroundColorInput.addEventListener('input', renderCanvas);
+    DOMElements.stripTitleInput.addEventListener('input', renderCanvas);
+    DOMElements.stripSubtitleInput.addEventListener('input', renderCanvas);
+
+    DOMElements.stripLogoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                DOMElements.logoPreview.src = event.target.result;
+                DOMElements.toggleLogoVisibilityBtn.dataset.customLogoVisible = 'true'; // Show custom logo by default
+                renderCanvas();
+                logAnalytics('Custom_Logo_Uploaded');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            DOMElements.logoPreview.src = '';
+            DOMElements.toggleLogoVisibilityBtn.dataset.customLogoVisible = 'false';
+            renderCanvas();
         }
-        // Add Ctrl+Y or Ctrl+Shift+Z for redo if redo stack is implemented
     });
+
+    DOMElements.toggleLogoVisibilityBtn.addEventListener('click', () => {
+        const isVisible = DOMElements.toggleLogoVisibilityBtn.dataset.visible === 'true';
+        DOMElements.toggleLogoVisibilityBtn.dataset.visible = String(!isVisible); // Toggle global logo visibility
+        const isCustomLogoVisible = DOMElements.toggleLogoVisibilityBtn.dataset.customLogoVisible === 'true';
+
+        // Update button text/icon
+        DOMElements.toggleLogoVisibilityBtn.querySelector('i').classList.toggle('bx-show', !isVisible);
+        DOMElements.toggleLogoVisibilityBtn.querySelector('i').classList.toggle('bx-hide', isVisible);
+        DOMElements.toggleLogoVisibilityBtn.innerHTML = `
+            <i class='bx ${!isVisible ? 'bx-show' : 'bx-hide'}'></i> ${!isVisible ? 'Hide ODZ Booth Logo' : 'Show ODZ Booth Logo'}
+        `;
+
+        renderCanvas();
+        logAnalytics('ODZ_Booth_Logo_Visibility_Toggled', { visible: !isVisible });
+    });
+
+    // Initial state for toggleLogoVisibilityBtn
+    DOMElements.toggleLogoVisibilityBtn.dataset.visible = 'true'; // Default to visible
+    DOMElements.toggleLogoVisibilityBtn.dataset.customLogoVisible = 'false'; // Default custom logo to hidden
 }
 
-// --- Initialization ---
-
 /**
- * Initializes the editor page: loads photos, sets up canvas, populates controls, and attaches events.
+ * Initializes the editor page by loading data, setting up controls, and rendering the canvas.
  */
 async function initializeEditorPage() {
-    DOMElements.ctx = DOMEElements.photoCanvas.getContext('2d');
+    // Assign DOM elements to DOMElements properties
+    DOMElements.canvas = document.getElementById('photoStripCanvas');
+    DOMElements.ctx = DOMElements.canvas.getContext('2d');
+    DOMElements.downloadStripBtn = document.getElementById('downloadStripBtn');
+    DOMElements.printStripBtn = document.getElementById('printStripBtn');
+    DOMElements.retakeBtn = document.getElementById('retakeBtn');
+
+    // Text controls
+    DOMElements.addTextBtn = document.getElementById('addTextBtn');
+    DOMElements.textInput = document.getElementById('textInput');
+    DOMElements.removeTextBtn = document.getElementById('removeTextBtn');
+    DOMElements.fontFamilySelect = document.getElementById('fontFamilySelect');
+    DOMElements.fontSizeInput = document.getElementById('fontSizeInput');
+    DOMElements.textColorInput = document.getElementById('textColorInput');
+    DOMElements.textAlignSelect = document.getElementById('textAlignSelect');
+    DOMElements.textBoldToggle = document.getElementById('textBoldToggle');
+    DOMElements.textItalicToggle = document.getElementById('textItalicToggle');
+    DOMElements.textOutlineToggle = document.getElementById('textOutlineToggle');
+    DOMElements.textShadowToggle = document.getElementById('textShadowToggle');
+    DOMElements.textRotateSlider = document.getElementById('textRotateSlider');
+
+    // Sticker controls
+    DOMElements.stickerSelect = document.getElementById('stickerSelect');
+    DOMElements.addStickerBtn = document.getElementById('addStickerBtn');
+    DOMElements.removeStickerBtn = document.getElementById('removeStickerBtn');
+    DOMElements.stickerSizeSlider = document.getElementById('stickerSizeSlider');
+    DOMElements.stickerRotateSlider = document.getElementById('stickerRotateSlider');
+
+    // Drawing controls
+    DOMElements.toggleDrawModeBtn = document.getElementById('toggleDrawModeBtn');
+    DOMElements.brushColorInput = document.getElementById('brushColorInput');
+    DOMElements.brushSizeInput = document.getElementById('brushSizeInput');
+    DOMElements.clearDrawingsBtn = document.getElementById('clearDrawingsBtn');
+
+    // Other
+    DOMElements.downloadFormatSelect = document.getElementById('downloadFormatSelect');
+    DOMElements.framesSelect = document.getElementById('framesSelect');
+    DOMElements.backgroundColorInput = document.getElementById('backgroundColorInput');
+    DOMElements.stripTitleInput = document.getElementById('stripTitleInput');
+    DOMElements.stripSubtitleInput = document.getElementById('stripSubtitleInput');
+    DOMElements.stripLogoInput = document.getElementById('stripLogoInput');
+    DOMElements.toggleLogoVisibilityBtn = document.getElementById('toggleLogoVisibilityBtn');
+    DOMElements.logoPreview = document.getElementById('logoPreview');
+
+
+    // Retrieve captured photos and selected layout from localStorage
+    const storedPhotos = localStorage.getItem('capturedPhotos');
+    if (storedPhotos) {
+        capturedPhotos = JSON.parse(storedPhotos);
+    } else {
+        console.warn('No captured photos found in localStorage. Redirecting to capture page.');
+        window.location.href = 'capture-page/capture-page.html';
+        return; // Stop initialization if no photos
+    }
 
     const selectedPhotoCount = localStorage.getItem('selectedPhotoCount');
     const selectedFrameAspectRatio = parseFloat(localStorage.getItem('selectedFrameAspectRatio'));
 
-    // Determine config based on selectedPhotoCount
-    if (STRIP_LAYOUT_CONFIGS[selectedPhotoCount]) {
-        appState.currentStripConfig = { ...STRIP_LAYOUT_CONFIGS.common, ...STRIP_LAYOUT_CONFIGS[selectedPhotoCount] };
-    } else {
-        // Fallback to a default if not found (e.g., 4 photos)
-        console.warn("No specific config found for photo count:", selectedPhotoCount, "Falling back to 4 photos.");
-        appState.currentStripConfig = { ...STRIP_LAYOUT_CONFIGS.common, ...STRIP_LAYOUT_CONFIGS['4'] };
+    if (!selectedPhotoCount || !STRIP_LAYOUT_CONFIGS[selectedPhotoCount]) {
+        console.error('Invalid or no photo layout selected. Redirecting to layout selection.');
+        window.location.href = 'layout-selection/layout-selection.html';
+        return;
     }
 
-    // Set canvas dimensions based on the determined strip config
-    DOMElements.photoCanvas.width = appState.currentStripConfig.stripWidth;
-    DOMElements.photoCanvas.height = appState.currentStripConfig.stripHeight;
+    currentStripConfig = { ...STRIP_LAYOUT_CONFIGS.common, ...STRIP_LAYOUT_CONFIGS[selectedPhotoCount] };
+    currentStripConfig.frameAspectRatio = selectedFrameAspectRatio;
 
-    // Load captured photos from local storage
-    await preloadCapturedPhotos();
+    // Set canvas dimensions
+    DOMElements.canvas.width = currentStripConfig.stripWidth;
+    DOMElements.canvas.height = currentStripConfig.stripHeight;
 
-    // Populate frame options based on the loaded config
-    populateFrameOptions();
+    // Populate frame options
+    if (DOMElements.framesSelect) {
+        DOMElements.framesSelect.innerHTML = ''; // Clear existing options
+        currentStripConfig.availableFrames.forEach(frame => {
+            const option = document.createElement('option');
+            option.value = frame.id;
+            option.textContent = frame.name;
+            DOMElements.framesSelect.appendChild(option);
+        });
+        DOMElements.framesSelect.value = 'option1'; // Select the first option by default
+    }
 
-    // Set initial control values
-    if (DOMElements.textInput) DOMElements.textInput.value = ''; // Clear text input on load
-    if (DOMElements.textFontSelect) DOMElements.textFontSelect.value = DEFAULT_TEXT_SETTINGS.fontFamily;
-    if (DOMElements.fontSizeSlider) DOMElements.fontSizeSlider.value = DEFAULT_TEXT_SETTINGS.fontSize;
+    // Set default values for controls based on DEFAULT_TEXT_SETTINGS and DEFAULT_DRAWING_SETTINGS
+    if (DOMElements.fontFamilySelect) DOMElements.fontFamilySelect.value = DEFAULT_TEXT_SETTINGS.fontFamily;
+    if (DOMElements.fontSizeInput) DOMElements.fontSizeInput.value = DEFAULT_TEXT_SETTINGS.size;
     if (DOMElements.textColorInput) DOMElements.textColorInput.value = DEFAULT_TEXT_SETTINGS.color;
     if (DOMElements.textAlignSelect) DOMElements.textAlignSelect.value = DEFAULT_TEXT_SETTINGS.align;
     if (DOMElements.brushColorInput) DOMElements.brushColorInput.value = DEFAULT_DRAWING_SETTINGS.color;
     if (DOMElements.brushSizeInput) DOMElements.brushSizeInput.value = DEFAULT_DRAWING_SETTINGS.size;
 
     // Initially disable controls that depend on selection or specific modes
-    // This call will correctly disable the *editing* controls.
     updateTextControlsFromSelection();
     // IMPORTANT: Explicitly ensure text input and add button are ENABLED after the above call
     // This handles the case where there ARE photos, but no text is selected initially.
@@ -1409,11 +1081,8 @@ async function initializeEditorPage() {
     if (DOMElements.toggleDrawModeBtn) DOMElements.toggleDrawModeBtn.classList.remove('active'); // Ensure draw button isn't active by default
 
     setupEventListeners(); // Attach all event listeners
+    setupCanvasEventListeners(); // Setup canvas specific event listeners
     renderCanvas(); // Initial render of the photo strip
-
-    // Set up an interval to refresh the canvas every minute for the date display
-    setInterval(renderCanvas, 60 * 1000); // Update every minute
-
     logAnalytics('Editor_Page_Loaded_Successfully', { layout: selectedPhotoCount });
 }
 
