@@ -8,7 +8,7 @@ const nextBtn = document.getElementById('nextBtn');
 const photoGrid = document.getElementById('captured-photos-grid');
 const filterSelect = document.getElementById('filter');
 const cameraSelect = document.getElementById('cameraSelect');
-const countdownElement = document.getElementById('countdown');
+const countdownElement = document.getElementById('countdown'); // Old text countdown (will be hidden by CSS)
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg'); 
 const subCameraMsg = document.getElementById('sub-camera-msg');   
@@ -17,6 +17,10 @@ const cameraLoadingSpinner = document.getElementById('camera-loading-spinner');
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
 const undoLastPhotoBtn = document.getElementById('undoLastPhotoBtn'); 
 const invertCameraButton = document.getElementById('invertCameraButton'); 
+
+// NEW: Visual Countdown and Flash Overlay Elements
+const visualCountdown = document.getElementById('visualCountdown');
+const flashOverlay = document.getElementById('flashOverlay');
 
 // --- Global State Variables ---
 let currentStream = null; 
@@ -40,6 +44,7 @@ function displayCameraMessage(message, type = 'info', subMessage = '') {
     cameraAccessMessage.style.display = 'flex'; 
     video.style.display = 'none'; 
     countdownElement.style.display = 'none'; 
+    visualCountdown.style.display = 'none'; // Ensure new countdown is also hidden
     cameraLoadingSpinner.classList.add('hidden-spinner'); 
 }
 
@@ -61,6 +66,7 @@ function showCameraLoadingSpinner(show) {
         cameraLoadingSpinner.classList.remove('hidden-spinner');
         video.style.display = 'none'; 
         cameraAccessMessage.style.display = 'none'; 
+        visualCountdown.style.opacity = 0; // Hide visual countdown while loading
     } else {
         cameraLoadingSpinner.classList.add('hidden-spinner');
         if (cameraAccessMessage.style.display === 'none') {
@@ -296,16 +302,25 @@ async function initiateCaptureSequence() {
 function runCountdown(duration) {
     return new Promise(resolve => {
         let count = duration;
-        countdownElement.innerText = count;
-        countdownElement.style.display = 'block';
+        // Show the visual countdown element and ensure its opacity is 1
+        visualCountdown.style.opacity = 1;
+        visualCountdown.style.display = 'block'; // Ensure it's visible if hidden by other states
+        visualCountdown.textContent = count;
+        visualCountdown.classList.add('animate'); // Trigger the pulse animation for the first number
 
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
-                countdownElement.innerText = count;
+                visualCountdown.textContent = count;
+                // Reset and re-apply animation class to trigger animation for subsequent numbers
+                visualCountdown.classList.remove('animate');
+                void visualCountdown.offsetWidth; // Trigger reflow to restart CSS animation
+                visualCountdown.classList.add('animate');
             } else {
                 clearInterval(timer);
-                countdownElement.style.display = 'none';
+                visualCountdown.classList.remove('animate'); // Clean up animation class
+                visualCountdown.style.opacity = 0; // Fade out the last number/countdown
+                visualCountdown.style.display = 'none'; // Hide it completely after fade
                 resolve();
             }
         }, 1000);
@@ -318,6 +333,13 @@ function runCountdown(duration) {
  * before adding to the display and `capturedPhotos` array.
  */
 function takePhoto() {
+    // NEW: Trigger flash effect
+    flashOverlay.classList.add('active');
+    // Remove flash after a very short delay (e.g., 100ms)
+    setTimeout(() => {
+        flashOverlay.classList.remove('active');
+    }, 100); 
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
