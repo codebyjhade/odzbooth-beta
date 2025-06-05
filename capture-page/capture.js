@@ -1,3 +1,5 @@
+// capture-page/capture.js
+
 // Strict mode for cleaner code
 "use strict";
 
@@ -39,6 +41,10 @@ let selectedPhotoIndexForRetake = -1; // -1 means no photo is selected for retak
 
 // NEW: State for retake preparation
 let isReadyToRetake = false; // True when a photo is selected and 'Retake Selected Photo' is pressed, waiting for 'Start Retake'
+
+// NEW: Web Worker for image processing
+let imageProcessorWorker = null;
+let offscreenCanvasInstance = null;
 
 
 // --- Utility Functions ---
@@ -121,6 +127,13 @@ function updateVideoAspectRatio(aspectRatio) {
     if (videoPreviewArea) {
         videoPreviewArea.style.setProperty('--video-aspect-ratio', `${aspectRatio}`);
         console.log(`Video preview aspect ratio set to: ${aspectRatio}`);
+    }
+    // NEW: Also inform the worker about the aspect ratio change
+    if (imageProcessorWorker) {
+        imageProcessorWorker.postMessage({
+            type: 'UPDATE_SETTINGS',
+            payload: { aspectRatio: aspectRatio }
+        });
     }
 }
 
@@ -247,6 +260,10 @@ async function startCamera(deviceId) {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
+                // Using ideal 1280x720, but this will now be processed by OffscreenCanvas
+                // This gives good quality while offloading work from the main thread.
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             },
             audio: false 
         };
@@ -260,6 +277,9 @@ async function startCamera(deviceId) {
             setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
             console.log(`Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
+            
+            // NEW: Initialize OffscreenCanvas and Web Worker once video metadata is loaded
+            initializeImageProcessorWorker();
         };
 
     } catch (error) {
@@ -269,6 +289,62 @@ async function startCamera(deviceId) {
         showCameraLoadingSpinner(false); 
     }
 }
+
+/**
+ * NEW: Initializes the Web Worker and OffscreenCanvas.
+ */
+function initializeImageProcessorWorker() {
+    if (offscreenCanvasInstance) {
+        // If already initialized, send a message to clean up the old worker
+        imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
+        imageProcessorWorker.terminate();
+    }
+
+    // Create an OffscreenCanvas from a temporary HTML canvas element
+    // This allows us to pass it to the worker.
+    const tempCanvas = document.createElement('canvas');
+    offscreenCanvasInstance = tempCanvas.transferControlToOffscreen();
+
+    // Create the Web Worker
+    // Make sure the path to image-processor.js is correct relative to capture.js
+    imageProcessorWorker = new Worker('capture-page/image-processor.js');
+
+    // Send the OffscreenCanvas to the worker (transferable)
+    imageProcessorWorker.postMessage({
+        type: 'INIT',
+        payload: {
+            canvas: offscreenCanvasInstance,
+            aspectRatio: photoFrameAspectRatio // Initial aspect ratio
+        }
+    }, [offscreenCanvasInstance]); // IMPORTANT: Transfer the OffscreenCanvas
+
+    // Listen for messages back from the worker
+    imageProcessorWorker.onmessage = (event) => {
+        if (event.data.type === 'FRAME_PROCESSED') {
+            const { imgData, indexToReplace } = event.data.payload;
+            handleProcessedPhoto(imgData, indexToReplace); // Process the photo on the main thread
+            showPhotoProcessingSpinner(false); // Hide spinner after processing is done
+        }
+    };
+
+    imageProcessorWorker.onerror = (error) => {
+        console.error('Web Worker error:', error);
+        showPhotoProcessingSpinner(false);
+        // Handle worker errors, e.g., show an error message to the user
+        displayCameraMessage(
+            'Photo processing error.',
+            'error',
+            'A background process failed. Please refresh the page.'
+        );
+    };
+
+    // Initial filter setting for the worker
+    imageProcessorWorker.postMessage({
+        type: 'UPDATE_SETTINGS',
+        payload: { filter: filterSelect.value }
+    });
+}
+
 
 // --- Photo Capture and Management Logic ---
 
@@ -339,43 +415,32 @@ function runCountdown(duration) {
 }
 
 /**
- * Captures a single frame from the video feed.
+ * NEW: Sends a video frame to the Web Worker for processing.
  * @param {number} [indexToReplace=-1] - The index in capturedPhotos array to replace. If -1, a new photo is added.
  */
-function takePhoto(indexToReplace = -1) {
-    flashOverlay.classList.add('active');
-    setTimeout(() => {
-        flashOverlay.classList.remove('active');
-    }, 100); 
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    const videoActualWidth = video.videoWidth;
-    const videoActualHeight = video.videoHeight;
-    const videoActualAspectRatio = videoActualWidth / videoActualHeight;
-
-    let sx = 0; 
-    let sy = 0; 
-    let sWidth = videoActualWidth; 
-    let sHeight = videoActualHeight; 
-
-    if (videoActualAspectRatio > photoFrameAspectRatio) { 
-        sWidth = videoActualHeight * photoFrameAspectRatio;
-        sx = (videoActualWidth - sWidth) / 2; 
-    } else if (videoActualAspectRatio < photoFrameAspectRatio) { 
-        sHeight = videoActualWidth / photoFrameAspectRatio;
-        sy = (videoActualHeight - sHeight) / 2; 
+async function sendFrameToWorker(indexToReplace = -1) {
+    if (!imageProcessorWorker) {
+        console.error('Image processing worker not initialized.');
+        showPhotoProcessingSpinner(false);
+        return;
     }
 
-    canvas.width = sWidth; 
-    canvas.height = sHeight;
+    // Capture a frame as an ImageBitmap. This is efficient as it avoids synchronous pixel reads.
+    const imageBitmap = await createImageBitmap(video);
 
-    ctx.filter = filterSelect.value;
-    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+    // Send the ImageBitmap to the worker. It's a transferable object.
+    imageProcessorWorker.postMessage({
+        type: 'PROCESS_FRAME',
+        payload: { imageBitmap, indexToReplace }
+    }, [imageBitmap]); // IMPORTANT: Transfer the ImageBitmap
+}
 
-    const imgData = canvas.toDataURL('image/png');
-
+/**
+ * NEW: Handles the photo data received back from the worker.
+ * @param {string} imgData - Base64 data URL of the processed image.
+ * @param {number} indexToReplace - The index in capturedPhotos array that was processed.
+ */
+function handleProcessedPhoto(imgData, indexToReplace) {
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
         capturedPhotos[indexToReplace] = imgData; 
         const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
@@ -389,6 +454,7 @@ function takePhoto(indexToReplace = -1) {
     }
     updatePhotoProgressText(); 
 }
+
 
 /**
  * Manages the initial photo capture sequence with countdowns and multiple shots.
@@ -427,9 +493,15 @@ async function initiateCaptureSequence() {
     
     while (capturedPhotos.length < photosToCapture) {
         await runCountdown(3);
+        flashOverlay.classList.add('active');
+        setTimeout(() => {
+            flashOverlay.classList.remove('active');
+        }, 100); 
         showPhotoProcessingSpinner(true); 
-        takePhoto(); 
-        showPhotoProcessingSpinner(false); 
+        // MODIFIED: Call sendFrameToWorker instead of direct takePhoto
+        await sendFrameToWorker(); 
+        
+        // The spinner is hidden by handleProcessedPhoto now
         
         if (capturedPhotos.length < photosToCapture) {
             await new Promise(resolve => setTimeout(resolve, 1000)); 
@@ -507,9 +579,14 @@ async function executeRetakeCapture() {
     captureBtn.disabled = true; // Disable "Start Retake" button itself
 
     await runCountdown(3);
+    flashOverlay.classList.add('active');
+    setTimeout(() => {
+        flashOverlay.classList.remove('active');
+    }, 100); 
     showPhotoProcessingSpinner(true);
-    takePhoto(selectedPhotoIndexForRetake); // Capture and replace the selected photo
-    showPhotoProcessingSpinner(false);
+    // MODIFIED: Call sendFrameToWorker for retake
+    await sendFrameToWorker(selectedPhotoIndexForRetake); // Capture and replace the selected photo
+    // Spinner hidden by handleProcessedPhoto
 
     exitRetakePreparationState(); // Reset UI state after capture
 }
@@ -580,29 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
     populateCameraList();
     updatePhotoProgressText(); 
     updateRetakeButtonState(); 
-
-    // The following block was previously trying to load photos, which contradicts the
-    // desired behavior of starting fresh. It has been removed.
-    /*
-    const storedPhotos = localStorage.getItem('capturedPhotos');
-    if (storedPhotos) {
-        capturedPhotos = JSON.parse(storedPhotos);
-        photosCapturedCount = capturedPhotos.length; 
-        
-        const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
-        photosToCapture = parseInt(storedPhotoCount, 10);
-        if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture === 5) {
-            photosToCapture = capturedPhotos.length > 0 ? capturedPhotos.length : 3; 
-        }
-
-        renderPhotoGrid(); 
-        updatePhotoProgressText(); 
-
-        if (capturedPhotos.length === photosToCapture) {
-            enterRetakeMode();
-        }
-    }
-    */
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -610,7 +664,15 @@ cameraSelect.addEventListener('change', (event) => {
 });
 
 filterSelect.addEventListener('change', () => {
-    video.style.filter = filterSelect.value;
+    const selectedFilter = filterSelect.value;
+    video.style.filter = selectedFilter; // Still apply to live feed for preview
+    // NEW: Inform the worker about the filter change
+    if (imageProcessorWorker) {
+        imageProcessorWorker.postMessage({
+            type: 'UPDATE_SETTINGS',
+            payload: { filter: selectedFilter }
+        });
+    }
 });
 
 // MODIFIED: Capture button listener now handles both initial capture and starting a retake
@@ -640,4 +702,17 @@ photoGrid.addEventListener('click', handlePhotoSelection);
 // Invert Camera Button Listener
 invertCameraButton.addEventListener('click', () => {
     video.classList.toggle('inverted');
+});
+
+// NEW: Add a cleanup for the worker when navigating away or closing the page
+window.addEventListener('beforeunload', () => {
+    if (imageProcessorWorker) {
+        imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
+        imageProcessorWorker.terminate();
+        imageProcessorWorker = null;
+    }
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+    }
 });
