@@ -18,15 +18,17 @@ self.onmessage = async (event) => {
             offscreenCanvas = payload.canvas;
             offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
             photoFrameAspectRatio = payload.aspectRatio;
-            console.log('Worker initialized with OffscreenCanvas.');
+            console.log('Worker: Initialized with OffscreenCanvas.');
             break;
 
         case 'PROCESS_FRAME':
             // The main thread sends an ImageBitmap (frame from video) and other capture details
             const { imageBitmap, indexToReplace } = payload;
+            console.log(`Worker: Received PROCESS_FRAME for index ${indexToReplace}.`);
 
             if (!offscreenCanvas || !offscreenCtx) {
-                console.error('OffscreenCanvas not initialized in worker.');
+                console.error('Worker: OffscreenCanvas not initialized.');
+                if (imageBitmap) imageBitmap.close(); // Prevent memory leak
                 return;
             }
 
@@ -56,8 +58,10 @@ self.onmessage = async (event) => {
             // Apply filter (this property is available on OffscreenCanvasRenderingContext2D)
             offscreenCtx.filter = filterToApply;
 
+            console.log('Worker: Drawing image to OffscreenCanvas...');
             // Draw the ImageBitmap onto the OffscreenCanvas
             offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            console.log('Worker: Image drawn. Converting to Blob...');
 
             // Encode to JPEG. This is the heavy part, now off the main thread!
             // Using a high quality for better results
@@ -65,6 +69,7 @@ self.onmessage = async (event) => {
                 type: 'image/jpeg',
                 quality: 0.95
             });
+            console.log('Worker: Blob created. Reading as DataURL...');
 
             // Read the blob as a data URL
             const reader = new FileReader();
@@ -76,6 +81,7 @@ self.onmessage = async (event) => {
                     payload: { imgData, indexToReplace }
                 });
                 imageBitmap.close(); // Release the ImageBitmap memory
+                console.log('Worker: Frame processed and result sent to main thread.');
             };
             reader.readAsDataURL(blob);
             break;
@@ -84,9 +90,11 @@ self.onmessage = async (event) => {
             // Update settings like aspect ratio or filter from the main thread
             if (payload.aspectRatio) {
                 photoFrameAspectRatio = payload.aspectRatio;
+                console.log(`Worker: Aspect ratio updated to ${photoFrameAspectRatio}.`);
             }
             if (payload.filter) {
                 filterToApply = payload.filter;
+                console.log(`Worker: Filter updated to ${filterToApply}.`);
             }
             break;
 
@@ -96,6 +104,7 @@ self.onmessage = async (event) => {
                 imageBitmap.close();
             }
             self.close(); // Terminate the worker
+            console.log('Worker: Worker closed.');
             break;
     }
 };
