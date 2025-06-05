@@ -257,6 +257,17 @@ button:disabled {
     background: #e0b06b; /* Darker secondary */
     color: var(--text-dark);
 }
+/* In capture-page/capture-style.css */
+
+#cameraFeed {
+    /* Your existing styles */
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* Add this line: */
+    will-change: transform, filter; /* Hints to the browser for performance optimization */
+}
 
 #captured-photos-display {
     display: flex;
