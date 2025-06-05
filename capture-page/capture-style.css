@@ -372,6 +372,15 @@ button:disabled {
     display: none;
 }
 
+/* --- NEW: Photo Progress Text Style --- */
+.photo-progress-text {
+    font-size: 1.1em;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
     .photo-booth-wrapper {
