@@ -265,10 +265,9 @@ async function startCamera(deviceId) {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                // MODIFIED: Use min and ideal to allow browser more flexibility.
-                // It will try for 1280x720, but fall back no lower than 640x480 for compatibility.
-                width: { min: 640, ideal: 1280 },
-                height: { min: 480, ideal: 720 }
+                // MODIFIED: Request a more common and compatible resolution (640x480)
+                width: { ideal: 640, min: 480 }, 
+                height: { ideal: 480, min: 360 }  
             },
             audio: false 
         };
