@@ -255,15 +255,16 @@ async function startCamera(deviceId) {
     }
 
     showCameraLoadingSpinner(true); 
+    console.log('Attempting to start camera stream...');
 
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                // Using ideal 1280x720, but this will now be processed by OffscreenCanvas
-                // This gives good quality while offloading work from the main thread.
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                // MODIFIED: Use min and ideal to allow browser more flexibility.
+                // It will try for 1280x720, but fall back no lower than 640x480 for compatibility.
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 }
             },
             audio: false 
         };
@@ -276,6 +277,7 @@ async function startCamera(deviceId) {
             hideCameraMessage();
             setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
+            // Log the actual resolution obtained
             console.log(`Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
             
             // NEW: Initialize OffscreenCanvas and Web Worker once video metadata is loaded
@@ -308,6 +310,7 @@ function initializeImageProcessorWorker() {
     // Create the Web Worker
     // Make sure the path to image-processor.js is correct relative to capture.js
     imageProcessorWorker = new Worker('capture-page/image-processor.js');
+    console.log('Web Worker created.');
 
     // Send the OffscreenCanvas to the worker (transferable)
     imageProcessorWorker.postMessage({
@@ -322,6 +325,7 @@ function initializeImageProcessorWorker() {
     imageProcessorWorker.onmessage = (event) => {
         if (event.data.type === 'FRAME_PROCESSED') {
             const { imgData, indexToReplace } = event.data.payload;
+            console.log('Photo data received from worker.');
             handleProcessedPhoto(imgData, indexToReplace); // Process the photo on the main thread
             showPhotoProcessingSpinner(false); // Hide spinner after processing is done
         }
@@ -420,19 +424,24 @@ function runCountdown(duration) {
  */
 async function sendFrameToWorker(indexToReplace = -1) {
     if (!imageProcessorWorker) {
-        console.error('Image processing worker not initialized.');
+        console.error('Image processing worker not initialized. Cannot send frame.');
         showPhotoProcessingSpinner(false);
         return;
     }
+    
+    showPhotoProcessingSpinner(true); // Show spinner as soon as capture starts
 
+    console.log('Main Thread: Creating ImageBitmap from video...');
     // Capture a frame as an ImageBitmap. This is efficient as it avoids synchronous pixel reads.
     const imageBitmap = await createImageBitmap(video);
+    console.log('Main Thread: ImageBitmap created. Sending to worker...');
 
     // Send the ImageBitmap to the worker. It's a transferable object.
     imageProcessorWorker.postMessage({
         type: 'PROCESS_FRAME',
         payload: { imageBitmap, indexToReplace }
     }, [imageBitmap]); // IMPORTANT: Transfer the ImageBitmap
+    console.log('Main Thread: ImageBitmap sent to worker.');
 }
 
 /**
@@ -447,10 +456,12 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         if (imgElementInDom) {
             imgElementInDom.src = imgData;
         }
+        console.log(`Main Thread: Photo at index ${indexToReplace} updated in grid.`);
     } else {
         capturedPhotos.push(imgData); 
         photosCapturedCount++; 
         addPhotoToGrid(imgData, capturedPhotos.length - 1); 
+        console.log(`Main Thread: New photo added to grid at index ${capturedPhotos.length - 1}.`);
     }
     updatePhotoProgressText(); 
 }
@@ -492,14 +503,15 @@ async function initiateCaptureSequence() {
     }
     
     while (capturedPhotos.length < photosToCapture) {
+        console.log(`Main Thread: Starting countdown for photo ${capturedPhotos.length + 1} of ${photosToCapture}.`);
         await runCountdown(3);
         flashOverlay.classList.add('active');
         setTimeout(() => {
             flashOverlay.classList.remove('active');
         }, 100); 
-        showPhotoProcessingSpinner(true); 
+        
         // MODIFIED: Call sendFrameToWorker instead of direct takePhoto
-        await sendFrameToWorker(); 
+        await sendFrameToWorker(); // Spinner is shown inside sendFrameToWorker
         
         // The spinner is hidden by handleProcessedPhoto now
         
@@ -522,6 +534,7 @@ function enterRetakeMode() {
     
     selectedPhotoIndexForRetake = -1; // Clear any previous selection
     updateRetakeButtonState(); // Ensure button is disabled until selection
+    console.log('Main Thread: Entered retake mode.');
 }
 
 /**
@@ -543,6 +556,7 @@ function handlePhotoSelection(event) {
     if (selectedPhotoIndexForRetake === clickedIndex) {
         clickedWrapper.classList.remove('selected');
         selectedPhotoIndexForRetake = -1;
+        console.log(`Main Thread: Deselected photo ${clickedIndex}.`);
     } else {
         const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
         if (currentlySelected) {
@@ -550,6 +564,7 @@ function handlePhotoSelection(event) {
         }
         clickedWrapper.classList.add('selected');
         selectedPhotoIndexForRetake = clickedIndex;
+        console.log(`Main Thread: Selected photo ${clickedIndex}.`);
     }
     updateRetakeButtonState(); 
 }
@@ -565,6 +580,7 @@ function prepareForRetake() {
     captureBtn.style.display = 'block'; // Show the main capture button
     captureBtn.textContent = `Start Retake Photo ${selectedPhotoIndexForRetake + 1}`; // Change its text
     captureBtn.disabled = false; // Enable it
+    console.log(`Main Thread: Prepared for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
 }
 
 // NEW: Executes the single retake capture (countdown + take photo)
@@ -578,16 +594,18 @@ async function executeRetakeCapture() {
     setCaptureControlsEnabled(true); // Disable controls during countdown/capture
     captureBtn.disabled = true; // Disable "Start Retake" button itself
 
+    console.log(`Main Thread: Starting countdown for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
     await runCountdown(3);
     flashOverlay.classList.add('active');
     setTimeout(() => {
         flashOverlay.classList.remove('active');
     }, 100); 
-    showPhotoProcessingSpinner(true);
+    
     // MODIFIED: Call sendFrameToWorker for retake
     await sendFrameToWorker(selectedPhotoIndexForRetake); // Capture and replace the selected photo
     // Spinner hidden by handleProcessedPhoto
 
+    console.log(`Main Thread: Retake capture for photo ${selectedPhotoIndexForRetake + 1} initiated.`);
     exitRetakePreparationState(); // Reset UI state after capture
 }
 
@@ -609,6 +627,7 @@ function exitRetakePreparationState() {
     selectedPhotoIndexForRetake = -1; // Clear selection
     updateRetakeButtonState(); // Update button state
     setCaptureControlsEnabled(false); // Re-enable camera controls and filters
+    console.log('Main Thread: Exited retake preparation state.');
 }
 
 /**
@@ -630,6 +649,7 @@ async function handleRetakeBtnClick() {
         }
         selectedPhotoIndexForRetake = -1;
         updateRetakeButtonState();
+        console.log('Main Thread: Retake cancelled by user.');
         return;
     }
 
@@ -673,6 +693,7 @@ filterSelect.addEventListener('change', () => {
             payload: { filter: selectedFilter }
         });
     }
+    console.log(`Main Thread: Filter changed to ${selectedFilter}. Worker notified.`);
 });
 
 // MODIFIED: Capture button listener now handles both initial capture and starting a retake
@@ -702,6 +723,7 @@ photoGrid.addEventListener('click', handlePhotoSelection);
 // Invert Camera Button Listener
 invertCameraButton.addEventListener('click', () => {
     video.classList.toggle('inverted');
+    console.log('Main Thread: Camera inversion toggled.');
 });
 
 // NEW: Add a cleanup for the worker when navigating away or closing the page
@@ -710,9 +732,11 @@ window.addEventListener('beforeunload', () => {
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
         imageProcessorWorker = null;
+        console.log('Main Thread: Web Worker terminated on page unload.');
     }
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
+        console.log('Main Thread: Camera stream stopped on page unload.');
     }
 });
