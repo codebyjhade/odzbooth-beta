@@ -244,6 +244,8 @@ async function startCamera(deviceId) {
     showCameraLoadingSpinner(true); 
 
     try {
+        // No specific resolution constraints here; this lets the browser choose the optimal resolution
+        // based on the device's camera and browser capabilities.
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
@@ -360,6 +362,7 @@ function takePhoto(indexToReplace = -1) {
     let sWidth = videoActualWidth; 
     let sHeight = videoActualHeight; 
 
+    // Crop the video feed to match the desired photo frame aspect ratio
     if (videoActualAspectRatio > photoFrameAspectRatio) { 
         sWidth = videoActualHeight * photoFrameAspectRatio;
         sx = (videoActualWidth - sWidth) / 2; 
@@ -368,13 +371,17 @@ function takePhoto(indexToReplace = -1) {
         sy = (videoActualHeight - sHeight) / 2; 
     }
 
+    // Set canvas dimensions to the cropped area derived from the camera's actual resolution
     canvas.width = sWidth; 
     canvas.height = sHeight;
 
     ctx.filter = filterSelect.value;
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
 
-    const imgData = canvas.toDataURL('image/png');
+    // MODIFIED: Changed to JPEG with high quality (0.95) for better performance
+    // JPEG encoding is significantly faster than PNG, especially for photos,
+    // and 0.95 quality provides excellent visual results with smaller file sizes.
+    const imgData = canvas.toDataURL('image/jpeg', 0.95); 
 
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
         capturedPhotos[indexToReplace] = imgData; 
@@ -580,29 +587,6 @@ document.addEventListener('DOMContentLoaded', () => {
     populateCameraList();
     updatePhotoProgressText(); 
     updateRetakeButtonState(); 
-
-    // The following block was previously trying to load photos, which contradicts the
-    // desired behavior of starting fresh. It has been removed.
-    /*
-    const storedPhotos = localStorage.getItem('capturedPhotos');
-    if (storedPhotos) {
-        capturedPhotos = JSON.parse(storedPhotos);
-        photosCapturedCount = capturedPhotos.length; 
-        
-        const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
-        photosToCapture = parseInt(storedPhotoCount, 10);
-        if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture === 5) {
-            photosToCapture = capturedPhotos.length > 0 ? capturedPhotos.length : 3; 
-        }
-
-        renderPhotoGrid(); 
-        updatePhotoProgressText(); 
-
-        if (capturedPhotos.length === photosToCapture) {
-            enterRetakeMode();
-        }
-    }
-    */
 });
 
 cameraSelect.addEventListener('change', (event) => {
