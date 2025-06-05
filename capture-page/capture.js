@@ -244,11 +244,13 @@ async function startCamera(deviceId) {
     showCameraLoadingSpinner(true); 
 
     try {
-        // No specific resolution constraints here; this lets the browser choose the optimal resolution
-        // based on the device's camera and browser capabilities.
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
+                // ADDED: Ideal resolution constraints for better performance on mobile.
+                // This requests a 720p (HD) stream, which balances good quality with faster processing.
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             },
             audio: false 
         };
@@ -378,9 +380,7 @@ function takePhoto(indexToReplace = -1) {
     ctx.filter = filterSelect.value;
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
 
-    // MODIFIED: Changed to JPEG with high quality (0.95) for better performance
-    // JPEG encoding is significantly faster than PNG, especially for photos,
-    // and 0.95 quality provides excellent visual results with smaller file sizes.
+    // MODIFIED PREVIOUSLY: Changed to JPEG with high quality (0.95) for better performance
     const imgData = canvas.toDataURL('image/jpeg', 0.95); 
 
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
