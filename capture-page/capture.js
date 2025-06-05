@@ -22,6 +22,10 @@ const invertCameraButton = document.getElementById('invertCameraButton');
 const visualCountdown = document.getElementById('visualCountdown');
 const flashOverlay = document.getElementById('flashOverlay');
 
+// NEW: Photo Progress Text Element
+const photoProgressText = document.getElementById('photoProgressText');
+
+
 // --- Global State Variables ---
 let currentStream = null; 
 let capturedPhotos = []; // Stores base64 image data
@@ -109,6 +113,15 @@ function updateVideoAspectRatio(aspectRatio) {
         console.log(`Video preview aspect ratio set to: ${aspectRatio}`);
     }
 }
+
+// NEW: Function to update the photo progress text
+function updatePhotoProgressText() {
+    photoProgressText.textContent = `Captured: ${capturedPhotos.length} of ${photosToCapture}`;
+    if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
+        photoProgressText.textContent += ' - All photos captured!';
+    }
+}
+
 
 // --- Camera Management ---
 
@@ -277,6 +290,8 @@ async function initiateCaptureSequence() {
     photosCapturedCount = 0;
     capturedPhotos = []; // Clear previously captured photos
     photoGrid.innerHTML = ''; // Clear displayed photos
+    updatePhotoProgressText(); // NEW: Initialize photo progress text
+
 
     while (photosCapturedCount < photosToCapture) {
         await runCountdown(3);
@@ -284,6 +299,7 @@ async function initiateCaptureSequence() {
         takePhoto();
         showPhotoProcessingSpinner(false); 
         photosCapturedCount++;
+        updatePhotoProgressText(); // NEW: Update photo progress text after each capture
 
         if (photosCapturedCount < photosToCapture) {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between shots
@@ -404,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     populateCameraList();
     updateUndoButtonVisibility(); 
+    updatePhotoProgressText(); // NEW: Call on DOMContentLoaded to set initial text
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -417,12 +434,12 @@ filterSelect.addEventListener('change', () => {
 captureBtn.addEventListener('click', initiateCaptureSequence);
 
 nextBtn.addEventListener('click', () => {
-    // Only proceed if at least one photo is captured
-    if (capturedPhotos.length > 0) {
+    // Only proceed if all required photos are captured
+    if (capturedPhotos.length === photosToCapture) { // NEW: Ensure all photos are captured
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
-        alert("Please capture at least one photo before proceeding to the editor!");
+        alert(`Please capture ${photosToCapture - capturedPhotos.length} more photo(s) before proceeding to the editor!`); // NEW: More specific alert
     }
 });
 
@@ -438,6 +455,7 @@ undoLastPhotoBtn.addEventListener('click', () => {
         photosCapturedCount--; // Decrement the counter
         
         updateUndoButtonVisibility(); 
+        updatePhotoProgressText(); // NEW: Update text after undo
         
         // If all photos are undone, re-enable capture button and hide next/undo
         if (capturedPhotos.length === 0) {
