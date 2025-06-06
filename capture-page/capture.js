@@ -306,38 +306,40 @@ function initializeImageProcessorWorker() {
         console.log('Main Thread: Existing Web Worker terminated.');
     }
 
-    // Create an OffscreenCanvas from a temporary HTML canvas element
-    // This allows us to pass it to the worker.
     const tempCanvas = document.createElement('canvas');
     offscreenCanvasInstance = tempCanvas.transferControlToOffscreen();
 
-    // Create the Web Worker
-    imageProcessorWorker = new Worker('./image-processor.js');
+    imageProcessorWorker = new Worker('capture-page/image-processor.js');
     console.log('Main Thread: Web Worker created.');
 
-    // Send the OffscreenCanvas to the worker (transferable)
     imageProcessorWorker.postMessage({
         type: 'INIT',
         payload: {
             canvas: offscreenCanvasInstance,
-            aspectRatio: photoFrameAspectRatio // Initial aspect ratio
+            aspectRatio: photoFrameAspectRatio
         }
-    }, [offscreenCanvasInstance]); // IMPORTANT: Transfer the OffscreenCanvas
+    }, [offscreenCanvasInstance]);
 
-    // Listen for messages back from the worker
+    // START OF FIX: Handle blob from worker and convert it on the main thread
     imageProcessorWorker.onmessage = (event) => {
         if (event.data.type === 'FRAME_PROCESSED') {
-            const { imgData, indexToReplace } = event.data.payload;
-            console.log('Main Thread: Photo data received from worker.');
-            handleProcessedPhoto(imgData, indexToReplace); // Process the photo on the main thread
-            showPhotoProcessingSpinner(false); // Hide spinner after processing is done
+            const { blob, indexToReplace } = event.data.payload;
+            console.log('Main Thread: Blob received from worker.');
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const imgData = reader.result;
+                handleProcessedPhoto(imgData, indexToReplace);
+                showPhotoProcessingSpinner(false);
+            };
+            reader.readAsDataURL(blob);
         }
     };
+    // END OF FIX
 
     imageProcessorWorker.onerror = (error) => {
         console.error('Main Thread: Web Worker error:', error);
         showPhotoProcessingSpinner(false);
-        // Handle worker errors, e.g., show an error message to the user
         displayCameraMessage(
             'Photo processing error.',
             'error',
@@ -345,7 +347,6 @@ function initializeImageProcessorWorker() {
         );
     };
 
-    // Initial filter setting for the worker
     imageProcessorWorker.postMessage({
         type: 'UPDATE_SETTINGS',
         payload: { filter: filterSelect.value }
@@ -371,7 +372,6 @@ function addPhotoToGrid(imgData, index) {
     
     wrapper.appendChild(imgElement);
 
-    // If it's a replacement, find the existing element and replace it
     const existingWrapper = photoGrid.querySelector(`[data-index="${index}"]`);
     if (existingWrapper) {
         photoGrid.replaceChild(wrapper, existingWrapper);
@@ -432,18 +432,14 @@ async function sendFrameToWorker(indexToReplace = -1) {
         return;
     }
     
-    showPhotoProcessingSpinner(true); // Show spinner as soon as capture starts
+    showPhotoProcessingSpinner(true); 
 
-    console.log('Main Thread: Creating ImageBitmap from video...');
-    // Capture a frame as an ImageBitmap. This is efficient as it avoids synchronous pixel reads.
     const imageBitmap = await createImageBitmap(video);
-    console.log('Main Thread: ImageBitmap created. Sending to worker...');
 
-    // Send the ImageBitmap to the worker. It's a transferable object.
     imageProcessorWorker.postMessage({
         type: 'PROCESS_FRAME',
         payload: { imageBitmap, indexToReplace }
-    }, [imageBitmap]); // IMPORTANT: Transfer the ImageBitmap
+    }, [imageBitmap]);
     console.log('Main Thread: ImageBitmap sent to worker.');
 }
 
@@ -513,10 +509,7 @@ async function initiateCaptureSequence() {
             flashOverlay.classList.remove('active');
         }, 100); 
         
-        // MODIFIED: Call sendFrameToWorker instead of direct takePhoto
-        await sendFrameToWorker(); // Spinner is shown inside sendFrameToWorker
-        
-        // The spinner is hidden by handleProcessedPhoto now
+        await sendFrameToWorker();
         
         if (capturedPhotos.length < photosToCapture) {
             await new Promise(resolve => setTimeout(resolve, 1000)); 
@@ -530,13 +523,13 @@ async function initiateCaptureSequence() {
  * Transitions the UI into a state where photos can be selected for retake.
  */
 function enterRetakeMode() {
-    setCaptureControlsEnabled(false); // Enable camera controls initially
-    captureBtn.style.display = 'none'; // Hide primary capture button
-    nextBtn.style.display = 'block'; // Show next button
-    retakeSelectedPhotoBtn.style.display = 'flex'; // Show retake button
+    setCaptureControlsEnabled(false);
+    captureBtn.style.display = 'none';
+    nextBtn.style.display = 'block';
+    retakeSelectedPhotoBtn.style.display = 'flex';
     
-    selectedPhotoIndexForRetake = -1; // Clear any previous selection
-    updateRetakeButtonState(); // Ensure button is disabled until selection
+    selectedPhotoIndexForRetake = -1;
+    updateRetakeButtonState();
     console.log('Main Thread: Entered retake mode.');
 }
 
@@ -548,7 +541,6 @@ function handlePhotoSelection(event) {
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
     if (!clickedWrapper) return;
 
-    // Do not allow selection if currently preparing for a retake (i.e., 'Start Retake' button is visible)
     if (isReadyToRetake) {
         alert('Finish the current retake preparation or click "Start Capture" to proceed.');
         return;
@@ -575,14 +567,14 @@ function handlePhotoSelection(event) {
 // NEW: Prepares the UI for a single retake capture
 function prepareForRetake() {
     isReadyToRetake = true;
-    setCaptureControlsEnabled(true); // Disable camera controls during preparation (re-enable capture button)
+    setCaptureControlsEnabled(true);
     
-    retakeSelectedPhotoBtn.style.display = 'none'; // Hide retake button
-    nextBtn.style.display = 'none'; // Hide next button
+    retakeSelectedPhotoBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
 
-    captureBtn.style.display = 'block'; // Show the main capture button
-    captureBtn.textContent = `Start Retake Photo ${selectedPhotoIndexForRetake + 1}`; // Change its text
-    captureBtn.disabled = false; // Enable it
+    captureBtn.style.display = 'block';
+    captureBtn.textContent = `Start Retake Photo ${selectedPhotoIndexForRetake + 1}`;
+    captureBtn.disabled = false;
     console.log(`Main Thread: Prepared for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
 }
 
@@ -594,8 +586,8 @@ async function executeRetakeCapture() {
         return;
     }
 
-    setCaptureControlsEnabled(true); // Disable controls during countdown/capture
-    captureBtn.disabled = true; // Disable "Start Retake" button itself
+    setCaptureControlsEnabled(true);
+    captureBtn.disabled = true;
 
     console.log(`Main Thread: Starting countdown for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
     await runCountdown(3);
@@ -604,32 +596,29 @@ async function executeRetakeCapture() {
         flashOverlay.classList.remove('active');
     }, 100); 
     
-    // MODIFIED: Call sendFrameToWorker for retake
-    await sendFrameToWorker(selectedPhotoIndexForRetake); // Capture and replace the selected photo
-    // Spinner hidden by handleProcessedPhoto
+    await sendFrameToWorker(selectedPhotoIndexForRetake);
 
     console.log(`Main Thread: Retake capture for photo ${selectedPhotoIndexForRetake + 1} initiated.`);
-    exitRetakePreparationState(); // Reset UI state after capture
+    exitRetakePreparationState();
 }
 
 // NEW: Resets the UI state after a retake operation
 function exitRetakePreparationState() {
     isReadyToRetake = false;
     
-    captureBtn.style.display = 'none'; // Hide the 'Start Retake' button
-    captureBtn.textContent = 'Start Capture'; // Reset its text
+    captureBtn.style.display = 'none';
+    captureBtn.textContent = 'Start Capture';
     
-    retakeSelectedPhotoBtn.style.display = 'flex'; // Show 'Retake Selected' button
-    nextBtn.style.display = 'block'; // Show 'Go to Editor' button
+    retakeSelectedPhotoBtn.style.display = 'flex';
+    nextBtn.style.display = 'block';
 
-    // Deselect the photo visually
     const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
     if (selectedWrapper) {
         selectedWrapper.classList.remove('selected');
     }
-    selectedPhotoIndexForRetake = -1; // Clear selection
-    updateRetakeButtonState(); // Update button state
-    setCaptureControlsEnabled(false); // Re-enable camera controls and filters
+    selectedPhotoIndexForRetake = -1;
+    updateRetakeButtonState();
+    setCaptureControlsEnabled(false);
     console.log('Main Thread: Exited retake preparation state.');
 }
 
@@ -656,7 +645,6 @@ async function handleRetakeBtnClick() {
 
     prepareForRetake();
 
-    // START OF FIX: Ensure video is playing after UI transition to prevent freezing on mobile
     if (video.paused) {
         console.log("Main Thread: Video was paused, attempting to play it again.");
         try {
@@ -667,7 +655,6 @@ async function handleRetakeBtnClick() {
             displayCameraMessage('Camera feed paused.', 'warning', 'Could not resume the camera feed. Please try again.');
         }
     }
-    // END OF FIX
 }
 
 
@@ -719,7 +706,7 @@ retakeSelectedPhotoBtn.addEventListener('click', handleRetakeBtnClick);
 nextBtn.addEventListener('click', () => {
     if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
-        window.location.href = '../editing-page/editing-home.html';
+        window.location.href = 'editing-page/editing-home.html';
     } else {
         const remaining = photosToCapture - capturedPhotos.length;
         alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
