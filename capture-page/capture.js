@@ -153,7 +153,7 @@ function updatePhotoProgressText() {
 function updateRetakeButtonState() {
     // Retake button enabled only if a photo is selected AND we are NOT in the 'ready to retake' state
     retakeSelectedPhotoBtn.disabled = (selectedPhotoIndexForRetake === -1 || isReadyToRetake);
-    retakeSelectedPhotoBtn.style.display = isReadyToRetake ? 'none' : 'block'; // Hide if ready to retake
+    retakeSelectedPhotoBtn.style.display = isReadyToRetake ? 'none' : 'flex'; // Hide if ready to retake
 }
 
 // --- Camera Management ---
@@ -299,7 +299,7 @@ async function startCamera(deviceId) {
  * NEW: Initializes the Web Worker and OffscreenCanvas.
  */
 function initializeImageProcessorWorker() {
-    if (offscreenCanvasInstance) {
+    if (imageProcessorWorker) {
         // If already initialized, send a message to clean up the old worker
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
@@ -312,8 +312,7 @@ function initializeImageProcessorWorker() {
     offscreenCanvasInstance = tempCanvas.transferControlToOffscreen();
 
     // Create the Web Worker
-    // Make sure the path to image-processor.js is correct relative to capture.js
-    imageProcessorWorker = new Worker('capture-page/image-processor.js');
+    imageProcessorWorker = new Worker('./image-processor.js');
     console.log('Main Thread: Web Worker created.');
 
     // Send the OffscreenCanvas to the worker (transferable)
@@ -534,7 +533,7 @@ function enterRetakeMode() {
     setCaptureControlsEnabled(false); // Enable camera controls initially
     captureBtn.style.display = 'none'; // Hide primary capture button
     nextBtn.style.display = 'block'; // Show next button
-    retakeSelectedPhotoBtn.style.display = 'block'; // Show retake button
+    retakeSelectedPhotoBtn.style.display = 'flex'; // Show retake button
     
     selectedPhotoIndexForRetake = -1; // Clear any previous selection
     updateRetakeButtonState(); // Ensure button is disabled until selection
@@ -620,7 +619,7 @@ function exitRetakePreparationState() {
     captureBtn.style.display = 'none'; // Hide the 'Start Retake' button
     captureBtn.textContent = 'Start Capture'; // Reset its text
     
-    retakeSelectedPhotoBtn.style.display = 'block'; // Show 'Retake Selected' button
+    retakeSelectedPhotoBtn.style.display = 'flex'; // Show 'Retake Selected' button
     nextBtn.style.display = 'block'; // Show 'Go to Editor' button
 
     // Deselect the photo visually
@@ -643,10 +642,8 @@ async function handleRetakeBtnClick() {
         return;
     }
 
-    // Optional confirmation, can be removed if desired
     const confirmRetake = confirm(`You are about to retake photo ${selectedPhotoIndexForRetake + 1}. Proceed?`);
     if (!confirmRetake) {
-        // Deselect the photo if user cancels confirmation
         const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
         if (selectedWrapper) {
             selectedWrapper.classList.remove('selected');
@@ -657,18 +654,28 @@ async function handleRetakeBtnClick() {
         return;
     }
 
-    prepareForRetake(); // Enter the preparation state
+    prepareForRetake();
+
+    // START OF FIX: Ensure video is playing after UI transition to prevent freezing on mobile
+    if (video.paused) {
+        console.log("Main Thread: Video was paused, attempting to play it again.");
+        try {
+            await video.play();
+            console.log("Main Thread: Video playback resumed successfully.");
+        } catch (error) {
+            console.error("Main Thread: Error trying to resume video playback:", error);
+            displayCameraMessage('Camera feed paused.', 'warning', 'Could not resume the camera feed. Please try again.');
+        }
+    }
+    // END OF FIX
 }
 
 
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // START OF FIX: Clear any previously captured photos from localStorage and the display
-    // This ensures a clean slate when the capture page is loaded, preventing old photos from showing.
     localStorage.removeItem('capturedPhotos'); 
     photoGrid.innerHTML = ''; 
-    // END OF FIX
 
     const storedAspectRatio = localStorage.getItem('selectedFrameAspectRatio');
     if (storedAspectRatio) {
@@ -689,8 +696,7 @@ cameraSelect.addEventListener('change', (event) => {
 
 filterSelect.addEventListener('change', () => {
     const selectedFilter = filterSelect.value;
-    video.style.filter = selectedFilter; // Still apply to live feed for preview
-    // NEW: Inform the worker about the filter change
+    video.style.filter = selectedFilter; 
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({
             type: 'UPDATE_SETTINGS',
@@ -700,37 +706,33 @@ filterSelect.addEventListener('change', () => {
     console.log(`Main Thread: Filter changed to ${selectedFilter}. Worker notified.`);
 });
 
-// MODIFIED: Capture button listener now handles both initial capture and starting a retake
 captureBtn.addEventListener('click', () => {
     if (isReadyToRetake) {
-        executeRetakeCapture(); // Start the countdown and capture for retake
+        executeRetakeCapture(); 
     } else {
-        initiateCaptureSequence(); // Start the initial multi-photo capture sequence
+        initiateCaptureSequence(); 
     }
 });
 
-// Event listener for the retake selected photo button
 retakeSelectedPhotoBtn.addEventListener('click', handleRetakeBtnClick);
 
 nextBtn.addEventListener('click', () => {
-    if (capturedPhotos.length === photosToCapture) { 
+    if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
-        window.location.href = 'editing-page/editing-home.html';
+        window.location.href = '../editing-page/editing-home.html';
     } else {
-        alert(`Please capture ${photosToCapture - capturedPhotos.length} more photo(s) before proceeding to the editor!`); 
+        const remaining = photosToCapture - capturedPhotos.length;
+        alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
 });
 
-// Event listener for clicking on a photo in the grid (using event delegation)
 photoGrid.addEventListener('click', handlePhotoSelection);
 
-// Invert Camera Button Listener
 invertCameraButton.addEventListener('click', () => {
     video.classList.toggle('inverted');
     console.log('Main Thread: Camera inversion toggled.');
 });
 
-// NEW: Add a cleanup for the worker when navigating away or closing the page
 window.addEventListener('beforeunload', () => {
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
