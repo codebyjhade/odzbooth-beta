@@ -51,39 +51,30 @@ self.onmessage = async (event) => {
             }
 
             // Set offscreen canvas dimensions to the cropped area
-            // This is crucial for performance: draw only what's needed.
             offscreenCanvas.width = sWidth;
             offscreenCanvas.height = sHeight;
 
-            // Apply filter (this property is available on OffscreenCanvasRenderingContext2D)
+            // Apply filter
             offscreenCtx.filter = filterToApply;
 
-            console.log('Worker: Drawing image to OffscreenCanvas...');
             // Draw the ImageBitmap onto the OffscreenCanvas
             offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
-            console.log('Worker: Image drawn. Converting to Blob...');
 
             // Encode to JPEG. This is the heavy part, now off the main thread!
-            // Using a high quality for better results
             const blob = await offscreenCanvas.convertToBlob({
                 type: 'image/jpeg',
                 quality: 0.95
             });
-            console.log('Worker: Blob created. Reading as DataURL...');
 
-            // Read the blob as a data URL
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const imgData = reader.result;
-                // Send the result back to the main thread
-                self.postMessage({
-                    type: 'FRAME_PROCESSED',
-                    payload: { imgData, indexToReplace }
-                });
-                imageBitmap.close(); // Release the ImageBitmap memory
-                console.log('Worker: Frame processed and result sent to main thread.');
-            };
-            reader.readAsDataURL(blob);
+            // START OF FIX: Post the blob directly, as FileReader is not available in workers.
+            self.postMessage({
+                type: 'FRAME_PROCESSED',
+                payload: { blob, indexToReplace }
+            });
+            // END OF FIX
+
+            imageBitmap.close(); // Release the ImageBitmap memory
+            console.log('Worker: Frame processed and blob sent to main thread.');
             break;
 
         case 'UPDATE_SETTINGS':
@@ -99,11 +90,8 @@ self.onmessage = async (event) => {
             break;
 
         case 'CLOSE_WORKER':
-            // START OF FIX: Removed faulty reference to imageBitmap
-            // This prevents the worker from crashing on page unload.
             self.close(); // Terminate the worker
             console.log('Worker: Worker closed.');
-            // END OF FIX
             break;
     }
 };
