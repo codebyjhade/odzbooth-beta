@@ -535,6 +535,9 @@ async function renderCanvas() {
 
     // Draw all user drawings
     drawDrawingsOnCanvas(DOMElements.ctx, appState.drawings);
+    
+    // Draw the date on the canvas
+    drawDateOnCanvas(DOMElements.ctx);
 
     // Draw selection handles for the currently selected draggable object
     if (appState.selectedDraggable && !appState.isDrawMode) {
@@ -776,6 +779,36 @@ function drawSelectionHandles(targetCtx, obj) {
     targetCtx.stroke();
 
     targetCtx.restore(); // Restore context to original state
+}
+
+/**
+ * Draws the current Philippine date (YYYY.MM.DD) at the bottom of the strip.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
+ */
+function drawDateOnCanvas(targetCtx) {
+    // Get current date and format it
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed, pad with '0'
+    const day = String(now.getDate()).padStart(2, '0'); // Pad with '0'
+    const dateString = `${year}.${month}.${day}`;
+
+    // Get canvas dimensions
+    const canvasWidth = targetCtx.canvas.width;
+    const canvasHeight = targetCtx.canvas.height;
+
+    // Set text properties
+    targetCtx.font = "24px 'Poppins', sans-serif";
+    targetCtx.fillStyle = '#333333'; // Dark gray, good for most backgrounds
+    targetCtx.textAlign = 'center';
+    targetCtx.textBaseline = 'bottom';
+
+    // Calculate position (centered, near the bottom)
+    const x = canvasWidth / 2;
+    const y = canvasHeight - 30; // 30px padding from the bottom edge
+
+    // Draw the text
+    targetCtx.fillText(dateString, x, y);
 }
 
 
@@ -1302,6 +1335,9 @@ async function createFinalStripCanvas() {
     drawDraggableObjectsOnCanvas(finalCtx, appState.stickers);
     drawDraggableObjectsOnCanvas(finalCtx, appState.texts);
     drawDrawingsOnCanvas(finalCtx, appState.drawings);
+    
+    // Draw the date on the final canvas
+    drawDateOnCanvas(finalCtx);
 
     // Restore the selection on the main editing canvas after the final image is created.
     // This is important so the user's current selection state is not lost.
