@@ -798,14 +798,14 @@ function drawDateOnCanvas(targetCtx) {
     const canvasHeight = targetCtx.canvas.height;
 
     // Set text properties
-    targetCtx.font = "24px 'Poppins', sans-serif";
+    targetCtx.font = "21.3px 'Poppins', sans-serif";
     targetCtx.fillStyle = '#333333'; // Dark gray, good for most backgrounds
     targetCtx.textAlign = 'center';
     targetCtx.textBaseline = 'bottom';
 
     // Calculate position (centered, near the bottom)
     const x = canvasWidth / 2;
-    const y = canvasHeight - 30; // 30px padding from the bottom edge
+    const y = canvasHeight - 15; // 15px padding from the bottom edge
 
     // Draw the text
     targetCtx.fillText(dateString, x, y);
