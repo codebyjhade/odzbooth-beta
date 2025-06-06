@@ -99,12 +99,11 @@ self.onmessage = async (event) => {
             break;
 
         case 'CLOSE_WORKER':
-            // Clean up if necessary
-            if (imageBitmap) {
-                imageBitmap.close();
-            }
+            // START OF FIX: Removed faulty reference to imageBitmap
+            // This prevents the worker from crashing on page unload.
             self.close(); // Terminate the worker
             console.log('Worker: Worker closed.');
+            // END OF FIX
             break;
     }
 };
