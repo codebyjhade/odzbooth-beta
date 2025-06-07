@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="capture-page/capture-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="capture-page/capture.js"></script>
+    <script defer src="capture-page/capture.js"></script>
 </head>
 <body>
 
@@ -19,7 +19,7 @@
 
     <div class="photo-booth-wrapper">
         <div class="photobooth-container">
-           <div class="video-preview-area" id="videoPreviewArea">
+           <div class="video-preview-area">
                 <video id="cameraFeed" autoplay playsinline></video>
                 <div id="flashOverlay" class="flash-overlay"></div>
                 <div id="visualCountdown" class="visual-countdown"></div>
@@ -32,10 +32,7 @@
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
                 </div>
-                <!-- Fullscreen Capture Button Container -->
-                <div id="fullscreenCaptureBtnContainer" class="fullscreen-capture-btn-container">
-                    <!-- The capture button will be moved here when in fullscreen -->
-                </div>
+                <button id="fullscreenCaptureBtn" class="fullscreen-capture-btn" style="display: none;">Start Capture</button>
             </div>
 
             <div class="controls-panel">
@@ -66,18 +63,15 @@
                 <button id="captureBtn">Start Capture</button>
                 <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
             </div>
-            
-            <div class="additional-buttons">
-                <button id="invertCameraButton" class="secondary-btn">
-                    <i class="fas fa-sync-alt"></i> Invert Camera
-                </button>
-                <button id="fullscreenBtn" class="secondary-btn">
-                    <i class="fas fa-expand"></i> Toggle Fullscreen
-                </button>
-                <button id="backToLayoutBtn" class="secondary-btn">
-                    <i class="fas fa-arrow-left"></i> Back to Layout Selection
-                </button>
-            </div>
+            <button id="invertCameraButton" class="secondary-btn" style="margin-top: 15px;">
+                <i class="fas fa-sync-alt"></i> Invert Camera
+            </button>
+            <button id="toggleFullscreenBtn" class="secondary-btn" style="margin-top: 15px;">
+                <i class="fas fa-expand"></i> Toggle Fullscreen
+            </button>
+            <button id="backToLayoutBtn" class="secondary-btn" style="margin-top: 15px;">
+                <i class="fas fa-arrow-left"></i> Back to Layout Selection
+            </button>
         </div>
 
         <div id="captured-photos-display">
