@@ -66,12 +66,10 @@ self.onmessage = async (event) => {
                 quality: 0.95
             });
 
-            // START OF FIX: Post the blob directly, as FileReader is not available in workers.
             self.postMessage({
                 type: 'FRAME_PROCESSED',
                 payload: { blob, indexToReplace }
             });
-            // END OF FIX
 
             imageBitmap.close(); // Release the ImageBitmap memory
             console.log('Worker: Frame processed and blob sent to main thread.');
