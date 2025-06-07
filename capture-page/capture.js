@@ -602,7 +602,7 @@ const handleCaptureClick = () => {
 };
 
 captureBtn.addEventListener('click', handleCaptureClick); // Original capture button
-fullscreenCaptureBtn.addEventListener('click', handleCaptureClick); // NEW: Fullscreen capture button
+fullscreenCaptureBtn.addEventListener('click', handleCaptureClick); // NEW: Fullscreen capture button added here
 
 nextBtn.addEventListener('click', () => {
     if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
