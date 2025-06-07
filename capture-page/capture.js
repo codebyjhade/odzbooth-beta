@@ -113,6 +113,7 @@ function setCaptureControlsEnabled(disabled) {
     invertCameraButton.disabled = disabled; 
     backToLayoutBtn.disabled = disabled;
     fullscreenToggleBtn.disabled = disabled;
+    nextBtn.disabled = disabled; // Disable next button too
 }
 
 /**
@@ -140,6 +141,15 @@ function updatePhotoProgressText() {
         photoProgressText.textContent += ' - All photos captured!';
     } else if (photosToCapture > 0 && capturedPhotos.length < photosToCapture) {
         photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
+    }
+    
+    // Control "Go to Editor" button visibility
+    if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
+        nextBtn.style.display = 'block';
+        nextBtn.disabled = false;
+    } else {
+        nextBtn.style.display = 'none';
+        nextBtn.disabled = true;
     }
 }
 
@@ -462,10 +472,12 @@ async function initiateCaptureSequence() {
     }
 
     setCaptureControlsEnabled(true); 
-    captureBtn.style.display = 'none'; 
+    captureBtn.style.display = 'none'; // Hide capture button during sequence
     nextBtn.style.display = 'none'; 
     backToLayoutBtn.style.display = 'none'; 
     fullscreenToggleBtn.style.display = 'none';
+    invertCameraButton.style.display = 'none'; // Hide invert button during capture sequence
+
 
     if (capturedPhotos.length === 0) {
         photoGrid.innerHTML = ''; 
@@ -487,9 +499,9 @@ async function initiateCaptureSequence() {
     }
 
     setCaptureControlsEnabled(false); 
-    nextBtn.style.display = 'block'; 
     backToLayoutBtn.style.display = 'block'; 
     fullscreenToggleBtn.style.display = 'block';
+    invertCameraButton.style.display = 'block'; // Show invert button again
 
     if (capturedPhotos.length < photosToCapture) {
         captureBtn.disabled = false;
@@ -497,6 +509,7 @@ async function initiateCaptureSequence() {
         captureBtn.disabled = true; 
     }
     toggleCaptureButtonPosition(); // Reset button position after capture sequence
+    updatePhotoProgressText(); // Update progress text and next button visibility
 }
 
 /**
@@ -550,12 +563,15 @@ function toggleCaptureButtonPosition() {
         // In fullscreen: move button to videoPreviewArea and show it
         videoPreviewArea.appendChild(captureBtn);
         captureBtn.classList.add('fullscreen-bottom-btn');
-        captureBtn.style.display = 'block';
+        captureBtn.classList.remove('normal-mode-capture-btn'); // Remove normal mode class
+        captureBtn.style.display = 'block'; // Ensure it's visible
     } else {
-        // Not in fullscreen: move button back to photoboothContainer and position above invertCameraButton
-        photoboothContainer.insertBefore(captureBtn, invertCameraButton);
+        // Not in fullscreen: move button back to photoboothContainer and position at top
+        // Insert it as the first child of photoboothContainer
+        photoboothContainer.insertBefore(captureBtn, photoboothContainer.firstChild);
         captureBtn.classList.remove('fullscreen-bottom-btn');
-        captureBtn.style.display = 'block'; // Ensure it's visible outside fullscreen
+        captureBtn.classList.add('normal-mode-capture-btn'); // Add normal mode class for styling
+        captureBtn.style.display = 'block'; // Ensure it's visible
         // Disable if all photos are captured
         if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
             captureBtn.disabled = true;
@@ -584,7 +600,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVideoAspectRatio(4 / 3); 
     }
     populateCameraList();
-    updatePhotoProgressText(); 
+    updatePhotoProgressText(); // Initial call to set nextBtn display
+    toggleCaptureButtonPosition(); // Initial positioning of the capture button
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -611,6 +628,7 @@ nextBtn.addEventListener('click', () => {
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
+        // This scenario should ideally not be reachable if nextBtn is properly disabled/hidden
         const remaining = photosToCapture - capturedPhotos.length;
         alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
