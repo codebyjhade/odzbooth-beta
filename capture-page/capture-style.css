@@ -79,7 +79,7 @@ body {
     border: 6px solid var(--primary-brand-color);
     border-radius: var(--border-radius-soft);
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* Space below video before controls */
     background-color: #000; /* Black background for video placeholder */
     aspect-ratio: var(--video-aspect-ratio); 
     display: flex; /* Ensure flex for centering messages/spinners */
@@ -183,7 +183,7 @@ video.inverted {
     flex-direction: column;
     gap: 18px;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 25px; /* Space below control groups */
 }
 
 .control-group {
@@ -212,13 +212,27 @@ video.inverted {
     background-size: 12px;
 }
 
+/* Container for middle/top buttons (Invert, Fullscreen) */
 .action-buttons {
     display: flex;
+    flex-direction: column; /* Stack buttons vertically */
     gap: 15px;
     width: 100%;
     justify-content: center;
-    flex-wrap: wrap; 
+    align-items: center; /* Center horizontally */
+    margin-bottom: 25px; /* Space above bottom buttons */
 }
+
+/* Container for bottom buttons (Back to Layout, Go to Editor) */
+.bottom-action-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+    align-items: center; /* Center horizontally */
+}
+
 
 button {
     padding: 12px 25px;
@@ -231,6 +245,8 @@ button {
     border-radius: var(--border-radius-soft);
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 10px var(--shadow-light);
+    width: 100%; /* Make buttons full width in their container */
+    max-width: 250px; /* Limit max width for a nicer look */
 }
 
 button:hover:enabled {
@@ -424,21 +440,9 @@ body.fullscreen-active {
 body.fullscreen-active .logo-header,
 body.fullscreen-active .controls-panel,
 body.fullscreen-active #captured-photos-display,
-body.fullscreen-active #nextBtn, 
-body.fullscreen-active #backToLayoutBtn, 
-body.fullscreen-active #invertCameraButton, 
-body.fullscreen-active #fullscreenToggleBtn {
+body.fullscreen-active .action-buttons, /* Hide this group in fullscreen */
+body.fullscreen-active .bottom-action-buttons /* Hide this group in fullscreen */ {
     display: none !important;
-}
-
-body.fullscreen-active .photo-booth-wrapper {
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    flex-direction: column; 
-    justify-content: center;
-    align-items: center;
-    gap: 0;
 }
 
 body.fullscreen-active .photobooth-container {
@@ -450,14 +454,20 @@ body.fullscreen-active .photobooth-container {
     box-shadow: none;
     background: #000; 
     display: flex;
+    flex-direction: column; /* Ensure column layout for content alignment */
     justify-content: center;
     align-items: center;
     margin: 0;
 }
 
+/* The captureBtn is moved into video-preview-area in fullscreen, so it needs to be visible */
+body.fullscreen-active #captureBtn {
+    display: block !important;
+}
+
 body.fullscreen-active .video-preview-area {
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Takes full height in fullscreen */
     max-width: none; 
     margin-bottom: 0;
     border: none;
@@ -487,6 +497,16 @@ body.fullscreen-active video {
     font-size: 1.3em;
     padding: 15px 30px;
 }
+
+/* Style for the capture button when it's at the top in normal mode */
+.photobooth-container > .normal-mode-capture-btn {
+    margin-bottom: 25px; /* Space below the button */
+    /* Ensure it's not absolutely positioned */
+    position: relative; 
+    transform: none; 
+    /* Inherit default button styles for width/max-width */
+}
+
 
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
@@ -523,7 +543,7 @@ body.fullscreen-active video {
         padding: 20px;
     }
 
-    .controls-panel select, .action-buttons button {
+    .controls-panel select, .action-buttons button, .bottom-action-buttons button {
         padding: 10px 15px;
         font-size: 1em;
     }
