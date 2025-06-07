@@ -486,11 +486,12 @@ body.fullscreen-active video {
     border-radius: 0;
 }
 
+/* Style for the capture button when it's in fullscreen mode */
 .fullscreen-bottom-btn {
     position: absolute;
-    bottom: 20px; 
+    bottom: 50px; /* Increased from 20px to give more space from the bottom */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); /* Centers the button horizontally */
     z-index: 30; 
     width: auto; 
     min-width: 180px; 
