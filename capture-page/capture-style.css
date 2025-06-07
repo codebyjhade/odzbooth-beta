@@ -257,16 +257,13 @@ button:disabled {
     background: #e0b06b; /* Darker secondary */
     color: var(--text-dark);
 }
-/* In capture-page/capture-style.css */
 
 #cameraFeed {
-    /* Your existing styles */
     object-fit: cover;
     width: 100%;
     height: 100%;
     display: block;
-    /* Add this line: */
-    will-change: transform, filter; /* Hints to the browser for performance optimization */
+    will-change: transform, filter;
 }
 
 #captured-photos-display {
@@ -426,40 +423,6 @@ button:disabled {
     border-radius: var(--border-radius-soft); /* Inherit border radius */
 }
 
-/* Style for the retake button */
-#retakeSelectedPhotoBtn {
-    background-color: var(--accent-color); /* Use accent color for this button */
-    color: var(--text-light);
-    border: none;
-    padding: 12px 25px;
-    border-radius: 25px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: var(--shadow-medium);
-}
-
-#retakeSelectedPhotoBtn:hover:not(:disabled) {
-    background-color: var(--button-hover-accent); /* Darker accent on hover */
-    transform: translateY(-2px);
-}
-
-#retakeSelectedPhotoBtn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-
-#retakeSelectedPhotoBtn i {
-    font-size: 1.2em;
-}
-
 /* Fullscreen mode styles */
 .video-preview-area.fullscreen {
     position: fixed;
@@ -473,16 +436,26 @@ button:disabled {
     border: none;
     z-index: 9999; /* Bring to front */
     margin-bottom: 0; /* Remove margin */
+    /* Ensure content is centered if video aspect ratio doesn't match screen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black; /* Fill background with black for letterboxing */
 }
 
 .video-preview-area.fullscreen video {
     object-fit: contain; /* Contain video within screen, black bars if aspect ratios differ */
     border-radius: 0;
+    width: auto; /* Allow video to size based on contain */
+    height: 100%; /* Fill height */
+    max-width: 100%; /* Don't overflow width */
 }
 
+
+/* Make sure fullscreen capture button is centered and visible */
 .fullscreen-capture-btn {
     position: absolute;
-    bottom: 30px;
+    bottom: 30px; /* Distance from the bottom of the fullscreen video area */
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000; /* Above video */
@@ -492,6 +465,24 @@ button:disabled {
     color: var(--text-light);
     border-radius: 50px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    /* Ensure it's not hidden by mistake */
+    display: block !important;
+}
+
+/* Hide regular controls and photo grid when in fullscreen */
+.photobooth-container.fullscreen-active .controls-panel,
+.photobooth-container.fullscreen-active .action-buttons,
+.photobooth-container.fullscreen-active #invertCameraButton,
+.photobooth-container.fullscreen-active #toggleFullscreenBtn,
+.photobooth-container.fullscreen-active #backToLayoutBtn,
+.photo-booth-wrapper.fullscreen-active #captured-photos-display,
+.logo-header.fullscreen-active {
+    display: none !important;
+}
+
+/* Add a class to the body or a parent wrapper to manage overall fullscreen state */
+body.fullscreen-mode {
+    overflow: hidden; /* Prevent scrolling if body isn't explicitly fullscreened */
 }
 
 /* Responsive Adjustments for Capture Page */
