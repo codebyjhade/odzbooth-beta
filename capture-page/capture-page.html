@@ -32,7 +32,7 @@
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
                 </div>
-                <button id="fullscreenCaptureBtn" class="fullscreen-capture-btn" style="display: none;">Start Capture</button>
+                <button id="captureBtn" class="fullscreen-bottom-btn">Start Capture</button>
             </div>
 
             <div class="controls-panel">
@@ -60,17 +60,14 @@
             </div>
 
             <div class="action-buttons">
-                <button id="captureBtn">Start Capture</button>
+                <button id="captureBtn-original" style="display: none;">Start Capture</button> 
                 <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
-            </div>
+                <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button> </div>
             <button id="invertCameraButton" class="secondary-btn" style="margin-top: 15px;">
                 <i class="fas fa-sync-alt"></i> Invert Camera
             </button>
-            <button id="toggleFullscreenBtn" class="secondary-btn" style="margin-top: 15px;">
-                <i class="fas fa-expand"></i> Toggle Fullscreen
-            </button>
-            <button id="backToLayoutBtn" class="secondary-btn" style="margin-top: 15px;">
-                <i class="fas fa-arrow-left"></i> Back to Layout Selection
+            <button id="fullscreenToggleBtn" class="secondary-btn" style="margin-top: 15px;">
+                <i class="fas fa-expand"></i> Fullscreen
             </button>
         </div>
 
@@ -82,6 +79,7 @@
                 <p>Processing Photo...</p>
             </div>
             <div id="captured-photos-grid"></div>
-        </div>
-    </body>
+            </div>
+    </div>
+</body>
 </html>
