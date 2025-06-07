@@ -469,20 +469,19 @@ button:disabled {
     display: block !important;
 }
 
-/* Hide regular controls and photo grid when in fullscreen */
-.photobooth-container.fullscreen-active .controls-panel,
-.photobooth-container.fullscreen-active .action-buttons,
-.photobooth-container.fullscreen-active #invertCameraButton,
-.photobooth-container.fullscreen-active #toggleFullscreenBtn,
-.photobooth-container.fullscreen-active #backToLayoutBtn,
-.photo-booth-wrapper.fullscreen-active #captured-photos-display,
-.logo-header.fullscreen-active {
-    display: none !important;
-}
+/* Add a class to the parent wrapper or body to manage overall fullscreen state for hiding other elements */
+/* The .fullscreen class is on video-preview-area. We need a class on a common parent, e.g., body or photobooth-container */
+/* For simplicity, let's add a class to the body when fullscreen is active */
 
-/* Add a class to the body or a parent wrapper to manage overall fullscreen state */
-body.fullscreen-mode {
-    overflow: hidden; /* Prevent scrolling if body isn't explicitly fullscreened */
+/* Hide regular controls and photo grid when in fullscreen */
+body.fullscreen-active .controls-panel,
+body.fullscreen-active .action-buttons,
+body.fullscreen-active #invertCameraButton,
+body.fullscreen-active #toggleFullscreenBtn,
+body.fullscreen-active #backToLayoutBtn,
+body.fullscreen-active #captured-photos-display,
+body.fullscreen-active .logo-header {
+    display: none !important;
 }
 
 /* Responsive Adjustments for Capture Page */
