@@ -18,12 +18,11 @@ const subCameraMsg = document.getElementById('sub-camera-msg');
 const cameraLoadingSpinner = document.getElementById('camera-loading-spinner'); 
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
 
-// Removed: const retakeSelectedPhotoBtn = document.getElementById('retakeSelectedPhotoBtn'); 
 const invertCameraButton = document.getElementById('invertCameraButton'); 
-const backToLayoutBtn = document.getElementById('backToLayoutBtn'); // New: Back to Layout Selection button
-const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'); // New: Fullscreen toggle button
-const videoPreviewArea = document.querySelector('.video-preview-area'); // New: Reference to video preview area
-
+const backToLayoutBtn = document.getElementById('backToLayoutBtn'); 
+const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'); 
+const videoPreviewArea = document.querySelector('.video-preview-area'); 
+const photoboothContainer = document.querySelector('.photobooth-container'); // Reference to the parent of video and controls
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -35,16 +34,10 @@ const photoProgressText = document.getElementById('photoProgressText');
 
 // --- Global State Variables ---
 let currentStream = null; 
-let capturedPhotos = []; // Stores base64 image data
+let capturedPhotos = []; 
 let photosToCapture = 0; 
-let photosCapturedCount = 0; // Tracks photos taken in current sequence (not total capturedPhotos.length)
+let photosCapturedCount = 0; 
 let photoFrameAspectRatio = 4 / 3; 
-
-// Removed: For selective retake functionality
-// Removed: let selectedPhotoIndexForRetake = -1; // -1 means no photo is selected for retake
-
-// Removed: NEW: State for retake preparation
-// Removed: let isReadyToRetake = false; // True when a photo is selected and 'Retake Selected Photo' is pressed, waiting for 'Start Retake'
 
 // NEW: Web Worker for image processing
 let imageProcessorWorker = null;
@@ -114,12 +107,12 @@ function showPhotoProcessingSpinner(show) {
  * @param {boolean} disabled - True to disable, false to enable.
  */
 function setCaptureControlsEnabled(disabled) {
-    captureBtn.disabled = disabled;
+    // captureBtn visibility/disabled state is now handled by toggleCaptureButtonPosition
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
     invertCameraButton.disabled = disabled; 
-    // Removed: retakeSelectedPhotoBtn is managed by updateRetakeButtonState()
-    // nextBtn is managed separately
+    backToLayoutBtn.disabled = disabled;
+    fullscreenToggleBtn.disabled = disabled;
 }
 
 /**
@@ -129,9 +122,7 @@ function setCaptureControlsEnabled(disabled) {
 function updateVideoAspectRatio(aspectRatio) {
     if (videoPreviewArea) {
         videoPreviewArea.style.setProperty('--video-aspect-ratio', `${aspectRatio}`);
-        console.log(`Video preview aspect ratio set to: ${aspectRatio}`);
     }
-    // NEW: Also inform the worker about the aspect ratio change
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({
             type: 'UPDATE_SETTINGS',
@@ -151,13 +142,6 @@ function updatePhotoProgressText() {
         photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
     }
 }
-
-// Removed: NEW: Updates the disabled state of the retake button based on selection and current state
-// Removed: function updateRetakeButtonState() {
-// Removed:     // Retake button enabled only if a photo is selected AND we are NOT in the 'ready to retake' state
-// Removed:     retakeSelectedPhotoBtn.disabled = (selectedPhotoIndexForRetake === -1 || isReadyToRetake);
-// Removed:     retakeSelectedPhotoBtn.style.display = isReadyToRetake ? 'none' : 'flex'; // Hide if ready to retake
-// Removed: }
 
 // --- Camera Management ---
 
@@ -191,11 +175,9 @@ async function populateCameraList() {
             cameraSelect.appendChild(option);
         });
 
-        // MODIFIED: Start camera only once after populating the list
         if (cameraSelect.options.length > 0) {
-            // Select the first option and then start the camera with its value
             cameraSelect.selectedIndex = 0; 
-            startCamera(cameraSelect.value); // This is the single initial call
+            startCamera(cameraSelect.value); 
         } else {
             displayCameraMessage(
                 'No selectable cameras.',
@@ -258,17 +240,14 @@ async function startCamera(deviceId) {
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
-        console.log('Main Thread: Existing camera stream stopped.');
     }
 
     showCameraLoadingSpinner(true); 
-    console.log('Main Thread: Attempting to start camera stream...');
 
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                // MODIFIED: Request a more common and compatible resolution (640x480)
                 width: { ideal: 640, min: 480 }, 
                 height: { ideal: 480, min: 360 }  
             },
@@ -283,11 +262,8 @@ async function startCamera(deviceId) {
             hideCameraMessage();
             setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
-            // Log the actual resolution obtained
-            console.log(`Main Thread: Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
-            
-            // NEW: Initialize OffscreenCanvas and Web Worker once video metadata is loaded
             initializeImageProcessorWorker();
+            toggleCaptureButtonPosition(); // Initial positioning of the capture button
         };
 
     } catch (error) {
@@ -299,21 +275,18 @@ async function startCamera(deviceId) {
 }
 
 /**
- * NEW: Initializes the Web Worker and OffscreenCanvas.
+ * Initializes the Web Worker and OffscreenCanvas.
  */
 function initializeImageProcessorWorker() {
     if (imageProcessorWorker) {
-        // If already initialized, send a message to clean up the old worker
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
-        console.log('Main Thread: Existing Web Worker terminated.');
     }
 
     const tempCanvas = document.createElement('canvas');
     offscreenCanvasInstance = tempCanvas.transferControlToOffscreen();
 
     imageProcessorWorker = new Worker('capture-page/image-processor.js');
-    console.log('Main Thread: Web Worker created.');
 
     imageProcessorWorker.postMessage({
         type: 'INIT',
@@ -323,11 +296,9 @@ function initializeImageProcessorWorker() {
         }
     }, [offscreenCanvasInstance]);
 
-    // START OF FIX: Handle blob from worker and convert it on the main thread
     imageProcessorWorker.onmessage = (event) => {
         if (event.data.type === 'FRAME_PROCESSED') {
             const { blob, indexToReplace } = event.data.payload;
-            console.log('Main Thread: Blob received from worker.');
 
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -338,7 +309,6 @@ function initializeImageProcessorWorker() {
             reader.readAsDataURL(blob);
         }
     };
-    // END OF FIX
 
     imageProcessorWorker.onerror = (error) => {
         console.error('Main Thread: Web Worker error:', error);
@@ -425,7 +395,7 @@ function runCountdown(duration) {
 }
 
 /**
- * NEW: Sends a video frame to the Web Worker for processing.
+ * Sends a video frame to the Web Worker for processing.
  * @param {number} [indexToReplace=-1] - The index in capturedPhotos array to replace. If -1, a new photo is added.
  */
 async function sendFrameToWorker(indexToReplace = -1) {
@@ -443,21 +413,24 @@ async function sendFrameToWorker(indexToReplace = -1) {
         type: 'PROCESS_FRAME',
         payload: { imageBitmap, indexToReplace }
     }, [imageBitmap]);
-    console.log('Main Thread: ImageBitmap sent to worker.');
 }
 
 /**
- * NEW: Handles the photo data received back from the worker.
+ * Handles the photo data received back from the worker.
  * @param {string} imgData - Base64 data URL of the processed image.
  * @param {number} indexToReplace - The index in capturedPhotos array that was processed.
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
-    // Modified: Logic to only add new photos, no retake
-    if (indexToReplace === -1) { // Only add if it's a new photo
+    if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
+        capturedPhotos[indexToReplace] = imgData; 
+        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
+        if (imgElementInDom) {
+            imgElementInDom.src = imgData;
+        }
+    } else {
         capturedPhotos.push(imgData); 
         photosCapturedCount++; 
         addPhotoToGrid(imgData, capturedPhotos.length - 1); 
-        console.log(`Main Thread: New photo added to grid at index ${capturedPhotos.length - 1}.`);
     }
     updatePhotoProgressText(); 
 }
@@ -477,7 +450,6 @@ async function initiateCaptureSequence() {
     }
 
     if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-        // Modified: Removed retake alert, now just indicates all captured
         alert('All photos have already been captured. Click "Go to Editor" to proceed.');
         return;
     }
@@ -486,25 +458,21 @@ async function initiateCaptureSequence() {
     photosToCapture = parseInt(storedPhotoCount, 10);
 
     if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture > 6 || photosToCapture === 5) {
-        console.warn(`Invalid or missing selectedPhotoCount (${storedPhotoCount}) from localStorage. Defaulting to 3 photos.`);
         photosToCapture = 3;
     }
 
     setCaptureControlsEnabled(true); 
     captureBtn.style.display = 'none'; 
     nextBtn.style.display = 'none'; 
-    // Removed: retakeSelectedPhotoBtn.style.display = 'none'; 
-    backToLayoutBtn.style.display = 'none'; // Hide "Back to Layout" during capture
-    fullscreenToggleBtn.style.display = 'none'; // Hide fullscreen toggle during capture
-
+    backToLayoutBtn.style.display = 'none'; 
+    fullscreenToggleBtn.style.display = 'none';
 
     if (capturedPhotos.length === 0) {
         photoGrid.innerHTML = ''; 
-        capturedPhotos = []; // Clear array for a fresh capture sequence
+        capturedPhotos = [];
     }
     
     while (capturedPhotos.length < photosToCapture) {
-        console.log(`Main Thread: Starting countdown for photo ${capturedPhotos.length + 1} of ${photosToCapture}.`);
         await runCountdown(3);
         flashOverlay.classList.add('active');
         setTimeout(() => {
@@ -518,40 +486,25 @@ async function initiateCaptureSequence() {
         }
     }
 
-    // After capture, re-enable/show appropriate buttons
-    setCaptureControlsEnabled(false); // Re-disable controls once capture is done
-    captureBtn.style.display = 'block'; // Show capture button again
-    captureBtn.textContent = 'Start Capture'; // Reset button text
-    nextBtn.style.display = 'block'; // Show next button
-    backToLayoutBtn.style.display = 'block'; // Show back to layout button
-    fullscreenToggleBtn.style.display = 'block'; // Show fullscreen toggle again
+    setCaptureControlsEnabled(false); 
+    nextBtn.style.display = 'block'; 
+    backToLayoutBtn.style.display = 'block'; 
+    fullscreenToggleBtn.style.display = 'block';
 
-    // Re-enable capture button if more photos are needed, or if it's a new sequence
     if (capturedPhotos.length < photosToCapture) {
         captureBtn.disabled = false;
     } else {
-        captureBtn.disabled = true; // All photos captured, disable capture
+        captureBtn.disabled = true; 
     }
-
-    console.log('Main Thread: Photo capture sequence completed.');
+    toggleCaptureButtonPosition(); // Reset button position after capture sequence
 }
 
-// Removed: Transitions the UI into a state where photos can be selected for retake.
-// Removed: function enterRetakeMode() {
-// Removed:     setCaptureControlsEnabled(false);
-// Removed:     captureBtn.style.display = 'none';
-// Removed:     nextBtn.style.display = 'block';
-// Removed:     retakeSelectedPhotoBtn.style.display = 'flex';
-    
-// Removed:     selectedPhotoIndexForRetake = -1;
-// Removed:     updateRetakeButtonState();
-// Removed:     console.log('Main Thread: Entered retake mode.');
-// Removed: }
-
-// Removed: Handles selection/deselection of photos in the grid for retake.
+/**
+ * Handles selection/deselection of photos in the grid.
+ * (Currently, selection is just visual and doesn't trigger actions as retake is removed)
+ * @param {Event} event - The click event.
+ */
 function handlePhotoSelection(event) {
-    // No longer for retake, but could be for future features if needed.
-    // For now, it just prevents selection.
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
     if (!clickedWrapper) return;
 
@@ -560,100 +513,7 @@ function handlePhotoSelection(event) {
     if (currentlySelected) {
         currentlySelected.classList.remove('selected');
     }
-    // Prevent selection if no retake feature
-    console.log("Main Thread: Photo selection is currently disabled.");
 }
-
-// Removed: NEW: Prepares the UI for a single retake capture
-// Removed: function prepareForRetake() {
-// Removed:     isReadyToRetake = true;
-// Removed:     setCaptureControlsEnabled(true);
-    
-// Removed:     retakeSelectedPhotoBtn.style.display = 'none';
-// Removed:     nextBtn.style.display = 'none';
-
-// Removed:     captureBtn.style.display = 'block';
-// Removed:     captureBtn.textContent = `Start Retake Photo ${selectedPhotoIndexForRetake + 1}`;
-// Removed:     captureBtn.disabled = false;
-// Removed:     console.log(`Main Thread: Prepared for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
-// Removed: }
-
-// Removed: NEW: Executes the single retake capture (countdown + take photo)
-// Removed: async function executeRetakeCapture() {
-// Removed:     if (selectedPhotoIndexForRetake === -1) {
-// Removed:         console.error("Main Thread: No photo selected for retake, but executeRetakeCapture was called.");
-// Removed:         exitRetakePreparationState();
-// Removed:         return;
-// Removed:     }
-
-// Removed:     setCaptureControlsEnabled(true);
-// Removed:     captureBtn.disabled = true;
-
-// Removed:     console.log(`Main Thread: Starting countdown for retake of photo ${selectedPhotoIndexForRetake + 1}.`);
-// Removed:     await runCountdown(3);
-// Removed:     flashOverlay.classList.add('active');
-// Removed:     setTimeout(() => {
-// Removed:         flashOverlay.classList.remove('active');
-// Removed:     }, 100); 
-    
-// Removed:     await sendFrameToWorker(selectedPhotoIndexForRetake);
-
-// Removed:     console.log(`Main Thread: Retake capture for photo ${selectedPhotoIndexForRetake + 1} initiated.`);
-// Removed:     exitRetakePreparationState();
-// Removed: }
-
-// Removed: NEW: Resets the UI state after a retake operation
-// Removed: function exitRetakePreparationState() {
-// Removed:     isReadyToRetake = false;
-    
-// Removed:     captureBtn.style.display = 'block';
-// Removed:     captureBtn.textContent = 'Start Capture';
-    
-// Removed:     retakeSelectedPhotoBtn.style.display = 'flex';
-// Removed:     nextBtn.style.display = 'block';
-
-// Removed:     const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
-// Removed:     if (selectedWrapper) {
-// Removed:         selectedWrapper.classList.remove('selected');
-// Removed:     }
-// Removed:     selectedPhotoIndexForRetake = -1;
-// Removed:     updateRetakeButtonState();
-// Removed:     setCaptureControlsEnabled(false);
-// Removed:     console.log('Main Thread: Exited retake preparation state.');
-// Removed: }
-
-// Removed: Handles the click event for the "Retake Selected Photo" button.
-// Removed: async function handleRetakeBtnClick() {
-// Removed:     if (selectedPhotoIndexForRetake === -1) {
-// Removed:         alert('Please select a photo to retake first!');
-// Removed:         return;
-// Removed:     }
-
-// Removed:     const confirmRetake = confirm(`You are about to retake photo ${selectedPhotoIndexForRetake + 1}. Proceed?`);
-// Removed:     if (!confirmRetake) {
-// Removed:         const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
-// Removed:         if (selectedWrapper) {
-// Removed:             selectedWrapper.classList.remove('selected');
-// Removed:         }
-// Removed:         selectedPhotoIndexForRetake = -1;
-// Removed:         updateRetakeButtonState();
-// Removed:         console.log('Main Thread: Retake cancelled by user.');
-// Removed:         return;
-// Removed:     }
-
-// Removed:     prepareForRetake();
-
-// Removed:     if (video.paused) {
-// Removed:         console.log("Main Thread: Video was paused, attempting to play it again.");
-// Removed:         try {
-// Removed:             await video.play();
-// Removed:             console.log("Main Thread: Video playback resumed successfully.");
-// Removed:         } catch (error) {
-// Removed:             console.error("Main Thread: Error trying to resume video playback:", error);
-// Removed:             displayCameraMessage('Camera feed paused.', 'warning', 'Could not resume the camera feed. Please try again.');
-// Removed:         }
-// Removed:     }
-// Removed: }
 
 
 // --- Fullscreen and UI adjustments ---
@@ -661,47 +521,54 @@ function toggleFullScreen() {
     if (!document.fullscreenElement) {
         if (videoPreviewArea.requestFullscreen) {
             videoPreviewArea.requestFullscreen();
-        } else if (videoPreviewArea.mozRequestFullScreen) { // Firefox
+        } else if (videoPreviewArea.mozRequestFullScreen) {
             videoPreviewArea.mozRequestFullScreen();
-        } else if (videoPreviewArea.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        } else if (videoPreviewArea.webkitRequestFullscreen) {
             videoPreviewArea.webkitRequestFullscreen();
-        } else if (videoPreviewArea.msRequestFullscreen) { // IE/Edge
+        } else if (videoPreviewArea.msRequestFullscreen) {
             videoPreviewArea.msRequestFullscreen();
         }
-        // Add class to body to adjust styling for fullscreen mode
-        document.body.classList.add('fullscreen-active');
-        // Move capture button into video preview area
-        videoPreviewArea.appendChild(captureBtn);
-        captureBtn.classList.add('fullscreen-capture-btn');
     } else {
         if (document.exitFullscreen) {
             document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) { // Firefox
+        } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+        } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { // IE/Edge
+        } else if (document.msExitFullscreen) {
             document.msExitFullscreen();
         }
     }
 }
 
-// Listen for fullscreen change events to update UI
-document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-        document.body.classList.remove('fullscreen-active');
-        // Move capture button back to its original parent
-        document.querySelector('.action-buttons').prepend(captureBtn); // Assuming it was first
-        captureBtn.classList.remove('fullscreen-capture-btn');
+/**
+ * Manages the position and visibility of the capture button
+ * based on fullscreen mode.
+ */
+function toggleCaptureButtonPosition() {
+    if (document.fullscreenElement) {
+        // In fullscreen: move button to videoPreviewArea and show it
+        videoPreviewArea.appendChild(captureBtn);
+        captureBtn.classList.add('fullscreen-bottom-btn');
+        captureBtn.style.display = 'block';
+    } else {
+        // Not in fullscreen: move button back to photoboothContainer and position above invertCameraButton
+        photoboothContainer.insertBefore(captureBtn, invertCameraButton);
+        captureBtn.classList.remove('fullscreen-bottom-btn');
+        captureBtn.style.display = 'block'; // Ensure it's visible outside fullscreen
+        // Disable if all photos are captured
+        if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
+            captureBtn.disabled = true;
+        } else {
+            captureBtn.disabled = false;
+        }
     }
-});
+}
 
-// Orientation change listener for fullscreen adjustments
-window.addEventListener('orientationchange', () => {
-    // This event fires when the device orientation changes.
-    // CSS should handle most of the resizing based on the fullscreen-active class.
-    // No direct JS manipulation needed here unless specific pixel-perfect adjustments are required.
-});
+
+// Listen for fullscreen change events to update UI
+document.addEventListener('fullscreenchange', toggleCaptureButtonPosition);
+
 
 // --- Event Listeners ---
 
@@ -714,12 +581,10 @@ document.addEventListener('DOMContentLoaded', () => {
         photoFrameAspectRatio = parseFloat(storedAspectRatio);
         updateVideoAspectRatio(photoFrameAspectRatio);
     } else {
-        console.warn("No aspect ratio found in localStorage. Using default 4:3.");
         updateVideoAspectRatio(4 / 3); 
     }
     populateCameraList();
     updatePhotoProgressText(); 
-    // Removed: updateRetakeButtonState(); 
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -735,15 +600,11 @@ filterSelect.addEventListener('change', () => {
             payload: { filter: selectedFilter }
         });
     }
-    console.log(`Main Thread: Filter changed to ${selectedFilter}. Worker notified.`);
 });
 
 captureBtn.addEventListener('click', () => {
-    // Modified: No longer checks for isReadyToRetake
     initiateCaptureSequence(); 
 });
-
-// Removed: retakeSelectedPhotoBtn.addEventListener('click', handleRetakeBtnClick);
 
 nextBtn.addEventListener('click', () => {
     if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
@@ -755,29 +616,26 @@ nextBtn.addEventListener('click', () => {
     }
 });
 
-photoGrid.addEventListener('click', handlePhotoSelection); // Keeps the event listener, but its function is modified
+photoGrid.addEventListener('click', handlePhotoSelection);
 
 invertCameraButton.addEventListener('click', () => {
     video.classList.toggle('inverted');
-    console.log('Main Thread: Camera inversion toggled.');
 });
 
 backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'index.html'; // Adjust this path if your layout selection page is different
+    window.location.href = 'index.html'; 
 });
 
-fullscreenToggleBtn.addEventListener('click', toggleFullScreen); // New: Fullscreen toggle event listener
+fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
 
 window.addEventListener('beforeunload', () => {
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
         imageProcessorWorker = null;
-        console.log('Main Thread: Web Worker terminated on page unload.');
     }
     if (currentStream) {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
-        console.log('Main Thread: Camera stream stopped on page unload.');
     }
 });
