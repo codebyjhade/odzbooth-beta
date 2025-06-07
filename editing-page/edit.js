@@ -37,8 +37,8 @@ const STRIP_LAYOUT_CONFIGS = {
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Pastel Pink' },
             { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Light Coral' },
-            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Ice Blue' }
-            
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Ice Blue' },
+            { id: 'option3', src: 'assets/strip-frame-2-photos-option4.png', name: 'White Smoke' }
         ]
     },
     // Configuration for a 3-photo strip
@@ -55,7 +55,7 @@ const STRIP_LAYOUT_CONFIGS = {
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-3-photos-option1.png', name: 'Ice Blue' },
             { id: 'option2', src: 'assets/strip-frame-3-photos-option2.png', name: 'Pastel Pink' },
-            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'White Smoke' }
+            { id: 'option3', src: 'assets/strip-frame-3-photos-option3.png', name: 'White Smoke' },
             { id: 'option3', src: 'assets/strip-frame-3-photos-option4.png', name: 'Light Coral' }
         ]
     },
@@ -74,7 +74,7 @@ const STRIP_LAYOUT_CONFIGS = {
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-4-photos-option1.png', name: 'Light Coral' },
             { id: 'option2', src: 'assets/strip-frame-4-photos-option2.png', name: 'Pastel Pink' },
-            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'White Smoke' }
+            { id: 'option3', src: 'assets/strip-frame-4-photos-option3.png', name: 'White Smoke' },
             { id: 'option3', src: 'assets/strip-frame-4-photos-option4.png', name: 'Ice Blue' }
         ]
     },
@@ -94,8 +94,8 @@ const STRIP_LAYOUT_CONFIGS = {
         frameAspectRatio: 320 / 220,
         availableFrames: [
             { id: 'option1', src: 'assets/strip-frame-6-photos-option1.png', name: 'White Smoke' },
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Light Coral' }
-            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Ice Blue' }
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Light Coral' },
+            { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Ice Blue' },
             { id: 'option2', src: 'assets/strip-frame-6-photos-option2.png', name: 'Pastel Pink' }
         ]
     }
