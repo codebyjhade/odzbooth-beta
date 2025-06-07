@@ -19,8 +19,7 @@
 
     <div class="photo-booth-wrapper">
         <div class="photobooth-container">
-           <div class="video-preview-area">
-                <video id="cameraFeed" autoplay playsinline></video>
+           <div class="video-preview-area" id="videoPreviewArea"> <video id="cameraFeed" autoplay playsinline></video>
                 <div id="flashOverlay" class="flash-overlay"></div>
                 <div id="visualCountdown" class="visual-countdown"></div>
                 <p id="countdown"></p> 
@@ -32,7 +31,7 @@
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
                 </div>
-                <button id="fullscreenToggleBtn" class="fullscreen-btn">
+                <button id="fullscreenToggleBtn" class="fullscreen-toggle-btn">
                     <i class="fas fa-expand"></i>
                 </button>
             </div>
@@ -68,7 +67,7 @@
             <button id="invertCameraButton" class="secondary-btn" style="margin-top: 15px;">
                 <i class="fas fa-sync-alt"></i> Invert Camera
             </button>
-            <button id="backToLayoutBtn" class="secondary-btn back-to-layout-btn">
+            <button id="backToLayoutBtn" class="secondary-btn" style="margin-top: 15px;">
                 <i class="fas fa-arrow-left"></i> Back to Layout Selection
             </button>
         </div>
@@ -81,6 +80,6 @@
                 <p>Processing Photo...</p>
             </div>
             <div id="captured-photos-grid"></div>
-        </div>
+            </div>
     </body>
 </html>
