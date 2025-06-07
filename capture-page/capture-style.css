@@ -96,6 +96,7 @@ video {
     /* NEW: Mirror video for user-facing camera */
     transform: scaleX(-1); 
     transition: transform 0.3s ease; /* Smooth transition for invert button */
+    will-change: transform, filter; /* Hints to the browser for performance optimization */
 }
 
 /* NEW: Class for explicitly not mirroring the video (e.g., for rear camera or if user prefers) */
@@ -257,15 +258,12 @@ button:disabled {
     background: #e0b06b; /* Darker secondary */
     color: var(--text-dark);
 }
-/* In capture-page/capture-style.css */
 
 #cameraFeed {
-    /* Your existing styles */
     object-fit: cover;
     width: 100%;
     height: 100%;
     display: block;
-    /* Add this line: */
     will-change: transform, filter; /* Hints to the browser for performance optimization */
 }
 
@@ -298,7 +296,7 @@ button:disabled {
     justify-content: center;
 }
 
-.captured-photo-item {
+.captured-photo-wrapper {
     width: 100%;
     aspect-ratio: var(--video-aspect-ratio); /* Use the dynamic aspect ratio */
     object-fit: cover; /* Crop to fit */
@@ -308,7 +306,7 @@ button:disabled {
     transition: transform 0.2s ease;
 }
 
-.captured-photo-item:hover {
+.captured-photo-wrapper:hover {
     transform: scale(1.03);
 }
 
@@ -392,31 +390,6 @@ button:disabled {
     font-weight: 600;
 }
 
-/* --- NEW: Styles for Selectable Photos in Grid --- */
-.captured-photo-wrapper {
-    position: relative;
-    cursor: pointer; /* Indicate it's clickable */
-    border: 3px solid transparent; /* Default border, transparent */
-    border-radius: var(--border-radius-soft);
-    overflow: hidden; /* Ensures border-radius applies to image */
-    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
-}
-
-.captured-photo-wrapper:hover {
-    transform: scale(1.03);
-    border-color: var(--secondary-brand-color); /* Highlight on hover */
-}
-
-.captured-photo-wrapper.selected {
-    border-color: var(--primary-brand-color); /* Blue border when selected */
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Outer glow for selection */
-    transform: scale(1.05); /* Slightly larger when selected */
-}
-
-.captured-photo-wrapper.selected:hover {
-    border-color: var(--primary-brand-color); /* Keep selected border on hover */
-}
-
 /* Ensure the image fills its wrapper */
 .captured-photo-wrapper img {
     display: block; /* Remove extra space below image */
@@ -426,38 +399,101 @@ button:disabled {
     border-radius: var(--border-radius-soft); /* Inherit border radius */
 }
 
-/* Style for the retake button */
-#retakeSelectedPhotoBtn {
-    background-color: var(--accent-color); /* Use accent color for this button */
+/* Style for the "Back to Layout Selection" button */
+.back-to-layout-btn {
+    margin-top: 20px; /* Add some space above it */
+    background-color: #6c757d; /* A neutral color */
     color: var(--text-light);
-    border: none;
-    padding: 12px 25px;
-    border-radius: 25px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-soft);
+    font-size: 1em;
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: var(--shadow-medium);
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-#retakeSelectedPhotoBtn:hover:not(:disabled) {
-    background-color: var(--button-hover-accent); /* Darker accent on hover */
+.back-to-layout-btn:hover:enabled {
+    background-color: #5a6268; /* Darker on hover */
     transform: translateY(-2px);
 }
 
-#retakeSelectedPhotoBtn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
+/* Fullscreen Button */
+.fullscreen-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 30; /* Above flash and countdown */
+    transition: background-color 0.3s ease;
 }
 
-#retakeSelectedPhotoBtn i {
-    font-size: 1.2em;
+.fullscreen-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.fullscreen-btn.hidden {
+    display: none;
+}
+
+/* Styles for Fullscreen Mode */
+body.fullscreen-active {
+    background: #000; /* Black background for fullscreen */
+}
+
+body.fullscreen-active .logo-header,
+body.fullscreen-active .controls-panel,
+body.fullscreen-active #captured-photos-display,
+body.fullscreen-active .secondary-btn:not(#captureBtn) {
+    display: none !important; /* Hide other elements when in fullscreen */
+}
+
+body.fullscreen-active .photobooth-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: unset; /* Remove max-width */
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    justify-content: center;
+}
+
+body.fullscreen-active .video-preview-area {
+    width: 100vw;
+    height: 100vh;
+    max-width: unset;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    aspect-ratio: unset; /* Let video fill the screen */
+}
+
+body.fullscreen-active video {
+    object-fit: contain; /* Contain to ensure full video is seen in fullscreen */
+}
+
+/* Reposition capture button in fullscreen */
+body.fullscreen-active #captureBtn.fullscreen-capture-btn {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40; /* Above everything else */
+    width: auto; /* Adjust width as needed */
+    padding: 20px 40px; /* Larger hit area */
+    font-size: 1.5em;
+    border-radius: 50px; /* Pill shape */
 }
 
 /* Responsive Adjustments for Capture Page */
@@ -481,7 +517,7 @@ button:disabled {
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
-    .captured-photo-item {
+    .captured-photo-wrapper {
         max-width: 250px; 
         justify-self: center; 
     }
