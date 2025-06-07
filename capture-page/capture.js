@@ -402,25 +402,28 @@ function renderPhotoGrid() {
 
 /**
  * Handles the visual countdown display before each photo is taken, including sound effects.
+ * @param {number} duration - The duration of the countdown (e.g., 3 for 3-2-1).
  */
 function runCountdown(duration) {
     return new Promise(resolve => {
         let count = duration;
+
+        // Display the initial countdown number
         visualCountdown.style.opacity = 1;
         visualCountdown.style.display = 'block'; 
         visualCountdown.textContent = count;
         visualCountdown.classList.add('animate'); 
 
-        // Play the sound for the initial '3' countdown immediately
-        playSound(countdownBeep); //
+        // Play the sound for the initial countdown number immediately (e.g., the '3')
+        playSound(countdownBeep); 
 
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
-                playSound(countdownBeep); // Play beep for 2, 1
+                playSound(countdownBeep); // Play beep for subsequent numbers (e.g., 2, 1)
                 visualCountdown.textContent = count;
                 visualCountdown.classList.remove('animate');
-                void visualCountdown.offsetWidth; 
+                void visualCountdown.offsetWidth; // Trigger reflow for animation reset
                 visualCountdown.classList.add('animate');
             } else {
                 clearInterval(timer);
@@ -501,7 +504,6 @@ async function initiateCaptureSequence() {
         } catch (e) {
             console.warn("Audio autoplay blocked, user interaction required:", e);
             // On mobile, if audio is still blocked, inform the user they need to click to enable sound.
-            // This prompt could be a modal or a simple message.
             // For now, we'll proceed without sound if it's blocked.
         }
     }
@@ -711,7 +713,7 @@ invertCameraButton.addEventListener('click', () => {
 });
 
 backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'layout-selection/layout-selection.html'; 
+    window.location.href = 'index.html'; 
 });
 
 fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
