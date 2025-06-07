@@ -25,10 +25,6 @@ body {
     padding: 20px;
     box-sizing: border-box;
     color: var(--text-dark);
-    /* New: Prevents scrolling during fullscreen */
-    &.no-scroll {
-        overflow: hidden;
-    }
 }
 
 .logo-header {
@@ -89,21 +85,6 @@ body {
     display: flex; /* Ensure flex for centering messages/spinners */
     justify-content: center;
     align-items: center;
-    transition: all 0.3s ease-in-out; /* Smooth transition for fullscreen */
-}
-
-/* Fullscreen specific styles for video-preview-area */
-.video-preview-area.fullscreen-active {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    max-width: 100vw; /* Override max-width */
-    border-radius: 0;
-    z-index: 1000; /* Bring to front */
-    margin: 0;
-    border: none; /* No border in fullscreen */
 }
 
 video {
@@ -112,11 +93,12 @@ video {
     display: block;
     border-radius: 5px; /* Slight inner border radius */
     object-fit: cover; /* Ensures video fills the area, cropping if aspect ratios differ */
-    transform: scaleX(-1); /* Mirror video for user-facing camera */
+    /* NEW: Mirror video for user-facing camera */
+    transform: scaleX(-1); 
     transition: transform 0.3s ease; /* Smooth transition for invert button */
-    will-change: transform, filter; /* Hints to the browser for performance optimization */
 }
 
+/* NEW: Class for explicitly not mirroring the video (e.g., for rear camera or if user prefers) */
 video.inverted {
     transform: scaleX(1);
 }
@@ -238,17 +220,6 @@ video.inverted {
     gap: 15px;
     width: 100%;
     justify-content: center;
-    margin-bottom: 15px; /* Space before additional buttons */
-}
-
-/* New: Container for additional buttons below action-buttons */
-.additional-buttons {
-    display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-    gap: 15px;
-    width: 100%;
-    justify-content: center;
-    margin-top: 15px;
 }
 
 button {
@@ -262,7 +233,6 @@ button {
     border-radius: var(--border-radius-soft);
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 10px var(--shadow-light);
-    flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
 button:hover:enabled {
@@ -286,6 +256,17 @@ button:disabled {
 .secondary-btn:hover:enabled {
     background: #e0b06b; /* Darker secondary */
     color: var(--text-dark);
+}
+/* In capture-page/capture-style.css */
+
+#cameraFeed {
+    /* Your existing styles */
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* Add this line: */
+    will-change: transform, filter; /* Hints to the browser for performance optimization */
 }
 
 #captured-photos-display {
@@ -317,7 +298,7 @@ button:disabled {
     justify-content: center;
 }
 
-.captured-photo-wrapper {
+.captured-photo-item {
     width: 100%;
     aspect-ratio: var(--video-aspect-ratio); /* Use the dynamic aspect ratio */
     object-fit: cover; /* Crop to fit */
@@ -325,19 +306,10 @@ button:disabled {
     border-radius: 8px;
     box-shadow: 0 2px 8px var(--shadow-light);
     transition: transform 0.2s ease;
-    overflow: hidden; /* Ensures border-radius applies to image */
 }
 
-.captured-photo-wrapper:hover {
+.captured-photo-item:hover {
     transform: scale(1.03);
-}
-
-.captured-photo-wrapper img {
-    display: block; /* Remove extra space below image */
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Cover the wrapper while maintaining aspect ratio */
-    border-radius: var(--border-radius-soft); /* Inherit border radius */
 }
 
 .tool-tip {
@@ -348,22 +320,23 @@ button:disabled {
     line-height: 1.4;
 }
 
-/* --- Visual Countdown Styles --- */
+/* --- NEW: Visual Countdown Styles --- */
 .visual-countdown {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: var(--font-fredoka); 
-    font-size: 8em; 
-    color: var(--text-light); 
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
-    z-index: 10; 
-    opacity: 0; 
-    pointer-events: none; 
-    transition: opacity 0.3s ease-in-out; 
+    font-family: var(--font-fredoka); /* Use your special title font */
+    font-size: 8em; /* Large size */
+    color: var(--text-light); /* White text for contrast */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Strong shadow for visibility */
+    z-index: 10; /* Above video, below flash */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Allows clicks to pass through */
+    transition: opacity 0.3s ease-in-out; /* Smooth fade in/out */
 }
 
+/* Animation for the countdown numbers */
 @keyframes countdownPulse {
     0% {
         transform: translate(-50%, -50%) scale(0.8);
@@ -383,26 +356,26 @@ button:disabled {
 }
 
 .visual-countdown.animate {
-    animation: countdownPulse 1s ease-out forwards; 
+    animation: countdownPulse 1s ease-out forwards; /* Apply animation */
 }
 
-/* --- Flash Overlay Styles --- */
+/* --- NEW: Flash Overlay Styles --- */
 .flash-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 1); 
-    z-index: 20; 
-    opacity: 0; 
-    pointer-events: none; 
-    transition: opacity 0.1s ease-out; 
+    background-color: rgba(255, 255, 255, 1); /* Solid white */
+    z-index: 20; /* Above everything else */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Allows clicks to pass through */
+    transition: opacity 0.1s ease-out; /* Quick fade out */
 }
 
 .flash-overlay.active {
-    opacity: 1; 
-    transition: none; 
+    opacity: 1; /* Show the flash */
+    transition: none; /* No transition when activating for instant flash */
 }
 
 /* Hide the old text countdown */
@@ -410,7 +383,7 @@ button:disabled {
     display: none;
 }
 
-/* --- Photo Progress Text Style --- */
+/* --- NEW: Photo Progress Text Style --- */
 .photo-progress-text {
     font-size: 1.1em;
     color: var(--text-dark);
@@ -419,83 +392,107 @@ button:disabled {
     font-weight: 600;
 }
 
-/* New: Fullscreen Capture Button Container */
-.fullscreen-capture-btn-container {
+/* --- NEW: Styles for Selectable Photos in Grid --- */
+.captured-photo-wrapper {
+    position: relative;
+    cursor: pointer; /* Indicate it's clickable */
+    border: 3px solid transparent; /* Default border, transparent */
+    border-radius: var(--border-radius-soft);
+    overflow: hidden; /* Ensures border-radius applies to image */
+    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
+}
+
+.captured-photo-wrapper:hover {
+    transform: scale(1.03);
+    border-color: var(--secondary-brand-color); /* Highlight on hover */
+}
+
+.captured-photo-wrapper.selected {
+    border-color: var(--primary-brand-color); /* Blue border when selected */
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Outer glow for selection */
+    transform: scale(1.05); /* Slightly larger when selected */
+}
+
+.captured-photo-wrapper.selected:hover {
+    border-color: var(--primary-brand-color); /* Keep selected border on hover */
+}
+
+/* Ensure the image fills its wrapper */
+.captured-photo-wrapper img {
+    display: block; /* Remove extra space below image */
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the wrapper while maintaining aspect ratio */
+    border-radius: var(--border-radius-soft); /* Inherit border radius */
+}
+
+/* Style for the retake button */
+#retakeSelectedPhotoBtn {
+    background-color: var(--accent-color); /* Use accent color for this button */
+    color: var(--text-light);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-medium);
+}
+
+#retakeSelectedPhotoBtn:hover:not(:disabled) {
+    background-color: var(--button-hover-accent); /* Darker accent on hover */
+    transform: translateY(-2px);
+}
+
+#retakeSelectedPhotoBtn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+#retakeSelectedPhotoBtn i {
+    font-size: 1.2em;
+}
+
+/* Fullscreen mode styles */
+.video-preview-area.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: unset; /* Remove max-width restriction */
+    max-height: unset; /* Remove max-height restriction */
+    border-radius: 0;
+    border: none;
+    z-index: 9999; /* Bring to front */
+    margin-bottom: 0; /* Remove margin */
+}
+
+.video-preview-area.fullscreen video {
+    object-fit: contain; /* Contain video within screen, black bars if aspect ratios differ */
+    border-radius: 0;
+}
+
+.fullscreen-capture-btn {
     position: absolute;
-    bottom: 20px; /* Position at the bottom */
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30; /* Above flash and countdown */
-    display: none; /* Hidden by default, only shown in fullscreen */
-}
-
-.video-preview-area.fullscreen-active .fullscreen-capture-btn-container {
-    display: block; /* Show when fullscreen is active */
-}
-
-/* New: Custom Alert Box */
-#custom-alert {
-    display: none; /* Hidden by default */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--panel-bg-color);
-    padding: 30px;
-    border-radius: var(--border-radius-soft);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    max-width: 350px;
-    text-align: center;
-    border: 2px solid var(--primary-brand-color);
-}
-
-#custom-alert p {
-    font-size: 1.1em;
-    color: var(--text-dark);
-    margin: 0;
-}
-
-#custom-alert button {
-    background: var(--primary-brand-color);
+    z-index: 10000; /* Above video */
+    padding: 15px 40px;
+    font-size: 1.3em;
+    background-color: var(--primary-brand-color);
     color: var(--text-light);
-    padding: 10px 20px;
-    border: none;
-    border-radius: var(--border-radius-soft);
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
+    border-radius: 50px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
-
-#custom-alert button:hover {
-    background: #2a8fb6;
-}
-
-#custom-alert.error {
-    border-color: #dc3545;
-    color: #dc3545;
-}
-#custom-alert.error button {
-    background-color: #dc3545;
-}
-#custom-alert.error button:hover {
-    background-color: #c82333;
-}
-
-#custom-alert.warning {
-    border-color: #ffc107;
-    color: #ffc107;
-}
-#custom-alert.warning button {
-    background-color: #ffc107;
-}
-#custom-alert.warning button:hover {
-    background-color: #e0a800;
-}
-
 
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
@@ -518,7 +515,7 @@ button:disabled {
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
-    .captured-photo-wrapper {
+    .captured-photo-item {
         max-width: 250px; 
         justify-self: center; 
     }
@@ -545,15 +542,5 @@ button:disabled {
 
     #captured-photos-grid {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
-    }
-    
-    .action-buttons, .additional-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .action-buttons button, .additional-buttons button {
-        width: 100%;
-        max-width: 300px; /* Limit width on small screens for better appearance */
-        margin: 0 auto;
     }
 }
