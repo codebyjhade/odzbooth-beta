@@ -393,29 +393,29 @@ button:disabled {
 }
 
 /* --- NEW: Styles for Selectable Photos in Grid --- */
-/* .captured-photo-wrapper { removed as retake feature is gone
+.captured-photo-wrapper {
     position: relative;
-    cursor: pointer; 
-    border: 3px solid transparent; 
+    cursor: pointer; /* Indicate it's clickable */
+    border: 3px solid transparent; /* Default border, transparent */
     border-radius: var(--border-radius-soft);
-    overflow: hidden; 
+    overflow: hidden; /* Ensures border-radius applies to image */
     transition: border-color 0.2s ease-in-out, transform 0.2s ease;
 }
 
 .captured-photo-wrapper:hover {
     transform: scale(1.03);
-    border-color: var(--secondary-brand-color); 
+    border-color: var(--secondary-brand-color); /* Highlight on hover */
 }
 
 .captured-photo-wrapper.selected {
-    border-color: var(--primary-brand-color); 
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
-    transform: scale(1.05); 
+    border-color: var(--primary-brand-color); /* Blue border when selected */
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Outer glow for selection */
+    transform: scale(1.05); /* Slightly larger when selected */
 }
 
 .captured-photo-wrapper.selected:hover {
-    border-color: var(--primary-brand-color); 
-} */
+    border-color: var(--primary-brand-color); /* Keep selected border on hover */
+}
 
 /* Ensure the image fills its wrapper */
 .captured-photo-wrapper img {
@@ -425,8 +425,6 @@ button:disabled {
     object-fit: cover; /* Cover the wrapper while maintaining aspect ratio */
     border-radius: var(--border-radius-soft); /* Inherit border radius */
 }
-
-/* Removed styles for #retakeSelectedPhotoBtn */
 
 /* Fullscreen toggle button */
 .fullscreen-toggle-btn {
@@ -529,6 +527,9 @@ body.fullscreen-active #captureBtn {
     min-width: 150px; /* Example min-width */
     font-size: 1.5em; /* Larger button */
     padding: 15px 30px;
+    /* Ensure no margin-top or other conflicting styles */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 /* Portrait mode adjustments for fullscreen */
