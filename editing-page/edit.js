@@ -38,7 +38,7 @@ const STRIP_LAYOUT_CONFIGS = {
             { id: 'option1', src: 'assets/strip-frame-2-photos-option1.png', name: 'Pastel Pink' },
             { id: 'option2', src: 'assets/strip-frame-2-photos-option2.png', name: 'Light Coral' },
             { id: 'option3', src: 'assets/strip-frame-2-photos-option3.png', name: 'Ice Blue' }
-            { id: 'option3', src: 'assets/strip-frame-2-photos-option4.png', name: 'White Smoke' }
+            
         ]
     },
     // Configuration for a 3-photo strip
