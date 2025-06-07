@@ -5,12 +5,16 @@
 
 // --- DOM Element References ---
 const video = document.getElementById('cameraFeed');
-const captureBtn = document.getElementById('captureBtn');
+// Renamed captureBtn to captureBtnFullscreen to reflect its primary role
+const captureBtnFullscreen = document.getElementById('captureBtn'); 
+// New reference for the button visible in normal mode
+const captureBtnNormalMode = document.getElementById('captureBtnNormalMode'); 
+
 const nextBtn = document.getElementById('nextBtn');
 const photoGrid = document.getElementById('captured-photos-grid');
 const filterSelect = document.getElementById('filter');
 const cameraSelect = document.getElementById('cameraSelect');
-const countdownElement = document.getElementById('countdown'); // Old text countdown (will be hidden by CSS)
+const countdownElement = document.getElementById('countdown'); 
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg'); 
 const subCameraMsg = document.getElementById('sub-camera-msg');   
@@ -22,7 +26,9 @@ const invertCameraButton = document.getElementById('invertCameraButton');
 const backToLayoutBtn = document.getElementById('backToLayoutBtn'); 
 const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'); 
 const videoPreviewArea = document.querySelector('.video-preview-area'); 
-const photoboothContainer = document.querySelector('.photobooth-container'); // Reference to the parent of video and controls
+const photoboothContainer = document.querySelector('.photobooth-container'); 
+const actionButtonsDiv = document.querySelector('.action-buttons'); // New: Reference to the action-buttons div
+
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -113,7 +119,8 @@ function setCaptureControlsEnabled(disabled) {
     invertCameraButton.disabled = disabled; 
     backToLayoutBtn.disabled = disabled;
     fullscreenToggleBtn.disabled = disabled;
-    nextBtn.disabled = disabled; // Disable next button too
+    nextBtn.disabled = disabled; 
+    captureBtnNormalMode.disabled = disabled; // Disable normal mode capture button
 }
 
 /**
@@ -273,7 +280,7 @@ async function startCamera(deviceId) {
             setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
             initializeImageProcessorWorker();
-            toggleCaptureButtonPosition(); // Initial positioning of the capture button
+            toggleCaptureButtonVisibility(); // Initial visibility of the capture button
         };
 
     } catch (error) {
@@ -472,11 +479,13 @@ async function initiateCaptureSequence() {
     }
 
     setCaptureControlsEnabled(true); 
-    captureBtn.style.display = 'none'; // Hide capture button during sequence
+    // Hide relevant buttons during capture sequence
+    captureBtnFullscreen.style.display = 'none'; // Ensure fullscreen button is hidden if visible
+    captureBtnNormalMode.style.display = 'none'; 
     nextBtn.style.display = 'none'; 
     backToLayoutBtn.style.display = 'none'; 
     fullscreenToggleBtn.style.display = 'none';
-    invertCameraButton.style.display = 'none'; // Hide invert button during capture sequence
+    invertCameraButton.style.display = 'none'; 
 
 
     if (capturedPhotos.length === 0) {
@@ -501,27 +510,27 @@ async function initiateCaptureSequence() {
     setCaptureControlsEnabled(false); 
     backToLayoutBtn.style.display = 'block'; 
     fullscreenToggleBtn.style.display = 'block';
-    invertCameraButton.style.display = 'block'; // Show invert button again
+    invertCameraButton.style.display = 'block'; 
 
     if (capturedPhotos.length < photosToCapture) {
-        captureBtn.disabled = false;
+        captureBtnNormalMode.disabled = false;
+        captureBtnFullscreen.disabled = false;
     } else {
-        captureBtn.disabled = true; 
+        captureBtnNormalMode.disabled = true; 
+        captureBtnFullscreen.disabled = true;
     }
-    toggleCaptureButtonPosition(); // Reset button position after capture sequence
-    updatePhotoProgressText(); // Update progress text and next button visibility
+    toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
+    updatePhotoProgressText(); 
 }
 
 /**
  * Handles selection/deselection of photos in the grid.
- * (Currently, selection is just visual and doesn't trigger actions as retake is removed)
  * @param {Event} event - The click event.
  */
 function handlePhotoSelection(event) {
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
     if (!clickedWrapper) return;
 
-    // Remove selection visuals if any were mistakenly applied
     const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
     if (currentlySelected) {
         currentlySelected.classList.remove('selected');
@@ -555,35 +564,29 @@ function toggleFullScreen() {
 }
 
 /**
- * Manages the position and visibility of the capture button
- * based on fullscreen mode.
+ * Manages the visibility of the two capture buttons based on fullscreen mode.
  */
-function toggleCaptureButtonPosition() {
+function toggleCaptureButtonVisibility() {
     if (document.fullscreenElement) {
-        // In fullscreen: move button to videoPreviewArea and show it
-        videoPreviewArea.appendChild(captureBtn);
-        captureBtn.classList.add('fullscreen-bottom-btn');
-        captureBtn.classList.remove('normal-mode-capture-btn'); // Remove normal mode class
-        captureBtn.style.display = 'block'; // Ensure it's visible
+        // In fullscreen: hide normal mode button, show fullscreen button
+        captureBtnNormalMode.style.display = 'none';
+        captureBtnFullscreen.style.display = 'block';
     } else {
-        // Not in fullscreen: move button back to photoboothContainer and position at top
-        // Insert it as the first child of photoboothContainer
-        photoboothContainer.insertBefore(captureBtn, photoboothContainer.firstChild);
-        captureBtn.classList.remove('fullscreen-bottom-btn');
-        captureBtn.classList.add('normal-mode-capture-btn'); // Add normal mode class for styling
-        captureBtn.style.display = 'block'; // Ensure it's visible
-        // Disable if all photos are captured
+        // Not in fullscreen: show normal mode button, hide fullscreen button
+        captureBtnNormalMode.style.display = 'block';
+        captureBtnFullscreen.style.display = 'none';
+        // Ensure normal mode button's disabled state is correct
         if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-            captureBtn.disabled = true;
+            captureBtnNormalMode.disabled = true;
         } else {
-            captureBtn.disabled = false;
+            captureBtnNormalMode.disabled = false;
         }
     }
 }
 
 
 // Listen for fullscreen change events to update UI
-document.addEventListener('fullscreenchange', toggleCaptureButtonPosition);
+document.addEventListener('fullscreenchange', toggleCaptureButtonVisibility);
 
 
 // --- Event Listeners ---
@@ -600,8 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVideoAspectRatio(4 / 3); 
     }
     populateCameraList();
-    updatePhotoProgressText(); // Initial call to set nextBtn display
-    toggleCaptureButtonPosition(); // Initial positioning of the capture button
+    updatePhotoProgressText(); 
+    toggleCaptureButtonVisibility(); // Initial call to set button visibility
 });
 
 cameraSelect.addEventListener('change', (event) => {
@@ -619,7 +622,13 @@ filterSelect.addEventListener('change', () => {
     }
 });
 
-captureBtn.addEventListener('click', () => {
+// Use the normal mode capture button for clicks when not in fullscreen
+captureBtnNormalMode.addEventListener('click', () => {
+    initiateCaptureSequence(); 
+});
+
+// Use the fullscreen capture button for clicks when in fullscreen
+captureBtnFullscreen.addEventListener('click', () => {
     initiateCaptureSequence(); 
 });
 
@@ -628,7 +637,6 @@ nextBtn.addEventListener('click', () => {
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
-        // This scenario should ideally not be reachable if nextBtn is properly disabled/hidden
         const remaining = photosToCapture - capturedPhotos.length;
         alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
