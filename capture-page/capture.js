@@ -411,10 +411,13 @@ function runCountdown(duration) {
         visualCountdown.textContent = count;
         visualCountdown.classList.add('animate'); 
 
+        // Play the first beep immediately for '3'
+        playSound(countdownBeep); 
+
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
-                playSound(countdownBeep); // Play beep for 3, 2, 1
+                playSound(countdownBeep); // Play beep for 2, 1
                 visualCountdown.textContent = count;
                 visualCountdown.classList.remove('animate');
                 void visualCountdown.offsetWidth; 
@@ -459,8 +462,8 @@ async function sendFrameToWorker(indexToReplace = -1) {
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
-        capturedPhotos[indexToReplace] = imgData; 
-        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
+        capturedPhotos[indexTo: 1] = imgData; 
+        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexTo: 1}"] img`);
         if (imgElementInDom) {
             imgElementInDom.src = imgData;
         }
