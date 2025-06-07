@@ -19,10 +19,9 @@ const cameraLoadingSpinner = document.getElementById('camera-loading-spinner');
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
 
 const invertCameraButton = document.getElementById('invertCameraButton'); 
-const backToLayoutBtn = document.getElementById('backToLayoutBtn'); // New: Back to layout selection button
-const fullscreenBtn = document.getElementById('fullscreenBtn');     // New: Fullscreen toggle button
-const videoPreviewArea = document.getElementById('videoPreviewArea'); // New: Reference to the video container
-const fullscreenCaptureBtnContainer = document.getElementById('fullscreenCaptureBtnContainer'); // New: Container for capture button in fullscreen
+const toggleFullscreenBtn = document.getElementById('toggleFullscreenBtn'); // NEW
+const backToLayoutBtn = document.getElementById('backToLayoutBtn'); // NEW
+const fullscreenCaptureBtn = document.getElementById('fullscreenCaptureBtn'); // NEW
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -31,6 +30,7 @@ const flashOverlay = document.getElementById('flashOverlay');
 // Photo Progress Text Element
 const photoProgressText = document.getElementById('photoProgressText');
 
+const videoPreviewArea = document.querySelector('.video-preview-area'); // NEW
 
 // --- Global State Variables ---
 let currentStream = null; 
@@ -105,23 +105,16 @@ function showPhotoProcessingSpinner(show) {
 /**
  * Disables/enables capture controls (buttons, selects).
  * @param {boolean} disabled - True to disable, false to enable.
- * @param {boolean} [isDuringCapture=false] - If true, keeps nextBtn and backToLayoutBtn disabled.
  */
-function setCaptureControlsEnabled(disabled, isDuringCapture = false) {
+function setCaptureControlsEnabled(disabled) {
     captureBtn.disabled = disabled;
+    fullscreenCaptureBtn.disabled = disabled; // NEW
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
     invertCameraButton.disabled = disabled; 
-    fullscreenBtn.disabled = disabled; // Disable fullscreen button during capture
-
-    // Only enable nextBtn and backToLayoutBtn after capture is complete or if not during capture
-    if (!isDuringCapture) {
-        nextBtn.disabled = disabled;
-        backToLayoutBtn.disabled = disabled;
-    } else {
-        nextBtn.disabled = true; // Keep disabled during capture
-        backToLayoutBtn.disabled = true; // Keep disabled during capture
-    }
+    toggleFullscreenBtn.disabled = disabled; // NEW
+    backToLayoutBtn.disabled = disabled; // NEW
+    // nextBtn is managed separately
 }
 
 /**
@@ -133,7 +126,7 @@ function updateVideoAspectRatio(aspectRatio) {
         videoPreviewArea.style.setProperty('--video-aspect-ratio', `${aspectRatio}`);
         console.log(`Video preview aspect ratio set to: ${aspectRatio}`);
     }
-    // Inform the worker about the aspect ratio change
+    // NEW: Also inform the worker about the aspect ratio change
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({
             type: 'UPDATE_SETTINGS',
@@ -154,7 +147,6 @@ function updatePhotoProgressText() {
     }
 }
 
-
 // --- Camera Management ---
 
 /**
@@ -162,7 +154,7 @@ function updatePhotoProgressText() {
  */
 async function populateCameraList() {
     showCameraLoadingSpinner(true); 
-    setCaptureControlsEnabled(true); // Temporarily enable controls to allow camera selection attempt
+    setCaptureControlsEnabled(true); 
 
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -176,7 +168,7 @@ async function populateCameraList() {
                 'error',
                 'Please ensure your webcam is connected and enabled, then refresh the page.'
             );
-            setCaptureControlsEnabled(true); // Keep controls enabled but non-functional for user to retry
+            setCaptureControlsEnabled(true);
             return;
         }
 
@@ -187,9 +179,11 @@ async function populateCameraList() {
             cameraSelect.appendChild(option);
         });
 
+        // MODIFIED: Start camera only once after populating the list
         if (cameraSelect.options.length > 0) {
+            // Select the first option and then start the camera with its value
             cameraSelect.selectedIndex = 0; 
-            startCamera(cameraSelect.value); 
+            startCamera(cameraSelect.value); // This is the single initial call
         } else {
             displayCameraMessage(
                 'No selectable cameras.',
@@ -262,6 +256,7 @@ async function startCamera(deviceId) {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
+                // MODIFIED: Request a more common and compatible resolution (640x480)
                 width: { ideal: 640, min: 480 }, 
                 height: { ideal: 480, min: 360 }  
             },
@@ -274,10 +269,12 @@ async function startCamera(deviceId) {
         video.onloadedmetadata = () => {
             video.play();
             hideCameraMessage();
-            setCaptureControlsEnabled(false); // Enable controls when camera is ready
+            setCaptureControlsEnabled(false); 
             showCameraLoadingSpinner(false); 
+            // Log the actual resolution obtained
             console.log(`Main Thread: Camera active at resolution: ${video.videoWidth}x${video.videoHeight}`);
             
+            // NEW: Initialize OffscreenCanvas and Web Worker once video metadata is loaded
             initializeImageProcessorWorker();
         };
 
@@ -290,10 +287,11 @@ async function startCamera(deviceId) {
 }
 
 /**
- * Initializes the Web Worker and OffscreenCanvas.
+ * NEW: Initializes the Web Worker and OffscreenCanvas.
  */
 function initializeImageProcessorWorker() {
     if (imageProcessorWorker) {
+        // If already initialized, send a message to clean up the old worker
         imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
         imageProcessorWorker.terminate();
         console.log('Main Thread: Existing Web Worker terminated.');
@@ -313,6 +311,7 @@ function initializeImageProcessorWorker() {
         }
     }, [offscreenCanvasInstance]);
 
+    // START OF FIX: Handle blob from worker and convert it on the main thread
     imageProcessorWorker.onmessage = (event) => {
         if (event.data.type === 'FRAME_PROCESSED') {
             const { blob, indexToReplace } = event.data.payload;
@@ -327,6 +326,7 @@ function initializeImageProcessorWorker() {
             reader.readAsDataURL(blob);
         }
     };
+    // END OF FIX
 
     imageProcessorWorker.onerror = (error) => {
         console.error('Main Thread: Web Worker error:', error);
@@ -348,7 +348,7 @@ function initializeImageProcessorWorker() {
 // --- Photo Capture and Management Logic ---
 
 /**
- * Adds a captured photo to the grid.
+ * Adds a captured photo to the grid and the capturedPhotos array.
  * @param {string} imgData - Base64 data URL of the image.
  * @param {number} index - The index in the capturedPhotos array this photo belongs to.
  */
@@ -363,7 +363,6 @@ function addPhotoToGrid(imgData, index) {
     
     wrapper.appendChild(imgElement);
 
-    // If an element at this index already exists, replace it (for potential future updates, though retake is removed)
     const existingWrapper = photoGrid.querySelector(`[data-index="${index}"]`);
     if (existingWrapper) {
         photoGrid.replaceChild(wrapper, existingWrapper);
@@ -400,7 +399,7 @@ function runCountdown(duration) {
             if (count > 0) {
                 visualCountdown.textContent = count;
                 visualCountdown.classList.remove('animate');
-                void visualCountdown.offsetWidth; // Trigger reflow to restart animation
+                void visualCountdown.offsetWidth; 
                 visualCountdown.classList.add('animate');
             } else {
                 clearInterval(timer);
@@ -414,7 +413,7 @@ function runCountdown(duration) {
 }
 
 /**
- * Sends a video frame to the Web Worker for processing.
+ * NEW: Sends a video frame to the Web Worker for processing.
  * @param {number} [indexToReplace=-1] - The index in capturedPhotos array to replace. If -1, a new photo is added.
  */
 async function sendFrameToWorker(indexToReplace = -1) {
@@ -431,22 +430,29 @@ async function sendFrameToWorker(indexToReplace = -1) {
     imageProcessorWorker.postMessage({
         type: 'PROCESS_FRAME',
         payload: { imageBitmap, indexToReplace }
-    }, [imageBitmap]); // Transferable
+    }, [imageBitmap]);
     console.log('Main Thread: ImageBitmap sent to worker.');
 }
 
 /**
- * Handles the photo data received back from the worker.
+ * NEW: Handles the photo data received back from the worker.
  * @param {string} imgData - Base64 data URL of the processed image.
  * @param {number} indexToReplace - The index in capturedPhotos array that was processed.
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
-    // With retake removed, indexToReplace will always be -1, meaning a new photo is added.
-    capturedPhotos.push(imgData); 
-    photosCapturedCount++; 
-    addPhotoToGrid(imgData, capturedPhotos.length - 1); 
-    console.log(`Main Thread: New photo added to grid at index ${capturedPhotos.length - 1}.`);
-    
+    if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
+        capturedPhotos[indexToReplace] = imgData; 
+        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
+        if (imgElementInDom) {
+            imgElementInDom.src = imgData;
+        }
+        console.log(`Main Thread: Photo at index ${indexToReplace} updated in grid.`);
+    } else {
+        capturedPhotos.push(imgData); 
+        photosCapturedCount++; 
+        addPhotoToGrid(imgData, capturedPhotos.length - 1); 
+        console.log(`Main Thread: New photo added to grid at index ${capturedPhotos.length - 1}.`);
+    }
     updatePhotoProgressText(); 
 }
 
@@ -465,8 +471,7 @@ async function initiateCaptureSequence() {
     }
 
     if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-        // Use a modal message instead of alert
-        showCustomAlert('All photos have already been captured. Click "Go to Editor" or "Back to Layout Selection" to proceed.', 'info');
+        alert('All photos have already been captured.'); // Modified alert
         return;
     }
 
@@ -478,14 +483,13 @@ async function initiateCaptureSequence() {
         photosToCapture = 3;
     }
 
-    setCaptureControlsEnabled(true, true); // Disable controls during capture, enable nextBtn/backBtn only after
-    captureBtn.style.display = 'none'; // Hide the capture button
-    nextBtn.style.display = 'none'; // Hide next button during capture
+    setCaptureControlsEnabled(true); 
+    captureBtn.style.display = 'none'; 
+    fullscreenCaptureBtn.style.display = 'none'; // NEW
+    nextBtn.style.display = 'none'; 
 
     if (capturedPhotos.length === 0) {
-        photoGrid.innerHTML = ''; // Clear grid only if starting fresh
-        capturedPhotos = []; // Clear captured photos array
-        photosCapturedCount = 0; // Reset counter
+        photoGrid.innerHTML = ''; 
     }
     
     while (capturedPhotos.length < photosToCapture) {
@@ -503,117 +507,59 @@ async function initiateCaptureSequence() {
         }
     }
 
-    // After all photos are taken, show the next button and re-enable controls
-    nextBtn.style.display = 'block';
-    captureBtn.style.display = 'block'; // Show capture button again
-    captureBtn.textContent = 'Capture More'; // Change text to "Capture More"
-    setCaptureControlsEnabled(false); // Re-enable all controls for post-capture state
+    // After all photos are captured, re-enable controls and show next button
+    setCaptureControlsEnabled(false); // Disable controls during review
+    captureBtn.style.display = 'none'; // Keep capture button hidden
+    fullscreenCaptureBtn.style.display = 'none'; // Keep hidden
+    nextBtn.style.display = 'block'; // Show next button
+    console.log('Main Thread: Capture sequence completed.');
 }
 
-
-// --- Fullscreen Logic ---
-
-/**
- * Toggles fullscreen mode for the video preview area.
- */
+// NEW: Fullscreen Toggle
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
-        // Enter fullscreen
-        if (videoPreviewArea.requestFullscreen) {
-            videoPreviewArea.requestFullscreen();
-        } else if (videoPreviewArea.webkitRequestFullscreen) { /* Safari */
-            videoPreviewArea.webkitRequestFullscreen();
-        } else if (videoPreviewArea.msRequestFullscreen) { /* IE11 */
-            videoPreviewArea.msRequestFullscreen();
-        }
+        videoPreviewArea.requestFullscreen().then(() => {
+            videoPreviewArea.classList.add('fullscreen');
+            captureBtn.style.display = 'none'; // Hide main capture button
+            fullscreenCaptureBtn.style.display = 'block'; // Show fullscreen capture button
+            setCaptureControlsEnabled(true); // Re-enable controls if needed in fullscreen context
+        }).catch(err => {
+            console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            alert('Could not go full-screen. Your browser might not support it or it was denied.');
+        });
     } else {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { /* Safari */
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { /* IE11 */
-            document.msExitFullscreen();
-        }
+        document.exitFullscreen().then(() => {
+            videoPreviewArea.classList.remove('fullscreen');
+            captureBtn.style.display = 'block'; // Show main capture button
+            fullscreenCaptureBtn.style.display = 'none'; // Hide fullscreen capture button
+            // Re-evaluate controls state based on whether capture sequence is active or finished
+            if (photosCapturedCount < photosToCapture) {
+                setCaptureControlsEnabled(false); // Enable controls if not all photos captured
+            } else {
+                setCaptureControlsEnabled(false); // Disable controls after sequence completion
+            }
+        }).catch(err => {
+            console.error(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`);
+        });
     }
 }
 
-/**
- * Handles actions when entering/exiting fullscreen.
- */
+// NEW: Event listener for fullscreen change
 document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) {
-        // Entered fullscreen
-        console.log('Entered Fullscreen');
-        videoPreviewArea.classList.add('fullscreen-active');
-        document.body.classList.add('no-scroll'); // Add class to body to prevent scrolling
-
-        // Move capture button into the fullscreen container
-        fullscreenCaptureBtnContainer.appendChild(captureBtn);
-        captureBtn.style.display = 'block'; // Ensure it's visible in fullscreen
-        
-        // Hide other main controls and photo grid
-        document.querySelector('.controls-panel').style.display = 'none';
-        document.querySelector('.action-buttons').style.display = 'none'; // Contains nextBtn usually
-        document.querySelector('.additional-buttons').style.display = 'none'; // Hide other buttons
-        document.getElementById('captured-photos-display').style.display = 'none';
-
-    } else {
+    if (!document.fullscreenElement) {
         // Exited fullscreen
-        console.log('Exited Fullscreen');
-        videoPreviewArea.classList.remove('fullscreen-active');
-        document.body.classList.remove('no-scroll'); // Remove no-scroll class
-
-        // Move capture button back to its original place (action-buttons div)
-        document.querySelector('.action-buttons').prepend(captureBtn); // Prepend to keep its order
-        captureBtn.style.display = 'block'; // Ensure it's visible after moving
-        
-        // Show other main controls and photo grid
-        document.querySelector('.controls-panel').style.display = 'flex';
-        document.querySelector('.action-buttons').style.display = 'flex';
-        document.querySelector('.additional-buttons').style.display = 'flex';
-        document.getElementById('captured-photos-display').style.display = 'flex';
-
-        // Restore button visibility based on capture state
-        if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-            nextBtn.style.display = 'block';
-            captureBtn.textContent = 'Capture More';
+        videoPreviewArea.classList.remove('fullscreen');
+        captureBtn.style.display = 'block'; // Show main capture button
+        fullscreenCaptureBtn.style.display = 'none'; // Hide fullscreen capture button
+        // Re-evaluate controls state based on whether capture sequence is active or finished
+        if (capturedPhotos.length < photosToCapture) {
+            setCaptureControlsEnabled(false); 
         } else {
-            nextBtn.style.display = 'none';
-            captureBtn.textContent = 'Start Capture';
+            setCaptureControlsEnabled(false); 
+            nextBtn.style.display = 'block';
         }
     }
-    setCaptureControlsEnabled(false); // Always re-enable controls after fullscreen change
 });
-
-document.addEventListener('fullscreenerror', (event) => {
-    console.error('Fullscreen Error:', event);
-    showCustomAlert('Failed to enter fullscreen. Your browser might prevent it under certain conditions.', 'error');
-});
-
-// Custom Alert/Modal message (replaces native alert/confirm)
-function showCustomAlert(message, type = 'info') {
-    let alertBox = document.getElementById('custom-alert');
-    if (!alertBox) {
-        alertBox = document.createElement('div');
-        alertBox.id = 'custom-alert';
-        alertBox.className = 'custom-alert-box';
-        alertBox.innerHTML = `
-            <p id="custom-alert-message"></p>
-            <button id="custom-alert-ok-btn">OK</button>
-        `;
-        document.body.appendChild(alertBox);
-    }
-
-    document.getElementById('custom-alert-message').textContent = message;
-    alertBox.className = `custom-alert-box ${type}`; // Add type for styling
-    alertBox.style.display = 'flex';
-
-    const okBtn = document.getElementById('custom-alert-ok-btn');
-    okBtn.onclick = () => {
-        alertBox.style.display = 'none';
-    };
-}
 
 
 // --- Event Listeners ---
@@ -650,7 +596,13 @@ filterSelect.addEventListener('change', () => {
     console.log(`Main Thread: Filter changed to ${selectedFilter}. Worker notified.`);
 });
 
-captureBtn.addEventListener('click', initiateCaptureSequence); // Always initiate capture sequence directly
+// Use a single function for both capture buttons
+const handleCaptureClick = () => {
+    initiateCaptureSequence(); 
+};
+
+captureBtn.addEventListener('click', handleCaptureClick); // Original capture button
+fullscreenCaptureBtn.addEventListener('click', handleCaptureClick); // NEW: Fullscreen capture button
 
 nextBtn.addEventListener('click', () => {
     if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
@@ -658,17 +610,7 @@ nextBtn.addEventListener('click', () => {
         window.location.href = 'editing-page/editing-home.html';
     } else {
         const remaining = photosToCapture - capturedPhotos.length;
-        // Use custom alert instead of native alert
-        showCustomAlert(`Please capture ${remaining} more photo(s) before proceeding!`, 'warning'); 
-    }
-});
-
-// Photo grid click is only for display, not for retake selection anymore
-photoGrid.addEventListener('click', (event) => {
-    const clickedWrapper = event.target.closest('.captured-photo-wrapper');
-    if (clickedWrapper) {
-        // Optionally, you could add a visual effect here if needed, but no functional selection
-        console.log(`Main Thread: Photo at index ${clickedWrapper.dataset.index} clicked.`);
+        alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
 });
 
@@ -677,13 +619,17 @@ invertCameraButton.addEventListener('click', () => {
     console.log('Main Thread: Camera inversion toggled.');
 });
 
-// New: Event listener for Back to Layout Selection button
-backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'layout-selection/layout-selection.html';
-});
+// NEW: Toggle Fullscreen button listener
+toggleFullscreenBtn.addEventListener('click', toggleFullScreen);
 
-// New: Event listener for Fullscreen button
-fullscreenBtn.addEventListener('click', toggleFullScreen);
+// NEW: Back to Layout Selection button listener
+backToLayoutBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to go back? Your captured photos will be cleared.')) {
+        localStorage.removeItem('capturedPhotos');
+        // Assuming your layout selection page is 'index.html' or similar
+        window.location.href = 'index.html'; 
+    }
+});
 
 window.addEventListener('beforeunload', () => {
     if (imageProcessorWorker) {
