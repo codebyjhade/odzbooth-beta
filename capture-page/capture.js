@@ -711,7 +711,7 @@ invertCameraButton.addEventListener('click', () => {
 });
 
 backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'index.html'; 
+    window.location.href = 'layout-selection/layout-selection.html'; 
 });
 
 fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
