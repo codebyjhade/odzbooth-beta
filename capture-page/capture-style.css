@@ -93,12 +93,10 @@ video {
     display: block;
     border-radius: 5px; /* Slight inner border radius */
     object-fit: cover; /* Ensures video fills the area, cropping if aspect ratios differ */
-    /* NEW: Mirror video for user-facing camera */
     transform: scaleX(-1); 
-    transition: transform 0.3s ease; /* Smooth transition for invert button */
+    transition: transform 0.3s ease; 
 }
 
-/* NEW: Class for explicitly not mirroring the video (e.g., for rear camera or if user prefers) */
 video.inverted {
     transform: scaleX(1);
 }
@@ -138,14 +136,14 @@ video.inverted {
     box-sizing: border-box;
     text-align: center;
     z-index: 11;
-    display: none; /* Hidden by default */
+    display: none; 
 }
 
 .message.error {
-    color: #dc3545; /* Red for errors */
+    color: #dc3545; 
 }
 .message.warning {
-    color: #ffc107; /* Orange for warnings */
+    color: #ffc107; 
 }
 
 .message .sub-message {
@@ -154,7 +152,6 @@ video.inverted {
     margin-top: 5px;
 }
 
-/* Spinner Overlay Styles */
 .spinner-overlay {
     position: absolute;
     top: 0;
@@ -166,7 +163,7 @@ video.inverted {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 12; /* Above messages */
+    z-index: 12; 
     color: var(--primary-brand-color);
     font-size: 1.2em;
     gap: 10px;
@@ -177,7 +174,7 @@ video.inverted {
 }
 
 .spinner-overlay .fa-spinner {
-    color: var(--secondary-brand-color); /* Spinner color */
+    color: var(--secondary-brand-color); 
 }
 
 
@@ -190,7 +187,7 @@ video.inverted {
 }
 
 .control-group {
-    text-align: left; /* Align labels to the left */
+    text-align: left; 
 }
 
 .controls-panel label {
@@ -208,7 +205,7 @@ video.inverted {
     background-color: var(--panel-bg-color);
     font-size: 1em;
     cursor: pointer;
-    appearance: none; /* Remove default select arrow */
+    appearance: none; 
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.3L159.5%2069.8c-4.7-4.7-12.3-4.7-17%200L5.4%20197.3c-4.7%204.7-4.7%2012.3%200%2017l19.8%2019.8c4.7%204.7%2012.3%204.7%2017%200l105.7-105.7L245.2%20234.1c4.7%204.7%2012.3%204.7%2017%200l19.8-19.8c4.7-4.7%204.7-12.3%200-17z%22%2F%3E%3C%2Fsvg%3E');
     background-repeat: no-repeat;
     background-position: right 15px center;
@@ -220,7 +217,7 @@ video.inverted {
     gap: 15px;
     width: 100%;
     justify-content: center;
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    flex-wrap: wrap; 
 }
 
 button {
@@ -237,7 +234,7 @@ button {
 }
 
 button:hover:enabled {
-    background: #2a8fb6; /* Darker primary */
+    background: #2a8fb6; 
     transform: translateY(-2px);
     box-shadow: 0 6px 15px var(--shadow-medium);
 }
@@ -255,19 +252,16 @@ button:disabled {
 }
 
 .secondary-btn:hover:enabled {
-    background: #e0b06b; /* Darker secondary */
+    background: #e0b06b; 
     color: var(--text-dark);
 }
-/* In capture-page/capture-style.css */
 
 #cameraFeed {
-    /* Your existing styles */
     object-fit: cover;
     width: 100%;
     height: 100%;
     display: block;
-    /* Add this line: */
-    will-change: transform, filter; /* Hints to the browser for performance optimization */
+    will-change: transform, filter; 
 }
 
 #captured-photos-display {
@@ -275,13 +269,13 @@ button:disabled {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 400px; /* Max width for captured photos section */
+    max-width: 400px; 
     background: var(--panel-bg-color);
     padding: 25px;
     border-radius: var(--border-radius-soft);
     box-shadow: 0 5px 20px var(--shadow-medium);
     box-sizing: border-box;
-    position: relative; /* For spinner overlay */
+    position: relative; 
 }
 
 #captured-photos-display h3 {
@@ -293,7 +287,7 @@ button:disabled {
 
 #captured-photos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid for photos */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
     gap: 15px;
     width: 100%;
     justify-content: center;
@@ -301,8 +295,8 @@ button:disabled {
 
 .captured-photo-item {
     width: 100%;
-    aspect-ratio: var(--video-aspect-ratio); /* Use the dynamic aspect ratio */
-    object-fit: cover; /* Crop to fit */
+    aspect-ratio: var(--video-aspect-ratio); 
+    object-fit: cover; 
     border: 3px solid var(--secondary-brand-color);
     border-radius: 8px;
     box-shadow: 0 2px 8px var(--shadow-light);
@@ -321,23 +315,21 @@ button:disabled {
     line-height: 1.4;
 }
 
-/* --- NEW: Visual Countdown Styles --- */
 .visual-countdown {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: var(--font-fredoka); /* Use your special title font */
-    font-size: 8em; /* Large size */
-    color: var(--text-light); /* White text for contrast */
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Strong shadow for visibility */
-    z-index: 10; /* Above video, below flash */
-    opacity: 0; /* Hidden by default */
-    pointer-events: none; /* Allows clicks to pass through */
-    transition: opacity 0.3s ease-in-out; /* Smooth fade in/out */
+    font-family: var(--font-fredoka); 
+    font-size: 8em; 
+    color: var(--text-light); 
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
+    z-index: 10; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.3s ease-in-out; 
 }
 
-/* Animation for the countdown numbers */
 @keyframes countdownPulse {
     0% {
         transform: translate(-50%, -50%) scale(0.8);
@@ -357,34 +349,31 @@ button:disabled {
 }
 
 .visual-countdown.animate {
-    animation: countdownPulse 1s ease-out forwards; /* Apply animation */
+    animation: countdownPulse 1s ease-out forwards; 
 }
 
-/* --- NEW: Flash Overlay Styles --- */
 .flash-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 1); /* Solid white */
-    z-index: 20; /* Above everything else */
-    opacity: 0; /* Hidden by default */
-    pointer-events: none; /* Allows clicks to pass through */
-    transition: opacity 0.1s ease-out; /* Quick fade out */
+    background-color: rgba(255, 255, 255, 1); 
+    z-index: 20; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.1s ease-out; 
 }
 
 .flash-overlay.active {
-    opacity: 1; /* Show the flash */
-    transition: none; /* No transition when activating for instant flash */
+    opacity: 1; 
+    transition: none; 
 }
 
-/* Hide the old text countdown */
 #countdown {
     display: none;
 }
 
-/* --- NEW: Photo Progress Text Style --- */
 .photo-progress-text {
     font-size: 1.1em;
     color: var(--text-dark);
@@ -393,88 +382,52 @@ button:disabled {
     font-weight: 600;
 }
 
-/* --- NEW: Styles for Selectable Photos in Grid --- */
 .captured-photo-wrapper {
     position: relative;
-    cursor: pointer; /* Indicate it's clickable */
-    border: 3px solid transparent; /* Default border, transparent */
+    cursor: pointer; 
+    border: 3px solid transparent; 
     border-radius: var(--border-radius-soft);
-    overflow: hidden; /* Ensures border-radius applies to image */
+    overflow: hidden; 
     transition: border-color 0.2s ease-in-out, transform 0.2s ease;
 }
 
 .captured-photo-wrapper:hover {
     transform: scale(1.03);
-    border-color: var(--secondary-brand-color); /* Highlight on hover */
+    border-color: var(--secondary-brand-color); 
 }
 
 .captured-photo-wrapper.selected {
-    border-color: var(--primary-brand-color); /* Blue border when selected */
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Outer glow for selection */
-    transform: scale(1.05); /* Slightly larger when selected */
+    border-color: var(--primary-brand-color); 
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
+    transform: scale(1.05); 
 }
 
 .captured-photo-wrapper.selected:hover {
-    border-color: var(--primary-brand-color); /* Keep selected border on hover */
+    border-color: var(--primary-brand-color); 
 }
 
-/* Ensure the image fills its wrapper */
 .captured-photo-wrapper img {
-    display: block; /* Remove extra space below image */
+    display: block; 
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the wrapper while maintaining aspect ratio */
-    border-radius: var(--border-radius-soft); /* Inherit border radius */
+    object-fit: cover; 
+    border-radius: var(--border-radius-soft); 
 }
-
-/* Removed: Retake button styles */
-/* #retakeSelectedPhotoBtn {
-    background-color: var(--accent-color); 
-    color: var(--text-light);
-    border: none;
-    padding: 12px 25px;
-    border-radius: 25px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: var(--shadow-medium);
-} */
-
-/* #retakeSelectedPhotoBtn:hover:not(:disabled) {
-    background-color: var(--button-hover-accent); 
-    transform: translateY(-2px);
-}
-
-#retakeSelectedPhotoBtn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-    box-shadow: none;
-}
-
-#retakeSelectedPhotoBtn i {
-    font-size: 1.2em;
-} */
 
 /* Fullscreen Styles */
 body.fullscreen-active {
     padding: 0;
     margin: 0;
-    overflow: hidden; /* Hide scrollbars */
+    overflow: hidden; 
 }
 
 body.fullscreen-active .logo-header,
 body.fullscreen-active .controls-panel,
 body.fullscreen-active #captured-photos-display,
-body.fullscreen-active #nextBtn, /* Hide Next button in fullscreen */
-body.fullscreen-active #backToLayoutBtn, /* Hide Back to Layout in fullscreen */
-body.fullscreen-active #invertCameraButton, /* Hide invert camera in fullscreen */
-body.fullscreen-active #fullscreenToggleBtn /* Hide fullscreen toggle itself in fullscreen */ {
+body.fullscreen-active #nextBtn, 
+body.fullscreen-active #backToLayoutBtn, 
+body.fullscreen-active #invertCameraButton, 
+body.fullscreen-active #fullscreenToggleBtn {
     display: none !important;
 }
 
@@ -482,7 +435,7 @@ body.fullscreen-active .photo-booth-wrapper {
     width: 100vw;
     height: 100vh;
     max-width: none;
-    flex-direction: column; /* Force column layout in fullscreen */
+    flex-direction: column; 
     justify-content: center;
     align-items: center;
     gap: 0;
@@ -495,7 +448,7 @@ body.fullscreen-active .photobooth-container {
     padding: 0;
     border-radius: 0;
     box-shadow: none;
-    background: #000; /* Black background for fullscreen */
+    background: #000; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -505,33 +458,32 @@ body.fullscreen-active .photobooth-container {
 body.fullscreen-active .video-preview-area {
     width: 100vw;
     height: 100vh;
-    max-width: none; /* Override max-width */
+    max-width: none; 
     margin-bottom: 0;
     border: none;
     border-radius: 0;
-    aspect-ratio: auto; /* Allow natural video aspect ratio within bounds */
-    display: flex; /* Re-enable flex for internal alignment */
+    aspect-ratio: auto; 
+    display: flex; 
     justify-content: center;
     align-items: center;
 }
 
 body.fullscreen-active video {
-    width: auto; /* Allow video to determine its width based on height/aspect */
-    height: 100%; /* Fill height */
-    max-width: 100%; /* Ensure it doesn't exceed screen width */
-    object-fit: contain; /* Contain to ensure full video is visible, no cropping */
+    width: auto; 
+    height: 100%; 
+    max-width: 100%; 
+    object-fit: contain; 
     border-radius: 0;
 }
 
-/* Position Start Capture button at the bottom center in fullscreen */
-.fullscreen-capture-btn {
+.fullscreen-bottom-btn {
     position: absolute;
-    bottom: 20px; /* Adjust as needed */
+    bottom: 20px; 
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30; /* Ensure it's above other elements */
-    width: auto; /* Adjust width as needed */
-    min-width: 180px; /* Example minimum width */
+    z-index: 30; 
+    width: auto; 
+    min-width: 180px; 
     font-size: 1.3em;
     padding: 15px 30px;
 }
@@ -541,11 +493,11 @@ body.fullscreen-active video {
     .photo-booth-wrapper {
         flex-direction: row;
         justify-content: center;
-        align-items: flex-start; /* Align content to the top */
+        align-items: flex-start; 
     }
 
     .photobooth-container {
-        margin-right: 30px; /* Space between camera and photo display */
+        margin-right: 30px; 
         max-width: 500px;
     }
 
@@ -553,7 +505,6 @@ body.fullscreen-active video {
         max-width: 400px;
     }
 
-    /* Change to 1 column for captured photos to mimic a strip side by side */
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
