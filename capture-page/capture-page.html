@@ -23,14 +23,18 @@
                 <video id="cameraFeed" autoplay playsinline></video>
                 <div id="flashOverlay" class="flash-overlay"></div>
                 <div id="visualCountdown" class="visual-countdown"></div>
-                <p id="countdown"></p> <div id="camera-access-message" class="message">
-                <p id="main-camera-msg">Attempting to access camera...</p>
-                <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
-            </div>
+                <p id="countdown"></p> 
+                <div id="camera-access-message" class="message">
+                    <p id="main-camera-msg">Attempting to access camera...</p>
+                    <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
+                </div>
                 <div id="camera-loading-spinner" class="spinner-overlay">
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
                 </div>
+                <button id="fullscreenToggleBtn" class="fullscreen-btn">
+                    <i class="fas fa-expand"></i>
+                </button>
             </div>
 
             <div class="controls-panel">
@@ -49,7 +53,10 @@
                         <option value="contrast(150%) brightness(80%)">Vintage</option>
                         <option value="hue-rotate(90deg) saturate(150%)">Vibrant</option>
                         <option value="invert(100%)">Negative</option>
-                        <option value="blur(3px)">Blur</option> <option value="brightness(150%)">Bright</option> <option value="saturate(200%)">Saturated</option> </select>
+                        <option value="blur(3px)">Blur</option> 
+                        <option value="brightness(150%)">Bright</option> 
+                        <option value="saturate(200%)">Saturated</option> 
+                    </select>
                     <p class="tool-tip">See effects live on your camera feed!</p>
                 </div>
             </div>
@@ -61,6 +68,9 @@
             <button id="invertCameraButton" class="secondary-btn" style="margin-top: 15px;">
                 <i class="fas fa-sync-alt"></i> Invert Camera
             </button>
+            <button id="backToLayoutBtn" class="secondary-btn back-to-layout-btn">
+                <i class="fas fa-arrow-left"></i> Back to Layout Selection
+            </button>
         </div>
 
         <div id="captured-photos-display">
@@ -71,9 +81,6 @@
                 <p>Processing Photo...</p>
             </div>
             <div id="captured-photos-grid"></div>
-            <button id="retakeSelectedPhotoBtn" class="secondary-btn" style="display: none; margin-top: 15px;" disabled>
-                <i class="fas fa-redo-alt"></i> Retake Selected Photo
-            </button>
-            </div>
+        </div>
     </body>
 </html>
