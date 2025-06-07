@@ -411,8 +411,8 @@ function runCountdown(duration) {
         visualCountdown.textContent = count;
         visualCountdown.classList.add('animate'); 
 
-        // Play the first beep immediately for '3'
-        playSound(countdownBeep);
+        // Play the sound for the initial '3' countdown immediately
+        playSound(countdownBeep); //
 
         const timer = setInterval(() => {
             count--;
@@ -462,8 +462,8 @@ async function sendFrameToWorker(indexToReplace = -1) {
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
-        capturedPhotos[indexToReplace] = imgData; // Fixed: Use indexToReplace directly
-        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`); // Fixed: Use indexToReplace directly
+        capturedPhotos[indexToReplace] = imgData; 
+        const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`); 
         if (imgElementInDom) {
             imgElementInDom.src = imgData;
         }
@@ -548,10 +548,10 @@ async function initiateCaptureSequence() {
         }
     }
 
-    setCaptureControlsEnabled(false);
-    backToLayoutBtn.style.display = 'block';
+    setCaptureControlsEnabled(false); 
+    backToLayoutBtn.style.display = 'block'; 
     fullscreenToggleBtn.style.display = 'block';
-    invertCameraButton.style.display = 'block';
+    invertCameraButton.style.display = 'block'; 
 
     if (capturedPhotos.length < photosToCapture) {
         captureBtnNormalMode.disabled = false;
@@ -561,7 +561,7 @@ async function initiateCaptureSequence() {
         captureBtnFullscreen.disabled = true;
     }
     toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
-    updatePhotoProgressText();
+    updatePhotoProgressText(); 
 }
 
 /**
@@ -633,18 +633,18 @@ document.addEventListener('fullscreenchange', toggleCaptureButtonVisibility);
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    localStorage.removeItem('capturedPhotos');
-    photoGrid.innerHTML = '';
+    localStorage.removeItem('capturedPhotos'); 
+    photoGrid.innerHTML = ''; 
 
     const storedAspectRatio = localStorage.getItem('selectedFrameAspectRatio');
     if (storedAspectRatio) {
         photoFrameAspectRatio = parseFloat(storedAspectRatio);
         updateVideoAspectRatio(photoFrameAspectRatio);
     } else {
-        updateVideoAspectRatio(4 / 3);
+        updateVideoAspectRatio(4 / 3); 
     }
     populateCameraList();
-    updatePhotoProgressText();
+    updatePhotoProgressText(); 
     toggleCaptureButtonVisibility(); // Initial call to set button visibility
 
     // Unlock audio on first user interaction
@@ -675,7 +675,7 @@ cameraSelect.addEventListener('change', (event) => {
 
 filterSelect.addEventListener('change', () => {
     const selectedFilter = filterSelect.value;
-    video.style.filter = selectedFilter;
+    video.style.filter = selectedFilter; 
     if (imageProcessorWorker) {
         imageProcessorWorker.postMessage({
             type: 'UPDATE_SETTINGS',
@@ -686,12 +686,12 @@ filterSelect.addEventListener('change', () => {
 
 // Use the normal mode capture button for clicks when not in fullscreen
 captureBtnNormalMode.addEventListener('click', () => {
-    initiateCaptureSequence();
+    initiateCaptureSequence(); 
 });
 
 // Use the fullscreen capture button for clicks when in fullscreen
 captureBtnFullscreen.addEventListener('click', () => {
-    initiateCaptureSequence();
+    initiateCaptureSequence(); 
 });
 
 nextBtn.addEventListener('click', () => {
@@ -700,7 +700,7 @@ nextBtn.addEventListener('click', () => {
         window.location.href = 'editing-page/editing-home.html';
     } else {
         const remaining = photosToCapture - capturedPhotos.length;
-        alert(`Please capture ${remaining} more photo(s) before proceeding!`);
+        alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
 });
 
@@ -711,7 +711,7 @@ invertCameraButton.addEventListener('click', () => {
 });
 
 backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'index.html';
+    window.location.href = 'index.html'; 
 });
 
 fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
