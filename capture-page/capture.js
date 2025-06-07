@@ -492,19 +492,22 @@ async function initiateCaptureSequence() {
         return;
     }
 
-    // Attempt to unlock audio context on first interaction if not already
+    // Crucial: Attempt to unlock audio context directly on this user interaction
+    // This will ensure the audio context is ready for the first beep.
     if (!userInteracted) {
         try {
             countdownBeep.muted = false;
             cameraShutter.muted = false;
-            await countdownBeep.play(); // Play a silent sound to unlock (if needed)
+            // Play a very brief, silent sound to explicitly unlock the audio context
+            await countdownBeep.play();
             countdownBeep.pause();
             countdownBeep.currentTime = 0;
-            userInteracted = true;
+            userInteracted = true; // Mark as interacted
+            console.log("Audio context unlocked by Start Capture button click.");
         } catch (e) {
-            console.warn("Audio autoplay blocked, user interaction required:", e);
-            // On mobile, if audio is still blocked, inform the user they need to click to enable sound.
-            // For now, we'll proceed without sound if it's blocked.
+            console.warn("Audio autoplay blocked by explicit play attempt:", e);
+            // This could still happen in very strict environments, but less likely.
+            // Consider showing a UI message if audio is critical and fails here.
         }
     }
 
@@ -649,20 +652,22 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePhotoProgressText(); 
     toggleCaptureButtonVisibility(); // Initial call to set button visibility
 
-    // Unlock audio on first user interaction
+    // Unlock audio on first user interaction - this is a general fallback
+    // The main unlock will now happen in initiateCaptureSequence
     const unlockAudio = () => {
-        countdownBeep.muted = false;
-        cameraShutter.muted = false;
-        // Attempt to play a silent sound to "unlock" audio for later programmatic playback
-        // This is a common workaround for autoplay policies on mobile browsers.
-        countdownBeep.play().then(() => {
-            countdownBeep.pause();
-            countdownBeep.currentTime = 0;
-            userInteracted = true;
-        }).catch(e => {
-            console.warn("Initial audio unlock failed:", e);
-            // This might happen if play() is still blocked, but at least we tried.
-        });
+        // Only attempt if not already interacted via the capture button
+        if (!userInteracted) {
+            countdownBeep.muted = false;
+            cameraShutter.muted = false;
+            countdownBeep.play().then(() => {
+                countdownBeep.pause();
+                countdownBeep.currentTime = 0;
+                userInteracted = true;
+                console.log("Audio context unlocked by general DOM click.");
+            }).catch(e => {
+                console.warn("Initial audio unlock failed via DOM click:", e);
+            });
+        }
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchend', unlockAudio);
     };
