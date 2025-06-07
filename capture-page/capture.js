@@ -520,6 +520,7 @@ function toggleFullScreen() {
     if (!document.fullscreenElement) {
         videoPreviewArea.requestFullscreen().then(() => {
             videoPreviewArea.classList.add('fullscreen');
+            document.body.classList.add('fullscreen-active'); // Add class to body
             captureBtn.style.display = 'none'; // Hide main capture button
             fullscreenCaptureBtn.style.display = 'block'; // Show fullscreen capture button
             setCaptureControlsEnabled(true); // Re-enable controls if needed in fullscreen context
@@ -530,6 +531,7 @@ function toggleFullScreen() {
     } else {
         document.exitFullscreen().then(() => {
             videoPreviewArea.classList.remove('fullscreen');
+            document.body.classList.remove('fullscreen-active'); // Remove class from body
             captureBtn.style.display = 'block'; // Show main capture button
             fullscreenCaptureBtn.style.display = 'none'; // Hide fullscreen capture button
             // Re-evaluate controls state based on whether capture sequence is active or finished
@@ -549,6 +551,7 @@ document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
         // Exited fullscreen
         videoPreviewArea.classList.remove('fullscreen');
+        document.body.classList.remove('fullscreen-active'); // Remove class from body
         captureBtn.style.display = 'block'; // Show main capture button
         fullscreenCaptureBtn.style.display = 'none'; // Hide fullscreen capture button
         // Re-evaluate controls state based on whether capture sequence is active or finished
