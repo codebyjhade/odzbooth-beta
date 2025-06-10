@@ -1,0 +1,560 @@
+:root {
+    --primary-brand-color: #33A4C9; /* ODZ Blue */
+    --secondary-brand-color: #F0C27B; /* ODZ Orange-Yellow */
+    --accent-color: #E5A24A; /* Darker Orange */
+    --text-dark: #333;
+    --text-light: #fff;
+    --bg-gradient: linear-gradient(to bottom, var(--accent-color) 0%, var(--secondary-brand-color) 30%, var(--primary-brand-color) 100%);
+    --panel-bg-color: #fff;
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.2);
+    --border-radius-soft: 12px;
+    --font-poppins: 'Poppins', sans-serif;
+    --font-fredoka: 'Fredoka', cursive;
+    --video-aspect-ratio: 4/3; /* Default aspect ratio for video preview */
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--bg-gradient);
+    font-family: var(--font-poppins);
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    color: var(--text-dark);
+}
+
+.logo-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.logo-header .title {
+    font-family: var(--font-fredoka);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-brand-color);
+    transition: transform 0.3s ease-in-out;
+    text-shadow: 2px 2px 4px var(--shadow-light);
+}
+
+.logo-header .title .booth {
+    color: var(--secondary-brand-color);
+}
+
+.logo-header .title:hover {
+    transform: scale(1.05);
+}
+
+.photo-booth-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px; /* Space between video/controls and captured photos */
+    width: 100%;
+    max-width: 1000px; /* Max width for the entire section */
+}
+
+.photobooth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--panel-bg-color);
+    padding: 30px;
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 5px 20px var(--shadow-medium);
+    text-align: center;
+    width: 100%;
+    max-width: 550px; /* Max width for the camera section */
+    box-sizing: border-box;
+}
+
+.video-preview-area {
+    position: relative;
+    width: 100%;
+    max-width: 450px; /* Standard video width */
+    border: 6px solid var(--primary-brand-color);
+    border-radius: var(--border-radius-soft);
+    overflow: hidden;
+    margin-bottom: 20px; /* Space below video before controls */
+    background-color: #000; /* Black background for video placeholder */
+    aspect-ratio: var(--video-aspect-ratio); 
+    display: flex; /* Ensure flex for centering messages/spinners */
+    justify-content: center;
+    align-items: center;
+}
+
+video {
+    width: 100%;
+    height: 100%; /* Fill the parent container now that parent has aspect-ratio */
+    display: block;
+    border-radius: 5px; /* Slight inner border radius */
+    object-fit: cover; /* Ensures video fills the area, cropping if aspect ratios differ */
+    transform: scaleX(-1); 
+    transition: transform 0.3s ease; 
+}
+
+video.inverted {
+    transform: scaleX(1);
+}
+
+#countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-fredoka);
+    font-size: 5em;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--secondary-brand-color);
+    padding: 15px 30px;
+    border-radius: 15px;
+    display: none;
+    z-index: 10;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+.message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 11;
+    display: none; 
+}
+
+.message.error {
+    color: #dc3545; 
+}
+.message.warning {
+    color: #ffc107; 
+}
+
+.message .sub-message {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 5px;
+}
+
+.spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 12; 
+    color: var(--primary-brand-color);
+    font-size: 1.2em;
+    gap: 10px;
+}
+
+.spinner-overlay.hidden-spinner {
+    display: none;
+}
+
+.spinner-overlay .fa-spinner {
+    color: var(--secondary-brand-color); 
+}
+
+
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    margin-bottom: 25px; /* Space below control groups */
+}
+
+.control-group {
+    text-align: left; 
+}
+
+.controls-panel label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.controls-panel select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: var(--border-radius-soft);
+    border: 1px solid #ddd;
+    background-color: var(--panel-bg-color);
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none; 
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.3L159.5%2069.8c-4.7-4.7-12.3-4.7-17%200L5.4%20197.3c-4.7%204.7-4.7%2012.3%200%2017l19.8%2019.8c4.7%204.7%2012.3%204.7%2017%200l105.7-105.7L245.2%20234.1c4.7%204.7%2012.3%204.7%2017%200l19.8-19.8c4.7-4.7%204.7-12.3%200-17z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+}
+
+/* Container for middle/top buttons (Invert, Fullscreen) */
+.action-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+    align-items: center; /* Center horizontally */
+    margin-bottom: 25px; /* Space above bottom buttons */
+}
+
+/* Container for bottom buttons (Back to Layout, Go to Editor) */
+.bottom-action-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+    align-items: center; /* Center horizontally */
+}
+
+
+button {
+    padding: 12px 25px;
+    border: none;
+    background: var(--primary-brand-color);
+    color: var(--text-light);
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--border-radius-soft);
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    width: 100%; /* Make buttons full width in their container */
+    max-width: 250px; /* Limit max width for a nicer look */
+}
+
+button:hover:enabled {
+    background: #2a8fb6; 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px var(--shadow-medium);
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.secondary-btn {
+    background: var(--secondary-brand-color);
+    color: var(--text-dark);
+}
+
+.secondary-btn:hover:enabled {
+    background: #e0b06b; 
+    color: var(--text-dark);
+}
+
+#cameraFeed {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block;
+    will-change: transform, filter; 
+}
+
+#captured-photos-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px; 
+    background: var(--panel-bg-color);
+    padding: 25px;
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 5px 20px var(--shadow-medium);
+    box-sizing: border-box;
+    position: relative; 
+}
+
+#captured-photos-display h3 {
+    color: var(--primary-brand-color);
+    margin-bottom: 20px;
+    font-size: 1.6em;
+    font-family: var(--font-fredoka);
+}
+
+#captured-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+}
+
+.captured-photo-item {
+    width: 100%;
+    aspect-ratio: var(--video-aspect-ratio); 
+    object-fit: cover; 
+    border: 3px solid var(--secondary-brand-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-light);
+    transition: transform 0.2s ease;
+}
+
+.captured-photo-item:hover {
+    transform: scale(1.03);
+}
+
+.tool-tip {
+    font-size: 0.85em;
+    color: #777;
+    margin-top: 10px;
+    text-align: left;
+    line-height: 1.4;
+}
+
+.visual-countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-fredoka); 
+    font-size: 8em; 
+    color: var(--text-light); 
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
+    z-index: 10; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.3s ease-in-out; 
+}
+
+@keyframes countdownPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+.visual-countdown.animate {
+    animation: countdownPulse 1s ease-out forwards; 
+}
+
+.flash-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 1); 
+    z-index: 20; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.1s ease-out; 
+}
+
+.flash-overlay.active {
+    opacity: 1; 
+    transition: none; 
+}
+
+#countdown {
+    display: none;
+}
+
+.photo-progress-text {
+    font-size: 1.1em;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.captured-photo-wrapper {
+    position: relative;
+    cursor: pointer; 
+    border: 3px solid transparent; 
+    border-radius: var(--border-radius-soft);
+    overflow: hidden; 
+    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
+}
+
+.captured-photo-wrapper:hover {
+    transform: scale(1.03);
+    border-color: var(--secondary-brand-color); 
+}
+
+.captured-photo-wrapper.selected {
+    border-color: var(--primary-brand-color); 
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
+    transform: scale(1.05); 
+}
+
+.captured-photo-wrapper.selected:hover {
+    border-color: var(--primary-brand-color); 
+}
+
+.captured-photo-wrapper img {
+    display: block; 
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    border-radius: var(--border-radius-soft); 
+}
+
+/* Fullscreen Styles */
+body.fullscreen-active {
+    padding: 0;
+    margin: 0;
+    overflow: hidden; 
+}
+
+body.fullscreen-active .logo-header,
+body.fullscreen-active .controls-panel,
+body.fullscreen-active #captured-photos-display,
+body.fullscreen-active .action-buttons, /* Hide this group in fullscreen */
+body.fullscreen-active .bottom-action-buttons /* Hide this group in fullscreen */ {
+    display: none !important;
+}
+
+body.fullscreen-active .photobooth-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #000; 
+    display: flex;
+    flex-direction: column; /* Ensure column layout for content alignment */
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+/* The captureBtn is moved into video-preview-area in fullscreen, so it needs to be visible */
+body.fullscreen-active #captureBtn {
+    display: block !important;
+}
+
+body.fullscreen-active .video-preview-area {
+    width: 100vw;
+    height: 100vh; /* Takes full height in fullscreen */
+    max-width: none; 
+    margin-bottom: 0;
+    border: none;
+    border-radius: 0;
+    aspect-ratio: auto; 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+}
+
+body.fullscreen-active video {
+    width: auto; 
+    height: 100%; 
+    max-width: 100%; 
+    object-fit: contain; 
+    border-radius: 0;
+}
+
+/* Style for the capture button when it's in fullscreen mode */
+.fullscreen-bottom-btn {
+    position: absolute;
+    bottom: 50px; /* Increased from 20px to give more space from the bottom */
+    left: 50%;
+    transform: translateX(-50%); /* Centers the button horizontally */
+    z-index: 30; 
+    width: auto; 
+    min-width: 180px; 
+    font-size: 1.3em;
+    padding: 15px 30px;
+}
+
+/* Style for the capture button when it's at the top in normal mode */
+.photobooth-container > .normal-mode-capture-btn {
+    margin-bottom: 25px; /* Space below the button */
+    /* Ensure it's not absolutely positioned */
+    position: relative; 
+    transform: none; 
+    /* Inherit default button styles for width/max-width */
+}
+
+
+/* Responsive Adjustments for Capture Page */
+@media (min-width: 768px) {
+    .photo-booth-wrapper {
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start; 
+    }
+
+    .photobooth-container {
+        margin-right: 30px; 
+        max-width: 500px;
+    }
+
+    #captured-photos-display {
+        max-width: 400px;
+    }
+
+    #captured-photos-grid {
+        grid-template-columns: 1fr; 
+    }
+    .captured-photo-item {
+        max-width: 250px; 
+        justify-self: center; 
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-header .title {
+        font-size: 2.8rem;
+    }
+
+    .photobooth-container, #captured-photos-display {
+        padding: 20px;
+    }
+
+    .controls-panel select, .action-buttons button, .bottom-action-buttons button {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+
+    #countdown {
+        font-size: 4em;
+        padding: 10px 20px;
+    }
+
+    #captured-photos-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    }
+}
