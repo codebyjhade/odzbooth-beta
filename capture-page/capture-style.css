@@ -101,257 +101,6 @@ video.inverted {
     transform: scaleX(1);
 }
 
-#countdown {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-fredoka);
-    font-size: 5em;
-    font-weight: bold;
-    background: rgba(0, 0, 0, 0.7);
-    color: var(--secondary-brand-color);
-    padding: 15px 30px;
-    border-radius: 15px;
-    display: none;
-    z-index: 10;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-}
-
-.message {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column; 
-    justify-content: center;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.95);
-    color: var(--text-dark);
-    font-weight: 600;
-    font-size: 1.1em;
-    padding: 10px;
-    box-sizing: border-box;
-    text-align: center;
-    z-index: 11;
-    /* display: none; */ /* Managed by JS */
-}
-
-.message.error {
-    color: #dc3545; 
-}
-.message.warning {
-    color: #ffc107; 
-}
-
-.message .sub-message {
-    font-size: 0.8em;
-    color: #555;
-    margin-top: 5px;
-}
-
-.message .primary-btn { /* Style for Start Camera button within message */
-    margin-top: 20px;
-}
-
-.spinner-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 12; 
-    color: var(--primary-brand-color);
-    font-size: 1.2em;
-    gap: 10px;
-}
-
-.spinner-overlay.hidden-spinner {
-    display: none;
-}
-
-.spinner-overlay .fa-spinner {
-    color: var(--secondary-brand-color); 
-}
-
-
-.controls-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    width: 100%;
-    margin-bottom: 25px; /* Space below control groups */
-}
-
-.control-group {
-    text-align: left; 
-}
-
-.controls-panel label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.controls-panel select {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: var(--border-radius-soft);
-    border: 1px solid #ddd;
-    background-color: var(--panel-bg-color);
-    font-size: 1em;
-    cursor: pointer;
-    appearance: none; 
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.3L159.5%2069.8c-4.7-4.7-12.3-4.7-17%200L5.4%20197.3c-4.7%204.7-4.7%2012.3%200%2017l19.8%2019.8c4.7%204.7%2012.3%204.7%2017%200l105.7-105.7L245.2%20234.1c4.7%204.7%2012.3%204.7%2017%200l19.8-19.8c4.7-4.7%204.7-12.3%200-17z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 12px;
-}
-
-/* Container for middle/top buttons (Invert, Fullscreen) */
-.action-buttons {
-    display: flex;
-    flex-direction: column; /* Stack buttons vertically */
-    gap: 15px;
-    width: 100%;
-    justify-content: center;
-    align-items: center; /* Center horizontally */
-    margin-bottom: 25px; /* Space above bottom buttons */
-}
-
-/* Container for bottom buttons (Back to Layout, Go to Editor) */
-.bottom-action-buttons {
-    display: flex;
-    flex-direction: column; /* Stack buttons vertically */
-    gap: 15px;
-    width: 100%;
-    justify-content: center;
-    align-items: center; /* Center horizontally */
-}
-
-
-button {
-    padding: 12px 25px;
-    border: none;
-    background: var(--primary-brand-color);
-    color: var(--text-light);
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: var(--border-radius-soft);
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 10px var(--shadow-light);
-    width: 100%; /* Make buttons full width in their container */
-    max-width: 250px; /* Limit max width for a nicer look */
-}
-
-button:focus-visible { /* A11y: focus indicator */
-    outline: 2px solid var(--accent-color);
-    outline-offset: 3px;
-}
-
-
-button.primary-btn { /* Explicit primary button for "Start Camera" */
-    background: var(--primary-brand-color);
-    color: var(--text-light);
-}
-
-button.primary-btn:hover:enabled {
-    background: #2a8fb6; /* Darker primary */
-}
-
-
-button:hover:enabled {
-    background: #2a8fb6; 
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px var(--shadow-medium);
-}
-
-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-    opacity: 0.7; /* Indicate disabled state */
-}
-
-.secondary-btn {
-    background: var(--secondary-brand-color);
-    color: var(--text-dark);
-}
-
-.secondary-btn:hover:enabled {
-    background: #e0b06b; 
-    color: var(--text-dark);
-}
-
-#cameraFeed {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-    display: block;
-    will-change: transform, filter; 
-}
-
-#captured-photos-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 400px; 
-    background: var(--panel-bg-color);
-    padding: 25px;
-    border-radius: var(--border-radius-soft);
-    box-shadow: 0 5px 20px var(--shadow-medium);
-    box-sizing: border-box;
-    position: relative; 
-}
-
-#captured-photos-display h3 {
-    color: var(--primary-brand-color);
-    margin-bottom: 20px;
-    font-size: 1.6em;
-    font-family: var(--font-fredoka);
-}
-
-#captured-photos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-    gap: 15px;
-    width: 100%;
-    justify-content: center;
-}
-
-.captured-photo-item { /* This class is no longer directly used for img, but for context */
-    width: 100%;
-    aspect-ratio: var(--video-aspect-ratio); 
-    object-fit: cover; 
-    border: 3px solid var(--secondary-brand-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px var(--shadow-light);
-    transition: transform 0.2s ease;
-}
-
-.captured-photo-item:hover {
-    transform: scale(1.03);
-}
-
-.tool-tip {
-    font-size: 0.85em;
-    color: #777;
-    margin-top: 10px;
-    text-align: left;
-    line-height: 1.4;
-}
-
 .visual-countdown {
     position: absolute;
     top: 50%;
@@ -407,16 +156,225 @@ button:disabled {
     transition: none; 
 }
 
-#countdown { /* This is the old text countdown, now completely hidden */
+/* Camera Access Message and Spinners */
+.message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 11;
+    /* display is controlled by JS */
+}
+
+.message.error {
+    color: #dc3545; 
+}
+.message.warning {
+    color: #ffc107; 
+}
+
+.message .sub-message {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 5px;
+}
+
+.message button { /* Style for buttons within message like Start Camera / Retry */
+    margin-top: 20px;
+    min-width: 180px;
+}
+
+.spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 12; 
+    color: var(--primary-brand-color);
+    font-size: 1.2em;
+    gap: 10px;
+}
+
+.spinner-overlay.hidden-spinner {
     display: none;
 }
 
-.photo-progress-text {
-    font-size: 1.1em;
-    color: var(--text-dark);
-    text-align: center;
-    margin-bottom: 15px;
+.spinner-overlay .fa-spinner {
+    color: var(--secondary-brand-color); 
+}
+
+/* Control Panels and Buttons */
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    margin-bottom: 25px; 
+}
+
+.control-group {
+    text-align: left; 
+}
+
+.controls-panel label {
+    display: block;
+    margin-bottom: 8px;
     font-weight: 600;
+    color: var(--text-dark);
+}
+
+.controls-panel select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: var(--border-radius-soft);
+    border: 1px solid #ddd;
+    background-color: var(--panel-bg-color);
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none; 
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%20197.3L159.5%2069.8c-4.7-4.7-12.3-4.7-17%200L5.4%20197.3c-4.7%204.7-4.7%2012.3%200%2017l19.8%2019.8c4.7%204.7%2012.3%204.7%2017%200l105.7-105.7L245.2%20234.1c4.7%204.7%2012.3%204.7%2017%200l19.8-19.8c4.7-4.7%204.7-12.3%200-17z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+}
+
+.action-buttons, .bottom-action-buttons {
+    display: flex;
+    flex-direction: column; 
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+    align-items: center; 
+}
+
+.action-buttons {
+    margin-bottom: 25px; 
+}
+
+button {
+    padding: 12px 25px;
+    border: none;
+    background: var(--primary-brand-color);
+    color: var(--text-light);
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--border-radius-soft);
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    width: 100%; 
+    max-width: 250px; 
+}
+
+button:focus-visible { 
+    outline: 2px solid var(--accent-color);
+    outline-offset: 3px;
+}
+
+button.primary-btn { 
+    background: var(--primary-brand-color);
+    color: var(--text-light);
+}
+
+button.primary-btn:hover:enabled {
+    background: #2a8fb6; 
+}
+
+button:hover:enabled {
+    background: #2a8fb6; 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px var(--shadow-medium);
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    opacity: 0.7; 
+}
+
+.secondary-btn {
+    background: var(--secondary-brand-color);
+    color: var(--text-dark);
+}
+
+.secondary-btn:hover:enabled {
+    background: #e0b06b; 
+    color: var(--text-dark);
+}
+
+/* Captured Photos Display */
+#captured-photos-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px; 
+    background: var(--panel-bg-color);
+    padding: 25px;
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 5px 20px var(--shadow-medium);
+    box-sizing: border-box;
+    position: relative; 
+}
+
+#captured-photos-display h3 {
+    color: var(--primary-brand-color);
+    margin-bottom: 20px;
+    font-size: 1.6em;
+    font-family: var(--font-fredoka);
+}
+
+.photo-progress-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.photo-progress-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #e0e0e0; 
+    border: 2px solid #bbb;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.photo-progress-dot.filled {
+    background-color: var(--primary-brand-color); 
+    border-color: var(--primary-brand-color);
+}
+
+#photo-processing-spinner { /* Ensure this spinner doesn't get hidden by messages */
+    z-index: 25; 
+}
+
+#captured-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
 }
 
 .captured-photo-wrapper {
@@ -431,12 +389,12 @@ button:disabled {
 .captured-photo-wrapper:hover {
     transform: scale(1.03);
     border-color: var(--secondary-brand-color); 
-    box-shadow: 0 4px 12px var(--shadow-light); /* Added subtle shadow on hover */
+    box-shadow: 0 4px 12px var(--shadow-light); 
 }
 
 .captured-photo-wrapper.selected {
     border-color: var(--primary-brand-color); 
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Primary brand color glow */
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
     transform: scale(1.05); 
 }
 
@@ -451,29 +409,6 @@ button:disabled {
     object-fit: cover; 
     border-radius: var(--border-radius-soft); 
 }
-
-/* Photo Progress Indicator (new) */
-.photo-progress-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.photo-progress-dot {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background-color: #e0e0e0; /* Unfilled */
-    border: 2px solid #bbb;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.photo-progress-dot.filled {
-    background-color: var(--primary-brand-color); /* Filled */
-    border-color: var(--primary-brand-color);
-}
-
 
 /* Fullscreen Styles */
 body.fullscreen-active {
@@ -542,13 +477,6 @@ body.fullscreen-active video {
     padding: 15px 30px;
 }
 
-.photobooth-container > .normal-mode-capture-btn {
-    margin-bottom: 25px; 
-    position: relative; 
-    transform: none; 
-}
-
-
 /* Responsive Adjustments for Capture Page */
 @media (min-width: 768px) {
     .photo-booth-wrapper {
@@ -569,7 +497,7 @@ body.fullscreen-active video {
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
-    .captured-photo-wrapper { /* Corrected class name */
+    .captured-photo-wrapper { 
         max-width: 250px; 
         justify-self: center; 
     }
@@ -584,14 +512,13 @@ body.fullscreen-active video {
         padding: 20px;
     }
 
-    .controls-panel select, .action-buttons button, .bottom-action-buttons button, .message .primary-btn {
+    .controls-panel select, .action-buttons button, .bottom-action-buttons button, .message button {
         padding: 10px 15px;
         font-size: 1em;
     }
 
-    #countdown {
-        font-size: 4em;
-        padding: 10px 20px;
+    .visual-countdown { /* Smaller countdown on mobile */
+        font-size: 6em; 
     }
 
     #captured-photos-grid {
