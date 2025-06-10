@@ -470,7 +470,8 @@ body.fullscreen-active .video-preview-area {
     height: 100vh; /* Takes full height in fullscreen */
     max-width: none; 
     margin-bottom: 0;
-    border: none;
+    /* This line is changed: NO border: none; */
+    border: 6px solid var(--primary-brand-color); /* Added to maintain border in fullscreen */
     border-radius: 0;
     aspect-ratio: auto; 
     display: flex; 
