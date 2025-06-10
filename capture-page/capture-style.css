@@ -136,7 +136,7 @@ video.inverted {
     box-sizing: border-box;
     text-align: center;
     z-index: 11;
-    display: none; 
+    /* display: none; */ /* Managed by JS */
 }
 
 .message.error {
@@ -150,6 +150,10 @@ video.inverted {
     font-size: 0.8em;
     color: #555;
     margin-top: 5px;
+}
+
+.message .primary-btn { /* Style for Start Camera button within message */
+    margin-top: 20px;
 }
 
 .spinner-overlay {
@@ -249,6 +253,22 @@ button {
     max-width: 250px; /* Limit max width for a nicer look */
 }
 
+button:focus-visible { /* A11y: focus indicator */
+    outline: 2px solid var(--accent-color);
+    outline-offset: 3px;
+}
+
+
+button.primary-btn { /* Explicit primary button for "Start Camera" */
+    background: var(--primary-brand-color);
+    color: var(--text-light);
+}
+
+button.primary-btn:hover:enabled {
+    background: #2a8fb6; /* Darker primary */
+}
+
+
 button:hover:enabled {
     background: #2a8fb6; 
     transform: translateY(-2px);
@@ -260,6 +280,7 @@ button:disabled {
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+    opacity: 0.7; /* Indicate disabled state */
 }
 
 .secondary-btn {
@@ -309,7 +330,7 @@ button:disabled {
     justify-content: center;
 }
 
-.captured-photo-item {
+.captured-photo-item { /* This class is no longer directly used for img, but for context */
     width: 100%;
     aspect-ratio: var(--video-aspect-ratio); 
     object-fit: cover; 
@@ -386,7 +407,7 @@ button:disabled {
     transition: none; 
 }
 
-#countdown {
+#countdown { /* This is the old text countdown, now completely hidden */
     display: none;
 }
 
@@ -404,17 +425,18 @@ button:disabled {
     border: 3px solid transparent; 
     border-radius: var(--border-radius-soft);
     overflow: hidden; 
-    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
+    transition: border-color 0.2s ease-in-out, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .captured-photo-wrapper:hover {
     transform: scale(1.03);
     border-color: var(--secondary-brand-color); 
+    box-shadow: 0 4px 12px var(--shadow-light); /* Added subtle shadow on hover */
 }
 
 .captured-photo-wrapper.selected {
     border-color: var(--primary-brand-color); 
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
+    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); /* Primary brand color glow */
     transform: scale(1.05); 
 }
 
@@ -430,6 +452,29 @@ button:disabled {
     border-radius: var(--border-radius-soft); 
 }
 
+/* Photo Progress Indicator (new) */
+.photo-progress-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.photo-progress-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #e0e0e0; /* Unfilled */
+    border: 2px solid #bbb;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.photo-progress-dot.filled {
+    background-color: var(--primary-brand-color); /* Filled */
+    border-color: var(--primary-brand-color);
+}
+
+
 /* Fullscreen Styles */
 body.fullscreen-active {
     padding: 0;
@@ -440,8 +485,8 @@ body.fullscreen-active {
 body.fullscreen-active .logo-header,
 body.fullscreen-active .controls-panel,
 body.fullscreen-active #captured-photos-display,
-body.fullscreen-active .action-buttons, /* Hide this group in fullscreen */
-body.fullscreen-active .bottom-action-buttons /* Hide this group in fullscreen */ {
+body.fullscreen-active .action-buttons,
+body.fullscreen-active .bottom-action-buttons {
     display: none !important;
 }
 
@@ -454,20 +499,19 @@ body.fullscreen-active .photobooth-container {
     box-shadow: none;
     background: #000; 
     display: flex;
-    flex-direction: column; /* Ensure column layout for content alignment */
+    flex-direction: column; 
     justify-content: center;
     align-items: center;
     margin: 0;
 }
 
-/* The captureBtn is moved into video-preview-area in fullscreen, so it needs to be visible */
 body.fullscreen-active #captureBtn {
     display: block !important;
 }
 
 body.fullscreen-active .video-preview-area {
     width: 100vw;
-    height: 100vh; /* Takes full height in fullscreen */
+    height: 100vh; 
     max-width: none; 
     margin-bottom: 0;
     border: none;
@@ -486,12 +530,11 @@ body.fullscreen-active video {
     border-radius: 0;
 }
 
-/* Style for the capture button when it's in fullscreen mode */
 .fullscreen-bottom-btn {
     position: absolute;
-    bottom: 50px; /* Increased from 20px to give more space from the bottom */
+    bottom: 50px; 
     left: 50%;
-    transform: translateX(-50%); /* Centers the button horizontally */
+    transform: translateX(-50%); 
     z-index: 30; 
     width: auto; 
     min-width: 180px; 
@@ -499,13 +542,10 @@ body.fullscreen-active video {
     padding: 15px 30px;
 }
 
-/* Style for the capture button when it's at the top in normal mode */
 .photobooth-container > .normal-mode-capture-btn {
-    margin-bottom: 25px; /* Space below the button */
-    /* Ensure it's not absolutely positioned */
+    margin-bottom: 25px; 
     position: relative; 
     transform: none; 
-    /* Inherit default button styles for width/max-width */
 }
 
 
@@ -529,7 +569,7 @@ body.fullscreen-active video {
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
-    .captured-photo-item {
+    .captured-photo-wrapper { /* Corrected class name */
         max-width: 250px; 
         justify-self: center; 
     }
@@ -544,7 +584,7 @@ body.fullscreen-active video {
         padding: 20px;
     }
 
-    .controls-panel select, .action-buttons button, .bottom-action-buttons button {
+    .controls-panel select, .action-buttons button, .bottom-action-buttons button, .message .primary-btn {
         padding: 10px 15px;
         font-size: 1em;
     }
