@@ -264,7 +264,7 @@ async function initCamera({ deviceId = null, resolution = null, initialRequest =
     video.srcObject = stream;
     currentStream = stream;
 
-    video.onloadedmetadata = async () => { // Made async to await populate call
+    video.onloadedmetadata = async () => { 
         video.play();
         hideCameraMessage();
         cameraActive = true; 
@@ -560,7 +560,8 @@ async function sendFrameToWorker(indexToReplace = -1) {
  * @param {number} indexToReplace - The index in capturedPhotos array that was processed.
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
-    if (indexToReplace !== -1 && indexToReplace < photosToCapture) { 
+    // Ensure indexToReplace is valid and within photosToCapture bounds
+    if (indexToReplace >= 0 && indexToReplace < photosToCapture) { 
         capturedPhotos[indexToReplace] = imgData; 
         const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`); 
         if (imgElementInDom) {
@@ -571,14 +572,11 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         if (selectedWrapper) {
             selectedWrapper.classList.remove('selected');
         }
-
     } else {
-        if (capturedPhotos.length < photosToCapture) { 
-            capturedPhotos.push(imgData); 
-            addPhotoToGrid(imgData, capturedPhotos.length - 1); 
-        } else {
-            console.warn("Attempted to add more photos than 'photosToCapture' or invalid index.");
-        }
+        // This 'else' block should ideally not be hit if logic is correct,
+        // as `sendFrameToWorker` is always called with a valid index from `initiateCaptureSequence`.
+        // Log a warning if it happens, but don't try to `push` randomly.
+        console.warn(`handleProcessedPhoto: Invalid indexToReplace (${indexToReplace}) or outside photosToCapture bounds (${photosToCapture}). Photo not added to array.`);
     }
     updatePhotoProgressText(); 
 }
@@ -624,15 +622,17 @@ async function initiateCaptureSequence(indexToRetake = -1) {
     updateButtonVisibility('capturing');
 
     const currentPhotosCount = capturedPhotos.filter(p => p !== null).length;
-    if (indexToRetake === -1 && currentPhotosCount === photosToCapture) { 
-        capturedPhotos = Array(photosToCapture).fill(null); 
-        photoGrid.innerHTML = '';
-    } else if (indexToRetake === -1 && currentPhotosCount === 0 && capturedPhotos.length !== photosToCapture) { 
-        capturedPhotos = Array(photosToCapture).fill(null); 
-        photoGrid.innerHTML = '';
+    if (indexToRetake === -1) { // If it's not an individual retake
+        if (currentPhotosCount === photosToCapture) { // If all slots are currently filled, but user hit 'Start Capture' again
+            capturedPhotos = Array(photosToCapture).fill(null); // Reset all slots
+            photoGrid.innerHTML = ''; // Clear DOM
+        } else if (capturedPhotos.length !== photosToCapture) { // If array size is wrong or not fully initialized
+             capturedPhotos = Array(photosToCapture).fill(null); // Ensure fixed size with nulls
+             photoGrid.innerHTML = '';
+        }
     }
 
-
+    // Ensure DOM placeholders for all photo slots
     for (let i = 0; i < photosToCapture; i++) {
         if (!photoGrid.querySelector(`[data-index="${i}"]`)) { 
             addPhotoToGrid('data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', i); 
@@ -641,11 +641,13 @@ async function initiateCaptureSequence(indexToRetake = -1) {
     updatePhotoProgressText(); 
 
     if (indexToRetake !== -1) {
+        // Retake a specific photo
         await runCountdown(3);
         flashOverlay.classList.add('active');
         setTimeout(() => { flashOverlay.classList.remove('active'); }, 100); 
         await sendFrameToWorker(indexToRetake);
     } else {
+        // Capture all missing photos (or all if array was just cleared)
         for (let i = 0; i < photosToCapture; i++) {
             if (capturedPhotos[i] === null) { 
                 await runCountdown(3);
@@ -654,7 +656,7 @@ async function initiateCaptureSequence(indexToRetake = -1) {
                 await sendFrameToWorker(i);
                 
                 const photosStillMissing = photosToCapture - capturedPhotos.filter(p => p !== null).length;
-                if (photosStillMissing > 0) {
+                if (photosStillMissing > 0) { // Only wait if there are still photos to capture
                     await new Promise(resolve => setTimeout(resolve, 1000)); 
                 }
             }
@@ -882,12 +884,10 @@ startCameraButton.addEventListener('click', async () => {
     showCameraLoadingSpinner(true); 
     updateButtonVisibility('capturing'); // Temporarily disable buttons
 
-    // Initial request uses the simplest constraint (video: true) for speed
     const cameraStarted = await initCamera({ initialRequest: true });
 
     if (cameraStarted) {
-        // initCamera now handles calling populateCameraAndResolutionOptions after success
-        // It also handles updating to 'ready' state
+        // initCamera already updates to 'ready' state
     } else {
         // initCamera already calls handleCameraError and updateButtonVisibility('error')
     }
@@ -897,9 +897,7 @@ retryCameraButton.addEventListener('click', async () => {
     showCameraLoadingSpinner(true);
     updateButtonVisibility('capturing'); // Temporarily disable buttons
 
-    // Retry with the default initial setup (auto camera, 1280x720)
-    // initCamera will then populate dropdowns based on what it finds
-    const cameraStarted = await initCamera({ deviceId: 'auto', resolution: { width: 1280, height: 720 } });
+    const cameraStarted = await initCamera({ deviceId: selectedCameraDeviceId, resolution: selectedResolution });
 
     if (cameraStarted) {
         // initCamera already handles updating to 'ready' state
@@ -911,14 +909,12 @@ retryCameraButton.addEventListener('click', async () => {
 
 cameraSelect.addEventListener('change', async (event) => {
     selectedCameraDeviceId = event.target.value;
-    // When changing camera, restart stream with current selection
     await initCamera({ deviceId: selectedCameraDeviceId, resolution: selectedResolution });
 });
 
 resolutionSelect.addEventListener('change', async (event) => {
     const [width, height] = event.target.value.split('x').map(Number);
     selectedResolution = { width, height };
-    // When changing resolution, restart stream with current selection
     await initCamera({ deviceId: selectedCameraDeviceId, resolution: selectedResolution });
 });
 
