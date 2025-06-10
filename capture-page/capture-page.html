@@ -20,14 +20,13 @@
     <div class="photo-booth-wrapper">
         <div class="photobooth-container">
            <div class="video-preview-area">
-                <video id="cameraFeed" autoplay playsinline></video>
-                <div id="flashOverlay" class="flash-overlay"></div>
+                <video id="cameraFeed" autoplay playsinline muted></video> <div id="flashOverlay" class="flash-overlay"></div>
                 <div id="visualCountdown" class="visual-countdown"></div>
                 <p id="countdown"></p> 
                 <div id="camera-access-message" class="message">
-                    <p id="main-camera-msg">Attempting to access camera...</p>
+                    <p id="main-camera-msg">Click "Start Camera" to begin.</p>
                     <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
-                </div>
+                    <button id="startCameraButton" class="primary-btn">Start Camera</button> </div>
                 <div id="camera-loading-spinner" class="spinner-overlay">
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
                     <p>Loading Camera...</p>
@@ -38,13 +37,23 @@
             <div class="controls-panel">
                 <div class="control-group">
                     <label for="cameraSelect">Select Camera:</label>
-                    <select id="cameraSelect"></select>
+                    <select id="cameraSelect" disabled></select>
                     <p class="tool-tip">If you have multiple cameras, select one here.</p>
                 </div>
 
                 <div class="control-group">
+                    <label for="resolutionSelect">Select Resolution:</label>
+                    <select id="resolutionSelect" disabled>
+                        <option value="640x480">640x480 (SD)</option>
+                        <option value="1280x720">1280x720 (HD)</option>
+                        <option value="1920x1080">1920x1080 (Full HD)</option>
+                    </select>
+                    <p class="tool-tip">Higher resolutions result in larger file sizes.</p>
+                </div>
+
+                <div class="control-group">
                     <label for="filter">Apply Filter:</label>
-                    <select id="filter">
+                    <select id="filter" disabled>
                         <option value="none">None</option>
                         <option value="grayscale(100%)">Black & White</option>
                         <option value="sepia(100%)">Sepia</option>
@@ -60,25 +69,25 @@
             </div>
 
             <div class="action-buttons">
-                <button id="captureBtnNormalMode">Start Capture</button> 
-                <button id="invertCameraButton" class="secondary-btn">
+                <button id="captureBtnNormalMode" disabled>Start Capture</button> 
+                <button id="invertCameraButton" class="secondary-btn" disabled>
                     <i class="fas fa-sync-alt"></i> Invert Camera
                 </button>
-                <button id="fullscreenToggleBtn" class="secondary-btn">
+                <button id="fullscreenToggleBtn" class="secondary-btn" disabled>
                     <i class="fas fa-expand"></i> Fullscreen
                 </button>
             </div>
             
             <div class="bottom-action-buttons">
-                <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button> 
-                <button id="retakePhotosBtn" class="secondary-btn" style="display: none;">Retake Photos</button>
-                <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
+                <button id="backToLayoutBtn" class="secondary-btn" disabled>Back to Layout Selection</button> 
+                <button id="retakePhotosBtn" class="secondary-btn" style="display: none;" disabled>Retake All Photos</button>
+                <button id="retakeIndividualPhotoBtn" class="secondary-btn" style="display: none;" disabled>Retake Selected Photo</button> <button id="nextBtn" class="secondary-btn" style="display: none;" disabled>Go to Editor</button>
             </div>
         </div>
 
         <div id="captured-photos-display">
             <h3>Your Shots</h3>
-            <p id="photoProgressText" class="photo-progress-text"></p> 
+            <div class="photo-progress-indicator" id="photoProgressIndicator"></div> <p id="photoProgressText" class="photo-progress-text"></p> 
             <div id="photo-processing-spinner" class="spinner-overlay hidden-spinner">
                 <i class="fas fa-spinner fa-spin fa-2x"></i>
                 <p>Processing Photo...</p>
