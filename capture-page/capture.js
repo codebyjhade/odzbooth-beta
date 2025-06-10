@@ -266,7 +266,7 @@ async function initCamera({ deviceId = null, resolution = null, initialRequest =
 
     video.onloadedmetadata = async () => { 
         video.play();
-        hideCameraMessage();
+        hideCameraMessage(); // Explicitly hide message here
         cameraActive = true; 
         showCameraLoadingSpinner(false); 
         initializeImageProcessorWorker();
@@ -561,6 +561,7 @@ async function sendFrameToWorker(indexToReplace = -1) {
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
     // Ensure indexToReplace is valid and within photosToCapture bounds
+    // This is the CRITICAL block to ensure correct array management.
     if (indexToReplace >= 0 && indexToReplace < photosToCapture) { 
         capturedPhotos[indexToReplace] = imgData; 
         const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`); 
@@ -573,9 +574,8 @@ function handleProcessedPhoto(imgData, indexToReplace) {
             selectedWrapper.classList.remove('selected');
         }
     } else {
-        // This 'else' block should ideally not be hit if logic is correct,
-        // as `sendFrameToWorker` is always called with a valid index from `initiateCaptureSequence`.
-        // Log a warning if it happens, but don't try to `push` randomly.
+        // This 'else' block indicates a logic error in `initiateCaptureSequence` 
+        // or `sendFrameToWorker` if it ever results in an invalid index.
         console.warn(`handleProcessedPhoto: Invalid indexToReplace (${indexToReplace}) or outside photosToCapture bounds (${photosToCapture}). Photo not added to array.`);
     }
     updatePhotoProgressText(); 
@@ -620,19 +620,22 @@ async function initiateCaptureSequence(indexToRetake = -1) {
 
     setCaptureControlsEnabled(true); 
     updateButtonVisibility('capturing');
+    hideCameraMessage(); // Ensure the message is hidden during capture!
 
     const currentPhotosCount = capturedPhotos.filter(p => p !== null).length;
     if (indexToRetake === -1) { // If it's not an individual retake
-        if (currentPhotosCount === photosToCapture) { // If all slots are currently filled, but user hit 'Start Capture' again
+        if (currentPhotosCount === photosToCapture) { 
+            // If all slots are currently filled, and user hit 'Start Capture' again (new sequence)
             capturedPhotos = Array(photosToCapture).fill(null); // Reset all slots
             photoGrid.innerHTML = ''; // Clear DOM
-        } else if (capturedPhotos.length !== photosToCapture) { // If array size is wrong or not fully initialized
+        } else if (capturedPhotos.length !== photosToCapture || currentPhotosCount === 0) { 
+            // If array size is wrong or is empty, and starting new sequence
              capturedPhotos = Array(photosToCapture).fill(null); // Ensure fixed size with nulls
              photoGrid.innerHTML = '';
         }
     }
 
-    // Ensure DOM placeholders for all photo slots
+
     for (let i = 0; i < photosToCapture; i++) {
         if (!photoGrid.querySelector(`[data-index="${i}"]`)) { 
             addPhotoToGrid('data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', i); 
@@ -641,13 +644,11 @@ async function initiateCaptureSequence(indexToRetake = -1) {
     updatePhotoProgressText(); 
 
     if (indexToRetake !== -1) {
-        // Retake a specific photo
         await runCountdown(3);
         flashOverlay.classList.add('active');
         setTimeout(() => { flashOverlay.classList.remove('active'); }, 100); 
         await sendFrameToWorker(indexToRetake);
     } else {
-        // Capture all missing photos (or all if array was just cleared)
         for (let i = 0; i < photosToCapture; i++) {
             if (capturedPhotos[i] === null) { 
                 await runCountdown(3);
@@ -656,7 +657,7 @@ async function initiateCaptureSequence(indexToRetake = -1) {
                 await sendFrameToWorker(i);
                 
                 const photosStillMissing = photosToCapture - capturedPhotos.filter(p => p !== null).length;
-                if (photosStillMissing > 0) { // Only wait if there are still photos to capture
+                if (photosStillMissing > 0) { 
                     await new Promise(resolve => setTimeout(resolve, 1000)); 
                 }
             }
@@ -793,6 +794,9 @@ function updateButtonVisibility(state = 'initial') {
         }
         
     } else if (state === 'capturing') {
+        // IMPORTANT: Ensure message is hidden and video is visible during capture
+        hideCameraMessage(); 
+        
         setCaptureControlsEnabled(true); 
         invertCameraButton.style.display = 'none';
         backToLayoutBtn.style.display = 'none';
