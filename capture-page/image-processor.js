@@ -22,10 +22,9 @@ self.onmessage = async (event) => {
             break;
 
         case 'PROCESS_FRAME':
-            // The main thread sends an ImageBitmap (frame from video) and other capture details
-            // Removed: indexToReplace since retake feature is removed
-            const { imageBitmap } = payload; 
-            console.log(`Worker: Received PROCESS_FRAME.`); // Simplified log
+            // The main thread sends an ImageBitmap (frame from video) and the index to replace.
+            const { imageBitmap, indexToReplace } = payload; 
+            console.log(`Worker: Received PROCESS_FRAME. Index to replace: ${indexToReplace}`);
 
             if (!offscreenCanvas || !offscreenCtx) {
                 console.error('Worker: OffscreenCanvas not initialized.');
@@ -67,13 +66,11 @@ self.onmessage = async (event) => {
                 quality: 0.95
             });
 
-            // START OF FIX: Post the blob directly, as FileReader is not available in workers.
+            // Post the blob and the indexToReplace back to the main thread
             self.postMessage({
                 type: 'FRAME_PROCESSED',
-                // Removed: indexToReplace as it's no longer needed for retake
-                payload: { blob, indexToReplace: -1 } // Always send -1 as there's no specific index to replace
+                payload: { blob, indexToReplace: indexToReplace } // Send the index back
             });
-            // END OF FIX
 
             imageBitmap.close(); // Release the ImageBitmap memory
             console.log('Worker: Frame processed and blob sent to main thread.');
