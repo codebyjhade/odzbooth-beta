@@ -223,7 +223,7 @@ video.inverted {
     margin-bottom: 25px; /* Space above bottom buttons */
 }
 
-/* Container for bottom buttons (Back to Layout, Go to Editor) */
+/* Container for bottom buttons (Back to Layout, Go to Editor, Retake) */
 .bottom-action-buttons {
     display: flex;
     flex-direction: column; /* Stack buttons vertically */
