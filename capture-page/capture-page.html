@@ -43,6 +43,17 @@
                 </div>
 
                 <div class="control-group">
+                    <label for="resolutionSelect">Select Resolution:</label>
+                    <select id="resolutionSelect">
+                        <option value="default">Default</option>
+                        <option value="1280x720">HD (720p)</option>
+                        <option value="1920x1080">Full HD (1080p)</option>
+                        <option value="640x480">SD (480p)</option>
+                    </select>
+                    <p class="tool-tip">Choose your preferred camera resolution.</p>
+                </div>
+
+                <div class="control-group">
                     <label for="filter">Apply Filter:</label>
                     <select id="filter">
                         <option value="none">None</option>
@@ -71,6 +82,9 @@
             
             <div class="bottom-action-buttons">
                 <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button> 
+                <button id="retakeSelectedPhotoBtn" class="secondary-btn" style="display: none;" disabled>
+                    <i class="fas fa-redo"></i> Retake Selected Photo
+                </button>
                 <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
             </div>
         </div>
