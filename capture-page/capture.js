@@ -142,7 +142,7 @@ function setCaptureControlsEnabled(disabled) {
     // captureBtn visibility/disabled state is now handled by toggleCaptureButtonPosition
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    resolutionSelect.disabled = disabled; // Disable resolution select
+    resolutionSelect.disabled = disabled; 
     invertCameraButton.disabled = disabled; 
     backToLayoutBtn.disabled = disabled;
     fullscreenToggleBtn.disabled = disabled;
@@ -293,20 +293,22 @@ async function startCamera(deviceId) {
 
     showCameraLoadingSpinner(true); 
 
-    let width = 640;
-    let height = 480;
+    let width = { ideal: 640 };
+    let height = { ideal: 480 };
 
     const selectedResolution = resolutionSelect.value;
     if (selectedResolution !== 'default') {
-        [width, height] = selectedResolution.split('x').map(Number);
+        const [w, h] = selectedResolution.split('x').map(Number);
+        width = { exact: w };
+        height = { exact: h };
     }
 
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                width: { ideal: width, min: 480 }, 
-                height: { ideal: height, min: 360 }  
+                width: width, 
+                height: height 
             },
             audio: false 
         };
@@ -505,6 +507,7 @@ function handleProcessedPhoto(imgData, indexToReplace) {
     }
 }
 
+
 /**
  * Manages the initial photo capture sequence with countdowns and multiple shots.
  */
@@ -658,6 +661,7 @@ function hideAllActionButtons() {
 
 /**
  * Shows buttons relevant after all photos are captured.
+ * This function should NOT call toggleCaptureButtonVisibility.
  */
 function showPostCaptureButtons() {
     backToLayoutBtn.style.display = 'block'; 
@@ -667,7 +671,14 @@ function showPostCaptureButtons() {
     retakeSelectedPhotoBtn.style.display = 'block'; // Show "Retake Selected Photo"
     retakeSelectedPhotoBtn.disabled = selectedIndexForRetake === -1; // Initially disabled if no photo is selected
     nextBtn.disabled = false;
-    toggleCaptureButtonVisibility(); // Update button visibility based on fullscreen status
+
+    // Additionally, disable capture buttons if all photos are captured when this is called
+    captureBtnNormalMode.disabled = true;
+    captureBtnFullscreen.disabled = true;
+
+    // Ensure main capture buttons are hidden when post-capture buttons are shown
+    captureBtnNormalMode.style.display = 'none';
+    captureBtnFullscreen.style.display = 'none';
 }
 
 
@@ -699,6 +710,7 @@ function toggleFullScreen() {
 /**
  * Manages the visibility of the two capture buttons based on fullscreen mode.
  * Also ensures 'Go to Editor' and 'Retake' buttons are shown only when photos are captured.
+ * This function should NOT call showPostCaptureButtons.
  */
 function toggleCaptureButtonVisibility() {
     if (document.fullscreenElement) {
@@ -715,17 +727,21 @@ function toggleCaptureButtonVisibility() {
     if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
         captureBtnNormalMode.disabled = true;
         captureBtnFullscreen.disabled = true;
+        
+        // When all photos are captured, explicitly show the post-capture buttons here
+        nextBtn.style.display = 'block';
+        retakeSelectedPhotoBtn.style.display = 'block';
+        backToLayoutBtn.style.display = 'block';
+        fullscreenToggleBtn.style.display = 'block';
+        invertCameraButton.style.display = 'block';
     } else {
-        captureBtnNormalMode.disabled = false;
-        captureBtnFullscreen.disabled = false;
-    }
-    
-    // Ensure post-capture buttons are only shown when all photos are captured
-    if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-        showPostCaptureButtons();
-    } else {
+        // If not all photos are captured, ensure post-capture buttons are hidden
         nextBtn.style.display = 'none';
         retakeSelectedPhotoBtn.style.display = 'none';
+        // These should generally be visible unless a capture sequence is active (handled by hideAllActionButtons)
+        backToLayoutBtn.style.display = 'block'; // Make sure these are visible in normal pre-capture state
+        fullscreenToggleBtn.style.display = 'block';
+        invertCameraButton.style.display = 'block';
     }
 }
 
