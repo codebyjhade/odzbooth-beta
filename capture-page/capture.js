@@ -3,54 +3,45 @@
 // Strict mode for cleaner code
 "use strict";
 
-// --- DOM Element References ---
-const video = document.getElementById('cameraFeed');
-// Renamed captureBtn to captureBtnFullscreen to reflect its primary role
-const captureBtnFullscreen = document.getElementById('captureBtn'); 
-// New reference for the button visible in normal mode
-const captureBtnNormalMode = document.getElementById('captureBtnNormalMode'); 
-const nextBtn = document.getElementById('nextBtn');
-const photoGrid = document.getElementById('captured-photos-grid');
-const filterSelect = document.getElementById('filter');
-const cameraSelect = document.getElementById('cameraSelect');
-const countdownElement = document.getElementById('countdown'); // This element is now mostly redundant, keeping for aria-live if needed
-const cameraAccessMessage = document.getElementById('camera-access-message');
-const mainCameraMsg = document.getElementById('main-camera-msg'); 
-const subCameraMsg = document.getElementById('sub-camera-msg');   
-const cameraLoadingSpinner = document.getElementById('camera-loading-spinner'); 
-const photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
-const invertCameraButton = document.getElementById('invertCameraButton'); 
-const backToLayoutBtn = document.getElementById('backToLayoutBtn'); 
-const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'); 
-const videoPreviewArea = document.querySelector('.video-preview-area'); 
-const photoboothContainer = document.querySelector('.photobooth-container'); 
-const actionButtonsDiv = document.querySelector('.action-buttons'); 
+// --- Global State Variables (declared with let, assigned in DOMContentLoaded) ---
+let video;
+let captureBtnFullscreen;
+let captureBtnNormalMode;
+let nextBtn;
+let photoGrid;
+let filterSelect;
+let cameraSelect;
+let countdownElement; // This element is now mostly redundant, keeping for aria-live if needed
+let cameraAccessMessage;
+let mainCameraMsg;
+let subCameraMsg;   
+let cameraLoadingSpinner;
+let photoProcessingSpinner; 
+let invertCameraButton; 
+let backToLayoutBtn; 
+let fullscreenToggleBtn; 
+let videoPreviewArea; 
+let photoboothContainer; 
+let actionButtonsDiv; 
 
 // Visual Countdown and Flash Overlay Elements
-const visualCountdown = document.getElementById('visualCountdown');
-const flashOverlay = document.getElementById('flashOverlay');
-// NEW: "Get Ready!" Message Element
-const getReadyMessage = document.getElementById('getReadyMessage');
-// NEW: Post-Capture Preview Container
-const postCapturePreview = document.getElementById('postCapturePreview');
-// NEW: Retake Last Photo Button
-const retakeLastPhotoBtn = document.getElementById('retakeLastPhotoBtn');
-// NEW: Fullscreen Exit Hint Overlay
-const fullscreenHintOverlay = document.getElementById('fullscreenHintOverlay');
-// NEW: Layout Preview Placeholder
-const selectedLayoutPreview = document.getElementById('selectedLayoutPreview');
-// NEW: Progress Bar
-const captureProgressBar = document.getElementById('captureProgressBar');
+let visualCountdown;
+let flashOverlay;
+let getReadyMessage; // NEW: "Get Ready!" Message Element
+let postCapturePreview; // NEW: Post-Capture Preview Container
+let retakeLastPhotoBtn; // NEW: Retake Last Photo Button
+let fullscreenHintOverlay; // NEW: Fullscreen Exit Hint Overlay
+let selectedLayoutPreview; // NEW: Layout Preview Placeholder
+let captureProgressBar; // NEW: Progress Bar
 
 
-// Photo Progress Text Element
-const photoProgressText = document.getElementById('photoProgressText');
+let photoProgressText; // Photo Progress Text Element
 
-// Audio Elements
-const countdownBeep = document.getElementById('countdownBeep');
-const cameraShutter = document.getElementById('cameraShutter');
+// Audio Elements (declared with let, assigned in DOMContentLoaded)
+let countdownBeep;
+let cameraShutter;
 
-// --- Global State Variables ---
+// Other Global State Variables
 let currentStream = null; 
 let capturedPhotos = []; 
 let photosToCapture = 0; 
@@ -94,7 +85,7 @@ function displayCameraMessage(message, type = 'info', subMessage = '') {
     cameraAccessMessage.className = `message ${type}`; 
     cameraAccessMessage.style.display = 'flex'; 
     video.style.display = 'none'; 
-    countdownElement.style.display = 'none'; // Keep countdownElement hidden
+    if (countdownElement) countdownElement.style.display = 'none'; // Keep countdownElement hidden
     visualCountdown.style.display = 'none'; 
     getReadyMessage.style.display = 'none'; // Ensure getReadyMessage is hidden
     cameraLoadingSpinner.classList.add('hidden-spinner'); 
@@ -495,8 +486,8 @@ async function sendFrameToWorker(indexToReplace = -1) {
         const tempCanvas = document.createElement('canvas');
         const tempCtx = tempCanvas.getContext('2d');
         tempCanvas.width = imageBitmap.width;
-        tempCanvas.height = imageBitmap.height;
-        tempCtx.drawImage(imageBitmap, 0, 0);
+        tempCanvas.height = imageBitmap.width / photoFrameAspectRatio; // Use proportional height
+        tempCtx.drawImage(imageBitmap, 0, 0, imageBitmap.width, imageBitmap.height, 0, 0, tempCanvas.width, tempCanvas.height);
         postCapturePreview.src = tempCanvas.toDataURL('image/jpeg', 0.8);
 
         // Hide video feed temporarily
@@ -567,7 +558,7 @@ async function initiateCaptureSequence(indexToRetake = -1) {
     const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
     photosToCapture = parseInt(storedPhotoCount, 10);
 
-    if (isNaN(photosToCapture) || photosToCapture < 1) { // Removed upper limit as per user requirement (5 is no longer forbidden)
+    if (isNaN(photosToCapture) || photosToCapture < 1) {
         photosToCapture = 3; // Default to 3 if invalid
     }
 
@@ -582,8 +573,6 @@ async function initiateCaptureSequence(indexToRetake = -1) {
     }
 
     if (photosToTakeInThisSequence <= 0) {
-        // This case should ideally be caught by button disabled state, but good for robustness
-        // Custom modal instead of alert
         showCustomAlert('All photos have already been captured.', 'Click "Go to Editor" to proceed.');
         return;
     }
@@ -599,7 +588,9 @@ async function initiateCaptureSequence(indexToRetake = -1) {
         capturedPhotos = [];
     }
     
-    let currentCaptureIndex = indexToRetake;
+    // Only set currentCaptureIndex if we are retaking, otherwise it's handled by push
+    // For new captures, we'll let `capturedPhotos.push` determine the index.
+    const actualIndexToSend = indexToRetake !== -1 ? indexToRetake : -1; 
 
     for (let i = 0; i < photosToTakeInThisSequence; i++) {
         // Display "Get Ready!" message
@@ -617,19 +608,10 @@ async function initiateCaptureSequence(indexToRetake = -1) {
             flashOverlay.classList.remove('active');
         }, 100); 
         
-        // If retaking, use the specified index, otherwise use the next available index
-        const actualIndexToSend = indexToRetake !== -1 ? indexToRetake : capturedPhotos.length;
-        await sendFrameToWorker(actualIndexToSend);
-
-        if (indexToRetake === -1) { // Only increment for new photos
-            // Wait for processing to complete before moving to next photo or re-enabling controls
-            // The handleProcessedPhoto will update the count and progress
-            // We need to wait for the worker to send back the result and the FileReader to complete
-            // This is implicitly handled by the await sendFrameToWorker and subsequent updatePhotoProgressText
-            // However, add a small delay for better user experience between shots
-            if (capturedPhotos.length < photosToCapture) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); 
-            }
+        await sendFrameToWorker(actualIndexToSend); // Pass the index to replace if it's a retake
+        
+        if (indexToRetake === -1 && capturedPhotos.length < photosToCapture) { // Only delay if not retaking and more photos are needed
+            await new Promise(resolve => setTimeout(resolve, 1000)); 
         }
     }
 
@@ -672,19 +654,15 @@ function retakeLastPhoto() {
 
     const lastPhotoIndex = capturedPhotos.length - 1;
     
-    // Remove the last photo from the array (but keep its index)
-    // We'll let the worker replace the content at this index
-    // capturedPhotos[lastPhotoIndex] = null; // Mark for replacement
-    
     // Visually remove the last photo from the grid
     const lastPhotoElement = photoGrid.querySelector(`[data-index="${lastPhotoIndex}"]`);
     if (lastPhotoElement) {
         lastPhotoElement.remove();
     }
     
-    // Decrement the count for the progress text temporarily (it will go back up)
-    // No need to decrement photosCapturedCount as we're replacing
-    // Instead, simply update progress text to reflect one less visually
+    // We are not removing it from the array here, instead we pass the index
+    // to initiateCaptureSequence so the worker can replace it.
+    
     updatePhotoProgressText(); // Update progress text immediately
 
     // Re-initiate capture sequence, signaling to replace the last photo
@@ -726,6 +704,7 @@ function toggleFullScreen() {
  * Shows the fullscreen exit hint overlay temporarily.
  */
 function showFullscreenHint() {
+    if (!fullscreenHintOverlay) return; // Defensive check
     fullscreenHintOverlay.style.display = 'block';
     setTimeout(() => {
         fullscreenHintOverlay.style.display = 'none';
@@ -763,16 +742,20 @@ function initiateCursorHiding() {
 function toggleCaptureButtonVisibility() {
     if (document.fullscreenElement) {
         // In fullscreen: hide normal mode button, show fullscreen button
-        captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = 'block';
+        if (captureBtnNormalMode) captureBtnNormalMode.style.display = 'none';
+        if (captureBtnFullscreen) captureBtnFullscreen.style.display = 'block';
         // Disable fullscreen capture button if all photos are taken
-        captureBtnFullscreen.disabled = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+        if (captureBtnFullscreen) {
+             captureBtnFullscreen.disabled = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+        }
     } else {
         // Not in fullscreen: show normal mode button, hide fullscreen button
-        captureBtnNormalMode.style.display = 'block';
-        captureBtnFullscreen.style.display = 'none';
+        if (captureBtnNormalMode) captureBtnNormalMode.style.display = 'block';
+        if (captureBtnFullscreen) captureBtnFullscreen.style.display = 'none';
         // Disable normal mode capture button if all photos are taken
-        captureBtnNormalMode.disabled = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+        if (captureBtnNormalMode) {
+            captureBtnNormalMode.disabled = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+        }
     }
 }
 
@@ -814,6 +797,8 @@ function showCustomAlert(title, message) {
  * Dynamically generates a visual representation of the selected layout.
  */
 function displaySelectedLayoutPreview() {
+    if (!selectedLayoutPreview) return; // Defensive check
+
     const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
     const count = parseInt(storedPhotoCount, 10);
 
@@ -826,19 +811,51 @@ function displaySelectedLayoutPreview() {
     }
 
     selectedLayoutPreview.classList.add(`layout-${count}`);
-
+    let boxesHtml = '';
     for (let i = 0; i < count; i++) {
-        const box = document.createElement('div');
-        box.classList.add('layout-box');
-        selectedLayoutPreview.appendChild(box);
+        boxesHtml += '<div class="layout-box"></div>';
     }
-    selectedLayoutPreview.innerHTML = `Layout: ${count} photos<div class="layout-preview-boxes">${selectedLayoutPreview.innerHTML}</div>`;
+    selectedLayoutPreview.innerHTML = `Layout: ${count} photos<div class="layout-preview-boxes">${boxesHtml}</div>`;
 }
 
 
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Assign DOM element references here
+    video = document.getElementById('cameraFeed');
+    captureBtnFullscreen = document.getElementById('captureBtn'); 
+    captureBtnNormalMode = document.getElementById('captureBtnNormalMode'); 
+    nextBtn = document.getElementById('nextBtn');
+    photoGrid = document.getElementById('captured-photos-grid');
+    filterSelect = document.getElementById('filter');
+    cameraSelect = document.getElementById('cameraSelect');
+    countdownElement = document.getElementById('countdown'); 
+    cameraAccessMessage = document.getElementById('camera-access-message');
+    mainCameraMsg = document.getElementById('main-camera-msg'); 
+    subCameraMsg = document.getElementById('sub-camera-msg');   
+    cameraLoadingSpinner = document.getElementById('camera-loading-spinner'); 
+    photoProcessingSpinner = document.getElementById('photo-processing-spinner'); 
+    invertCameraButton = document.getElementById('invertCameraButton'); 
+    backToLayoutBtn = document.getElementById('backToLayoutBtn'); 
+    fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'); 
+    videoPreviewArea = document.querySelector('.video-preview-area'); 
+    photoboothContainer = document.querySelector('.photobooth-container'); 
+    actionButtonsDiv = document.querySelector('.action-buttons'); 
+
+    visualCountdown = document.getElementById('visualCountdown');
+    flashOverlay = document.getElementById('flashOverlay');
+    getReadyMessage = document.getElementById('getReadyMessage');
+    postCapturePreview = document.getElementById('postCapturePreview');
+    retakeLastPhotoBtn = document.getElementById('retakeLastPhotoBtn');
+    fullscreenHintOverlay = document.getElementById('fullscreenHintOverlay');
+    selectedLayoutPreview = document.getElementById('selectedLayoutPreview');
+    captureProgressBar = document.getElementById('captureProgressBar');
+    photoProgressText = document.getElementById('photoProgressText');
+    countdownBeep = document.getElementById('countdownBeep');
+    cameraShutter = document.getElementById('cameraShutter');
+
+    // Proceed with initialization only after elements are assigned
     localStorage.removeItem('capturedPhotos'); 
     photoGrid.innerHTML = ''; 
 
@@ -855,11 +872,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleCaptureButtonVisibility(); // Initial call to set button visibility
 
     // Initial audio context unlock attempt on the very first DOM interaction
-    // The primary unlock is now in initiateCaptureSequence
     const unlockAudioContext = async () => {
-        if (!userInteracted) {
+        if (!userInteracted && countdownBeep && cameraShutter) { // Check if elements exist
             try {
                 // For browsers that require a real play to unlock
+                countdownBeep.muted = false;
+                cameraShutter.muted = false;
                 await countdownBeep.play();
                 countdownBeep.pause();
                 countdownBeep.currentTime = 0;
@@ -878,64 +896,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('touchend', unlockAudioContext, { once: true });
 
     await populateCameraList(); // Ensure cameras are listed and started
-});
 
-cameraSelect.addEventListener('change', async (event) => {
-    await startCamera(event.target.value); // Use await here
-});
+    // Attach event listeners now that elements are guaranteed to exist
+    cameraSelect.addEventListener('change', async (event) => {
+        await startCamera(event.target.value);
+    });
 
-filterSelect.addEventListener('change', () => {
-    const selectedFilter = filterSelect.value;
-    video.style.filter = selectedFilter; 
-    if (imageProcessorWorker) {
-        imageProcessorWorker.postMessage({
-            type: 'UPDATE_SETTINGS',
-            payload: { filter: selectedFilter }
-        });
-    }
-});
+    filterSelect.addEventListener('change', () => {
+        const selectedFilter = filterSelect.value;
+        video.style.filter = selectedFilter; 
+        if (imageProcessorWorker) {
+            imageProcessorWorker.postMessage({
+                type: 'UPDATE_SETTINGS',
+                payload: { filter: selectedFilter }
+            });
+        }
+    });
 
-captureBtnNormalMode.addEventListener('click', () => {
-    initiateCaptureSequence(); 
-});
+    captureBtnNormalMode.addEventListener('click', () => {
+        initiateCaptureSequence(); 
+    });
 
-captureBtnFullscreen.addEventListener('click', () => {
-    initiateCaptureSequence(); 
-});
+    captureBtnFullscreen.addEventListener('click', () => {
+        initiateCaptureSequence(); 
+    });
 
-retakeLastPhotoBtn.addEventListener('click', retakeLastPhoto);
+    retakeLastPhotoBtn.addEventListener('click', retakeLastPhoto);
 
-nextBtn.addEventListener('click', () => {
-    if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
-        localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
-        window.location.href = 'editing-page/editing-home.html';
-    } else {
-        const remaining = photosToCapture - capturedPhotos.length;
-        // Use custom alert
-        showCustomAlert('Action Required!', `Please capture ${remaining} more photo(s) before proceeding!`); 
-    }
-});
+    nextBtn.addEventListener('click', () => {
+        if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
+            localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+            window.location.href = 'editing-page/editing-home.html';
+        } else {
+            const remaining = photosToCapture - capturedPhotos.length;
+            showCustomAlert('Action Required!', `Please capture ${remaining} more photo(s) before proceeding!`); 
+        }
+    });
 
-photoGrid.addEventListener('click', handlePhotoSelection);
+    photoGrid.addEventListener('click', handlePhotoSelection);
 
-invertCameraButton.addEventListener('click', () => {
-    video.classList.toggle('inverted');
-});
+    invertCameraButton.addEventListener('click', () => {
+        video.classList.toggle('inverted');
+    });
 
-backToLayoutBtn.addEventListener('click', () => {
-    window.location.href = 'layout-selection/layout-selection.html'; 
-});
+    backToLayoutBtn.addEventListener('click', () => {
+        window.location.href = 'layout-selection/layout-selection.html'; 
+    });
 
-fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
+    fullscreenToggleBtn.addEventListener('click', toggleFullScreen);
+    
+    // Listen for fullscreen change events to update UI
+    document.addEventListener('fullscreenchange', toggleCaptureButtonVisibility);
 
-window.addEventListener('beforeunload', () => {
-    if (imageProcessorWorker) {
-        imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
-        imageProcessorWorker.terminate();
-        imageProcessorWorker = null;
-    }
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
+    window.addEventListener('beforeunload', () => {
+        if (imageProcessorWorker) {
+            imageProcessorWorker.postMessage({ type: 'CLOSE_WORKER' });
+            imageProcessorWorker.terminate();
+            imageProcessorWorker = null;
+        }
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+    });
 });
