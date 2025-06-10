@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="capture-page/capture-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script defer src="capture-page/capture.js"></script>
+    <script src="capture-page/capture.js"></script>
 </head>
 <body>
 
@@ -22,35 +22,31 @@
            <div class="video-preview-area">
                 <video id="cameraFeed" autoplay playsinline></video>
                 <div id="flashOverlay" class="flash-overlay"></div>
-                <div id="visualCountdown" class="visual-countdown"></div>
-                <p id="countdown"></p> 
+                <div id="visualCountdown" class="visual-countdown" aria-live="polite"></div>
+                <!-- 'Get Ready!' Message Element -->
+                <div id="getReadyMessage" class="get-ready-message" aria-live="polite">Get Ready!</div>
+                <!-- Post-Capture Preview Container -->
+                <img id="postCapturePreview" class="post-capture-preview" style="display: none;">
                 <div id="camera-access-message" class="message">
                     <p id="main-camera-msg">Attempting to access camera...</p>
                     <p id="sub-camera-msg" class="sub-message">Please allow camera permissions if prompted.</p>
                 </div>
                 <div id="camera-loading-spinner" class="spinner-overlay">
                     <i class="fas fa-spinner fa-spin fa-3x"></i>
-                    <p>Loading Camera...</p>
+                    <p>Warming up the camera...</p>
                 </div>
-                <button id="captureBtn" class="fullscreen-bottom-btn" style="display: none;">Start Capture</button>
+                <!-- Fullscreen exit hint overlay -->
+                <div id="fullscreenHintOverlay" class="fullscreen-hint-overlay">Press ESC to Exit Fullscreen</div>
+                <button id="captureBtn" class="fullscreen-bottom-btn" style="display: none;" aria-label="Start Capture">Start Capture</button>
             </div>
 
             <div class="controls-panel">
                 <div class="control-group">
                     <label for="cameraSelect">Select Camera:</label>
-                    <select id="cameraSelect"></select>
-                    <p class="tool-tip">If you have multiple cameras, select one here.</p>
-                </div>
-
-                <div class="control-group">
-                    <label for="resolutionSelect">Select Resolution:</label>
-                    <select id="resolutionSelect">
-                        <option value="default">Default</option>
-                        <option value="1280x720">HD (720p)</option>
-                        <option value="1920x1080">Full HD (1080p)</option>
-                        <option value="640x480">SD (480p)</option>
+                    <select id="cameraSelect">
+                        <option value="">No Camera Found</option>
                     </select>
-                    <p class="tool-tip">Choose your preferred camera resolution.</p>
+                    <p class="tool-tip">If you have multiple cameras, select one here.</p>
                 </div>
 
                 <div class="control-group">
@@ -71,27 +67,33 @@
             </div>
 
             <div class="action-buttons">
-                <button id="captureBtnNormalMode">Start Capture</button> 
-                <button id="invertCameraButton" class="secondary-btn">
+                <button id="captureBtnNormalMode" aria-label="Start Capture">Start Capture</button> 
+                <button id="retakeLastPhotoBtn" class="secondary-btn" style="display: none;" aria-label="Retake Last Photo">
+                    <i class="fas fa-undo-alt"></i> Retake Last Photo
+                </button>
+                <button id="invertCameraButton" class="secondary-btn" aria-label="Invert Camera">
                     <i class="fas fa-sync-alt"></i> Invert Camera
                 </button>
-                <button id="fullscreenToggleBtn" class="secondary-btn">
+                <button id="fullscreenToggleBtn" class="secondary-btn" aria-label="Toggle Fullscreen">
                     <i class="fas fa-expand"></i> Fullscreen
                 </button>
             </div>
             
             <div class="bottom-action-buttons">
-                <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button> 
-                <button id="retakeSelectedPhotoBtn" class="secondary-btn" style="display: none;" disabled>
-                    <i class="fas fa-redo"></i> Retake Selected Photo
-                </button>
-                <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
+                <button id="backToLayoutBtn" class="secondary-btn" aria-label="Back to Layout Selection">Back to Layout Selection</button> 
+                <button id="nextBtn" class="secondary-btn" style="display: none;" aria-label="Go to Editor">Go to Editor</button>
             </div>
         </div>
 
         <div id="captured-photos-display">
             <h3>Your Shots</h3>
-            <p id="photoProgressText" class="photo-progress-text"></p> 
+            <!-- Layout Preview Placeholder -->
+            <div id="selectedLayoutPreview" class="selected-layout-preview"></div>
+            <!-- Progress Bar/Indicator -->
+            <div class="photo-progress-container">
+                <p id="photoProgressText" class="photo-progress-text">Captured: 0 of 0</p> 
+                <div id="captureProgressBar" class="capture-progress-bar"></div>
+            </div>
             <div id="photo-processing-spinner" class="spinner-overlay hidden-spinner">
                 <i class="fas fa-spinner fa-spin fa-2x"></i>
                 <p>Processing Photo...</p>
