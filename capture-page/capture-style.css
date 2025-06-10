@@ -101,22 +101,40 @@ video.inverted {
     transform: scaleX(1);
 }
 
-#countdown {
+.get-ready-message {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-fredoka);
-    font-size: 5em;
-    font-weight: bold;
-    background: rgba(0, 0, 0, 0.7);
-    color: var(--secondary-brand-color);
-    padding: 15px 30px;
-    border-radius: 15px;
-    display: none;
-    z-index: 10;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    transform: translate(-50%, -50%) scale(0.8);
+    font-family: var(--font-fredoka); 
+    font-size: 5em; 
+    color: var(--text-light); 
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
+    z-index: 15; /* Higher than visualCountdown */
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; 
+    display: none; /* Controlled by JS */
 }
+
+.get-ready-message.active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.post-capture-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Show entire image */
+    background-color: #000;
+    z-index: 25; /* On top of everything else */
+    display: none; /* Controlled by JS */
+    border-radius: var(--border-radius-soft);
+}
+
 
 .message {
     position: absolute;
@@ -210,9 +228,16 @@ video.inverted {
     background-repeat: no-repeat;
     background-position: right 15px center;
     background-size: 12px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Container for middle/top buttons (Invert, Fullscreen) */
+.controls-panel select:focus {
+    outline: none;
+    border-color: var(--primary-brand-color);
+    box-shadow: 0 0 0 3px rgba(51, 164, 201, 0.3);
+}
+
+/* Container for middle/top buttons (Invert, Fullscreen, Retake) */
 .action-buttons {
     display: flex;
     flex-direction: column; /* Stack buttons vertically */
@@ -223,7 +248,7 @@ video.inverted {
     margin-bottom: 25px; /* Space above bottom buttons */
 }
 
-/* Container for bottom buttons (Back to Layout, Go to Editor, Retake) */
+/* Container for bottom buttons (Back to Layout, Go to Editor) */
 .bottom-action-buttons {
     display: flex;
     flex-direction: column; /* Stack buttons vertically */
@@ -387,15 +412,30 @@ button:disabled {
 }
 
 #countdown {
-    display: none;
+    display: none; /* This is now redundant, visualCountdown is primary */
+}
+
+.photo-progress-container {
+    width: 100%;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
 .photo-progress-text {
     font-size: 1.1em;
     color: var(--text-dark);
-    text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     font-weight: 600;
+}
+
+.capture-progress-bar {
+    width: 0%;
+    height: 10px;
+    background-color: var(--primary-brand-color);
+    border-radius: 5px;
+    transition: width 0.3s ease-out;
+    margin: 0 auto;
+    max-width: 90%;
 }
 
 .captured-photo-wrapper {
@@ -405,7 +445,14 @@ button:disabled {
     border-radius: var(--border-radius-soft);
     overflow: hidden; 
     transition: border-color 0.2s ease-in-out, transform 0.2s ease;
+    animation: fadeIn 0.5s ease-out; /* Added fade-in animation */
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
 
 .captured-photo-wrapper:hover {
     transform: scale(1.03);
@@ -470,8 +517,7 @@ body.fullscreen-active .video-preview-area {
     height: 100vh; /* Takes full height in fullscreen */
     max-width: none; 
     margin-bottom: 0;
-    /* This line is changed: NO border: none; */
-    border: 6px solid var(--primary-brand-color); /* Added to maintain border in fullscreen */
+    border: none;
     border-radius: 0;
     aspect-ratio: auto; 
     display: flex; 
@@ -501,13 +547,139 @@ body.fullscreen-active video {
 }
 
 /* Style for the capture button when it's at the top in normal mode */
-.photobooth-container > .normal-mode-capture-btn {
+.photobooth-container > #captureBtnNormalMode { /* Targeting by ID for specificity */
     margin-bottom: 25px; /* Space below the button */
-    /* Ensure it's not absolutely positioned */
     position: relative; 
     transform: none; 
-    /* Inherit default button styles for width/max-width */
 }
+
+/* Fullscreen Hint Overlay */
+.fullscreen-hint-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--text-light);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    z-index: 40; /* Above all other elements */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    display: none; /* Controlled by JS */
+}
+
+.fullscreen-hint-overlay.active {
+    opacity: 1;
+}
+
+/* Custom Alert Modal */
+.custom-alert-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.custom-alert-content {
+    background: var(--panel-bg-color);
+    padding: 30px;
+    border-radius: var(--border-radius-soft);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.custom-alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    color: var(--primary-brand-color);
+}
+
+.custom-alert-header h3 {
+    margin: 0;
+    font-family: var(--font-fredoka);
+    font-size: 1.5em;
+}
+
+.custom-alert-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.custom-alert-close-btn:hover {
+    color: var(--accent-color);
+}
+
+.custom-alert-content p {
+    margin-bottom: 25px;
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+.custom-alert-ok-btn {
+    background: var(--primary-brand-color);
+    color: var(--text-light);
+    padding: 10px 25px;
+    border-radius: var(--border-radius-soft);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.custom-alert-ok-btn:hover {
+    background: #2a8fb6;
+    transform: translateY(-1px);
+}
+
+/* Layout Preview Placeholder */
+.selected-layout-preview {
+    font-size: 1.1em;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.layout-preview-boxes {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.layout-box {
+    width: 20px;
+    height: 30px;
+    border: 2px solid var(--secondary-brand-color);
+    border-radius: 4px;
+    background-color: rgba(240, 194, 123, 0.2); /* Light transparent version of secondary color */
+}
+
+/* Specific styling for different layout counts if needed, for example */
+/* .selected-layout-preview.layout-2 .layout-box { height: 40px; } */
 
 
 /* Responsive Adjustments for Capture Page */
@@ -530,7 +702,7 @@ body.fullscreen-active video {
     #captured-photos-grid {
         grid-template-columns: 1fr; 
     }
-    .captured-photo-item {
+    .captured-photo-wrapper { /* Changed from .captured-photo-item */
         max-width: 250px; 
         justify-self: center; 
     }
@@ -550,12 +722,17 @@ body.fullscreen-active video {
         font-size: 1em;
     }
 
-    #countdown {
+    .visual-countdown, .get-ready-message {
         font-size: 4em;
         padding: 10px 20px;
     }
 
     #captured-photos-grid {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    }
+    .fullscreen-bottom-btn {
+        bottom: 20px;
+        min-width: 150px;
+        font-size: 1.1em;
     }
 }
