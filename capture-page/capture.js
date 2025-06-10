@@ -12,7 +12,7 @@ const nextBtn = document.getElementById('nextBtn');
 const photoGrid = document.getElementById('captured-photos-grid');
 const filterSelect = document.getElementById('filter');
 const cameraSelect = document.getElementById('cameraSelect');
-const resolutionSelect = document.getElementById('resolutionSelect'); // New: Resolution select
+const resolutionSelect = document.getElementById('resolutionSelect'); 
 const countdownElement = document.getElementById('countdown'); 
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg'); 
@@ -28,9 +28,9 @@ const videoPreviewArea = document.querySelector('.video-preview-area');
 const photoboothContainer = document.querySelector('.photobooth-container'); 
 const actionButtonsDiv = document.querySelector('.action-buttons'); 
 
-const startCameraButton = document.getElementById('startCameraButton'); // New: Start Camera button
-const retakePhotosBtn = document.getElementById('retakePhotosBtn'); // Existing: Retake All Photos
-const retakeIndividualPhotoBtn = document.getElementById('retakeIndividualPhotoBtn'); // New: Retake Individual Photo
+const startCameraButton = document.getElementById('startCameraButton'); 
+const retakePhotosBtn = document.getElementById('retakePhotosBtn'); 
+const retakeIndividualPhotoBtn = document.getElementById('retakeIndividualPhotoBtn'); 
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -38,7 +38,7 @@ const flashOverlay = document.getElementById('flashOverlay');
 
 // Photo Progress Text Element
 const photoProgressText = document.getElementById('photoProgressText');
-const photoProgressIndicator = document.getElementById('photoProgressIndicator'); // New: Progress indicator container
+const photoProgressIndicator = document.getElementById('photoProgressIndicator'); 
 
 // Audio Elements
 const countdownBeep = document.getElementById('countdownBeep');
@@ -49,8 +49,8 @@ let currentStream = null;
 let capturedPhotos = []; 
 let photosToCapture = 0; 
 let photoFrameAspectRatio = 4 / 3; 
-let selectedCameraDeviceId = null; // Store selected camera ID
-let selectedResolution = { width: 640, height: 480 }; // Store selected resolution
+let selectedCameraDeviceId = null; 
+let selectedResolution = { width: 1280, height: 720 }; // Default to HD for better quality, but will try lower if fails
 
 // Web Worker for image processing
 let imageProcessorWorker = null;
@@ -70,7 +70,7 @@ let cameraActive = false; // New: Track if camera is streaming
 function playSound(audioElem, volume = 1) {
     if (userInteracted) {
         audioElem.volume = volume;
-        audioElem.currentTime = 0; // Rewind to start
+        audioElem.currentTime = 0; 
         audioElem.play().catch(e => console.error("Error playing sound:", e));
     }
 }
@@ -116,7 +116,6 @@ function showCameraLoadingSpinner(show) {
         visualCountdown.style.opacity = 0; 
     } else {
         cameraLoadingSpinner.classList.add('hidden-spinner');
-        // Only show video if no other message is active
         if (cameraAccessMessage.style.display === 'none') {
             video.style.display = 'block';
         }
@@ -143,8 +142,8 @@ function showPhotoProcessingSpinner(show) {
 function setCaptureControlsEnabled(disabled) {
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    resolutionSelect.disabled = disabled; // Disable resolution select as well
-    invertCameraButton.disabled = disabled; // Invert button also disabled by this
+    resolutionSelect.disabled = disabled; 
+    invertCameraButton.disabled = disabled; 
     backToLayoutBtn.disabled = disabled;
     fullscreenToggleBtn.disabled = disabled;
 }
@@ -181,31 +180,106 @@ function updatePhotoProgressText() {
     for (let i = 0; i < photosToCapture; i++) {
         const dot = document.createElement('div');
         dot.classList.add('photo-progress-dot');
-        if (i < capturedPhotos.length) {
+        if (i < capturedPhotos.length && capturedPhotos[i] !== undefined && capturedPhotos[i] !== null) {
             dot.classList.add('filled');
         }
         photoProgressIndicator.appendChild(dot);
     }
 
-    updateButtonVisibility(); // Update button visibility based on capture progress
+    updateButtonVisibility(); 
 }
 
 // --- Camera Management ---
 
 /**
+ * Attempts to initialize the camera stream with given constraints.
+ * Tries with specific deviceId and resolution, then falls back to lower resolution if needed.
+ * @param {string} deviceId - The deviceId of the camera to use.
+ * @param {object} resolution - {width, height} ideal resolution.
+ * @returns {Promise<boolean>} - True if stream started successfully, false otherwise.
+ */
+async function initCamera(deviceId, resolution) {
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+    }
+
+    showCameraLoadingSpinner(true); 
+    cameraActive = false; 
+
+    const preferredConstraints = {
+        video: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            width: { ideal: resolution.width },
+            height: { ideal: resolution.height },
+            // Removed min values for more flexibility
+            // resizeMode: 'none' // Can sometimes help with specific browser implementations
+        },
+        audio: false 
+    };
+
+    const fallbackConstraints = {
+        video: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            width: { ideal: 640 }, // Fallback to 640x480
+            height: { ideal: 480 },
+        },
+        audio: false
+    };
+
+    let stream = null;
+    let constraintsToTry = preferredConstraints;
+    let triedFallback = false;
+
+    while (stream === null) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(constraintsToTry);
+        } catch (error) {
+            console.error('Error getting user media:', error);
+            if (error.name === 'OverconstrainedError' && !triedFallback) {
+                console.warn('OverconstrainedError, trying lower resolution fallback.');
+                constraintsToTry = fallbackConstraints;
+                triedFallback = true;
+                continue; // Try again with fallback
+            } else {
+                handleCameraError(error);
+                return false; // Fatal error or fallback failed
+            }
+        }
+    }
+
+    video.srcObject = stream;
+    currentStream = stream;
+
+    video.onloadedmetadata = () => {
+        video.play();
+        hideCameraMessage();
+        cameraActive = true; 
+        setCaptureControlsEnabled(false); 
+        showCameraLoadingSpinner(false); 
+        initializeImageProcessorWorker();
+        updateButtonVisibility('ready'); // Camera is ready to capture
+    };
+
+    return true; // Stream successfully obtained
+}
+
+/**
  * Populates the camera selection dropdown with available video input devices.
+ * This function also requests a temporary permission to ensure labels are available.
  */
 async function populateCameraList() {
     showCameraLoadingSpinner(true); 
-    
+    setCaptureControlsEnabled(true); // Enable selects temporarily to populate them
+
     try {
         // Request temporary stream to get device permissions and labels
-        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        tempStream.getTracks().forEach(track => track.stop()); // Stop immediately
+        // Use a simpler constraint here as this is just for enumeration/permission prompt
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        tempStream.getTracks().forEach(track => track.stop()); // Stop immediately after getting permission
 
         const devices = await navigator.mediaDevices.enumerateDevices();
         cameraSelect.innerHTML = ''; 
-        resolutionSelect.innerHTML = '';
 
         const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
 
@@ -216,14 +290,21 @@ async function populateCameraList() {
                 'Please ensure your webcam is connected and enabled. Refresh to try again.',
                 true // Show start camera button to re-attempt
             );
-            setCaptureControlsEnabled(true);
             return;
         }
 
-        videoInputDevices.forEach((device, index) => {
+        // Add a default 'Auto' option for facingMode
+        const autoOption = document.createElement('option');
+        autoOption.value = 'auto';
+        autoOption.text = 'Auto (Front/Rear)';
+        cameraSelect.appendChild(autoOption);
+
+
+        videoInputDevices.forEach((device) => {
             const option = document.createElement('option');
             option.value = device.deviceId;
-            option.text = device.label || `Camera ${index + 1}`;
+            // Use device label or infer type if label is empty (common in some browsers)
+            option.text = device.label || (device.kind === 'videoinput' ? `Camera ${cameraSelect.options.length}` : 'Unknown Camera');
             cameraSelect.appendChild(option);
         });
 
@@ -231,8 +312,10 @@ async function populateCameraList() {
         const resolutions = [
             { width: 640, height: 480, label: '640x480 (SD)' },
             { width: 1280, height: 720, label: '1280x720 (HD)' },
-            { width: 1920, height: 1080, label: '1920x1080 (Full HD)' }
+            { width: 1920, height: 1080, label: '1920x1080 (Full HD)' },
+            { width: 3840, height: 2160, label: '3840x2160 (4K - Experimental)' } // Added 4K option
         ];
+        resolutionSelect.innerHTML = ''; // Clear existing
         resolutions.forEach(res => {
             const option = document.createElement('option');
             option.value = `${res.width}x${res.height}`;
@@ -244,35 +327,30 @@ async function populateCameraList() {
         if (hdOption) {
             hdOption.selected = true;
             selectedResolution = { width: 1280, height: 720 };
-        }
-
-
-        if (cameraSelect.options.length > 0) {
-            cameraSelect.selectedIndex = 0; 
-            selectedCameraDeviceId = cameraSelect.value;
-            // Now display the message with the "Start Camera" button
-            displayCameraMessage(
-                'Camera ready.',
-                'info',
-                'Click "Start Camera" to view the live feed.',
-                true // Show start camera button
-            );
-            setCaptureControlsEnabled(false); // Enable controls for selection
         } else {
-            displayCameraMessage(
-                'No selectable cameras.',
-                'error',
-                'Despite enumerating devices, no suitable camera could be selected.',
-                true
-            );
-            setCaptureControlsEnabled(true);
+             // Fallback to SD if HD not present (unlikely)
+            selectedResolution = { width: 640, height: 480 };
         }
+
+        selectedCameraDeviceId = cameraSelect.value; // Set default camera
+
+        displayCameraMessage(
+            'Camera settings loaded.',
+            'info',
+            'Click "Start Camera" to view the live feed.',
+            true // Show start camera button
+        );
+        setCaptureControlsEnabled(false); // Controls will be enabled by updateButtonVisibility('ready')
+        hideCameraMessage(); // Hide loading spinner and show message for start button
+        showCameraLoadingSpinner(false);
+        updateButtonVisibility('initial'); // Set initial button states after loading options
 
     } catch (error) {
         console.error('Error enumerating devices or getting initial permission:', error);
         handleCameraError(error);
-        setCaptureControlsEnabled(true); // Keep controls disabled on error
+        setCaptureControlsEnabled(true); 
         showCameraLoadingSpinner(false); 
+        updateButtonVisibility('initial');
     }
 }
 
@@ -282,88 +360,35 @@ async function populateCameraList() {
  */
 function handleCameraError(error) {
     cameraActive = false;
+    let mainMsg = 'Failed to access camera.';
+    let subMsg = `An unexpected error occurred: ${error.message}.`;
+    let type = 'error';
+    let showBtn = true;
+
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        displayCameraMessage(
-            'Camera access denied.',
-            'error',
-            'Please enable camera permissions in your browser settings and try again.',
-            true
-        );
+        mainMsg = 'Camera access denied.';
+        subMsg = 'Please enable camera permissions in your browser settings and try again.';
     } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        displayCameraMessage(
-            'No camera detected.',
-            'error',
-            'Ensure your webcam is connected/enabled. Check if another app is using it. Try refreshing the page.',
-            true
-        );
+        mainMsg = 'No camera detected.';
+        subMsg = 'Ensure your webcam is connected/enabled. Check if another app is using it. Try refreshing the page.';
     } else if (error.name === 'NotReadableError') {
-        displayCameraMessage(
-            'Camera is busy.',
-            'warning',
-            'Your camera might be in use by another application. Please close other apps and try again.',
-            true
-        );
+        mainMsg = 'Camera is busy.';
+        subMsg = 'Your camera might be in use by another application. Please close other apps and try again.';
+        type = 'warning';
+    } else if (error.name === 'OverconstrainedError') {
+        mainMsg = 'Camera resolution not supported.';
+        subMsg = `Your camera cannot provide the requested resolution (${selectedResolution.width}x${selectedResolution.height}). Try selecting a lower resolution.`;
+        type = 'warning';
     } else if (error.name === 'SecurityError' && window.location.protocol === 'file:') {
-        displayCameraMessage(
-            'Camera access requires a secure context.',
-            'error',
-            'Please open this page using a local server (e.g., via VS Code Live Server) or HTTPS.',
-            false // No point in showing start button here
-        );
-    } else {
-        displayCameraMessage(
-            'Failed to access camera.',
-            'error',
-            `An unexpected error occurred: ${error.message}. Please check the browser console.`,
-            true
-        );
-    }
-    updateButtonVisibility(); // Update button visibility on error
+        mainMsg = 'Camera access requires a secure context.';
+        subMsg = 'Please open this page using a local server (e.g., via VS Code Live Server) or HTTPS.';
+        showBtn = false; 
+    } 
+
+    displayCameraMessage(mainMsg, type, subMsg, showBtn);
+    updateButtonVisibility('error'); // Update button visibility on error
 }
 
-/**
- * Starts the camera stream for the given device ID and resolution.
- */
-async function startCameraStream(deviceId, resolution) {
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
-
-    showCameraLoadingSpinner(true); 
-    cameraActive = false; // Mark camera as inactive during loading
-
-    try {
-        const constraints = {
-            video: {
-                deviceId: deviceId ? { exact: deviceId } : undefined,
-                width: { ideal: resolution.width, min: resolution.width * 0.8 }, 
-                height: { ideal: resolution.height, min: resolution.height * 0.8 }  
-            },
-            audio: false 
-        };
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-        currentStream = stream;
-
-        video.onloadedmetadata = () => {
-            video.play();
-            hideCameraMessage();
-            cameraActive = true; // Mark camera as active
-            setCaptureControlsEnabled(false); // Enable selects and other controls
-            showCameraLoadingSpinner(false); 
-            initializeImageProcessorWorker();
-            updateButtonVisibility(); // Update button visibility after camera starts
-        };
-
-    } catch (error) {
-        console.error('Error starting camera stream:', error);
-        handleCameraError(error);
-        setCaptureControlsEnabled(true); // Keep controls disabled on error
-        showCameraLoadingSpinner(false); 
-        updateButtonVisibility(); // Update button visibility on error
-    }
-}
 
 /**
  * Initializes the Web Worker and OffscreenCanvas.
@@ -374,25 +399,21 @@ function initializeImageProcessorWorker() {
         imageProcessorWorker.terminate();
     }
 
-    // Check for OffscreenCanvas support for graceful degradation (conceptual)
     if (typeof OffscreenCanvas !== 'undefined') {
         const tempCanvas = document.createElement('canvas');
         offscreenCanvasInstance = tempCanvas.transferControlToOffscreen();
     } else {
-        // Fallback to main thread canvas if OffscreenCanvas is not supported
-        // This part would require a separate, simpler canvas context setup
-        console.warn('OffscreenCanvas not supported, processing might be on main thread.');
-        // For this example, we'll assume OffscreenCanvas is available.
-        // A full fallback would involve creating a <canvas> element and context here.
+        console.warn('OffscreenCanvas not supported, image processing will fallback to main thread (not implemented here).');
+        // A full implementation would create a canvas element and context on the main thread here
+        // and adjust the worker logic to be handled directly on the main thread.
         displayCameraMessage(
             'Browser not fully supported.',
             'warning',
-            'Some features might be slower. Update your browser for best experience.',
+            'Your browser does not support advanced image processing. Please update or try a different browser.',
             true
         );
         return; 
     }
-
 
     imageProcessorWorker = new Worker('capture-page/image-processor.js');
 
@@ -460,19 +481,6 @@ function addPhotoToGrid(imgData, index) {
     } else {
         photoGrid.appendChild(wrapper); 
     }
-}
-
-/**
- * Renders all photos currently in the capturedPhotos array to the grid.
- * (Not strictly needed with `addPhotoToGrid` but good for full re-render scenarios)
- */
-function renderPhotoGrid() {
-    photoGrid.innerHTML = ''; 
-    capturedPhotos.forEach((imgData, index) => {
-        if (imgData) { 
-            addPhotoToGrid(imgData, index);
-        }
-    });
 }
 
 /**
@@ -558,20 +566,19 @@ function handleProcessedPhoto(imgData, indexToReplace) {
 
 /**
  * Manages the initial photo capture sequence with countdowns and multiple shots.
- * @param {number} [startIndex=0] - The index to start capturing from (for retaking specific photos).
+ * @param {number} [indexToRetake=-1] - If >=0, retakes only this specific index. Otherwise, captures all missing photos.
  */
-async function initiateCaptureSequence(startIndex = 0) {
+async function initiateCaptureSequence(indexToRetake = -1) {
     if (!currentStream || video.srcObject === null || video.paused || !cameraActive) {
         displayCameraMessage(
             'Camera not active or paused.',
             'warning',
-            'Please ensure camera access is granted and the live feed is visible before starting.',
+            'Please click "Start Camera" first.',
             true
         );
         return;
     }
 
-    // Crucial: Attempt to unlock audio context directly on this user interaction
     if (!userInteracted) {
         try {
             countdownBeep.muted = false;
@@ -593,52 +600,48 @@ async function initiateCaptureSequence(startIndex = 0) {
         photosToCapture = 3;
     }
 
-    setCaptureControlsEnabled(true); // Disable selects during capture
-    updateButtonVisibility('capturing'); // Update button visibility for capturing state
+    setCaptureControlsEnabled(true); 
+    updateButtonVisibility('capturing');
 
-    if (startIndex === 0 && capturedPhotos.length !== 0) { // Only clear grid if starting from scratch
+    if (indexToRetake === -1 && capturedPhotos.length !== 0) { // Clear all if starting a full new sequence
         photoGrid.innerHTML = ''; 
         capturedPhotos = [];
     }
-    
-    // Fill in any gaps if starting from a specific index or retaking a selection
+
+    // Ensure placeholders for all photos
     for (let i = 0; i < photosToCapture; i++) {
         if (!capturedPhotos[i]) {
-            // Add a placeholder if a photo is missing (e.g., after retaking a specific one)
-            // or if we're starting fresh.
+            capturedPhotos[i] = null; // Mark as null/undefined to ensure order
             addPhotoToGrid('data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=', i); // Transparent GIF placeholder
         }
     }
+    updatePhotoProgressText(); // Update progress dots before starting capture
 
-
-    for (let i = startIndex; i < photosToCapture; i++) {
-        // If we are doing a "retake selected photo", only process the selected one.
-        // Otherwise, process all missing photos.
-        const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
-        if (selectedWrapper && parseInt(selectedWrapper.dataset.index) !== i) {
-            continue; // Skip if a specific photo is selected for retake and this isn't it
-        }
-
+    if (indexToRetake !== -1) {
+        // Retake a specific photo
         await runCountdown(3);
         flashOverlay.classList.add('active');
-        setTimeout(() => {
-            flashOverlay.classList.remove('active');
-        }, 100); 
-        
-        await sendFrameToWorker(i); // Pass the index to replace
-
-        // If a single photo was retaken, we're done with the sequence
-        if (selectedWrapper) {
-            break;
-        }
-        
-        if (capturedPhotos.length < photosToCapture) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
+        setTimeout(() => { flashOverlay.classList.remove('active'); }, 100); 
+        await sendFrameToWorker(indexToRetake);
+    } else {
+        // Capture all photos or remaining ones
+        for (let i = 0; i < photosToCapture; i++) {
+            if (capturedPhotos[i] === null) { // Only capture if slot is empty
+                await runCountdown(3);
+                flashOverlay.classList.add('active');
+                setTimeout(() => { flashOverlay.classList.remove('active'); }, 100); 
+                await sendFrameToWorker(i);
+                
+                if (capturedPhotos.filter(p => p !== null).length < photosToCapture) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); 
+                }
+            }
         }
     }
 
-    setCaptureControlsEnabled(false); // Re-enable selects
-    updateButtonVisibility('captured'); // Update button visibility after capture sequence
+    // After sequence, re-enable controls and update button states
+    setCaptureControlsEnabled(false); 
+    updateButtonVisibility('captured'); 
     updatePhotoProgressText(); 
 }
 
@@ -646,10 +649,10 @@ async function initiateCaptureSequence(startIndex = 0) {
  * Handles the retake all photos action.
  */
 function retakeAllPhotos() {
-    capturedPhotos = [];
-    photoGrid.innerHTML = '';
-    updatePhotoProgressText(); // This will also trigger updateButtonVisibility
-    initiateCaptureSequence();
+    capturedPhotos = []; // Clear all photos
+    photoGrid.innerHTML = ''; // Clear grid
+    updatePhotoProgressText(); // Reset progress
+    initiateCaptureSequence(); // Start a new full capture sequence
 }
 
 /**
@@ -659,7 +662,7 @@ function retakeSelectedPhoto() {
     const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
     if (selectedWrapper) {
         const indexToRetake = parseInt(selectedWrapper.dataset.index);
-        initiateCaptureSequence(indexToRetake); // Start capture sequence from this index
+        initiateCaptureSequence(indexToRetake); // Start capture sequence for specific index
     } else {
         alert('Please select a photo to retake first!');
         updateButtonVisibility('captured'); // Ensure buttons are correct if no selection
@@ -675,16 +678,14 @@ function handlePhotoSelection(event) {
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
     if (!clickedWrapper) return;
 
-    // Toggle selected class
-    const isSelected = clickedWrapper.classList.contains('selected');
-    // Deselect all others first
-    photoGrid.querySelectorAll('.captured-photo-wrapper').forEach(wrapper => {
-        wrapper.classList.remove('selected');
-    });
-
-    if (!isSelected) {
-        clickedWrapper.classList.add('selected');
+    // Deselect any previously selected photo
+    const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+    if (currentlySelected && currentlySelected !== clickedWrapper) {
+        currentlySelected.classList.remove('selected');
     }
+
+    // Toggle the selected class on the clicked photo
+    clickedWrapper.classList.toggle('selected');
     
     // Update button visibility based on selection
     updateButtonVisibility('captured'); 
@@ -718,14 +719,15 @@ function toggleFullScreen() {
 
 /**
  * Manages the visibility and disabled state of all relevant buttons based on application state.
- * @param {'initial'|'ready'|'capturing'|'captured'} state - The current state of the photo capture process.
+ * @param {'initial'|'ready'|'capturing'|'captured'|'error'} state - The current state of the photo capture process.
  */
 function updateButtonVisibility(state = 'initial') {
     const isFullscreen = document.fullscreenElement;
-    const allPhotosCaptured = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+    const allPhotosCaptured = (capturedPhotos.filter(p => p !== null).length === photosToCapture && photosToCapture > 0);
     const photoSelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+    const cameraAvailable = (cameraSelect.options.length > 0 && cameraActive); // New: Check if camera is actually streaming
 
-    // Default to hidden/disabled for most buttons
+    // Default to hidden/disabled for most action buttons
     startCameraButton.style.display = 'none';
     captureBtnNormalMode.style.display = 'none';
     captureBtnFullscreen.style.display = 'none';
@@ -733,31 +735,41 @@ function updateButtonVisibility(state = 'initial') {
     retakePhotosBtn.style.display = 'none';
     retakeIndividualPhotoBtn.style.display = 'none';
 
-    // General controls
+    // General controls (initially visible, but might be disabled)
     invertCameraButton.style.display = 'block';
     backToLayoutBtn.style.display = 'block';
     fullscreenToggleBtn.style.display = 'block';
-    setCaptureControlsEnabled(false); // Enable selects by default when not in specific states
 
-    if (state === 'initial') {
-        // Before camera stream starts
-        displayCameraMessage(
-            'Click "Start Camera" to begin.',
-            'info',
-            'Please allow camera permissions if prompted.',
-            true // Show start camera button
-        );
-        setCaptureControlsEnabled(true); // Disable selects but enable start button
-        invertCameraButton.style.display = 'none';
-        backToLayoutBtn.style.display = 'block'; // Always allow going back
-        fullscreenToggleBtn.style.display = 'none';
+    // Always enable "Back to Layout" unless explicitly in capture sequence
+    backToLayoutBtn.disabled = (state === 'capturing');
+
+    // Controls Panel (selects) enabled only when camera is active and not capturing
+    const controlsEnabled = (cameraActive && state !== 'capturing');
+    setCaptureControlsEnabled(!controlsEnabled);
+
+    if (state === 'initial' || state === 'error') {
+        // Before camera stream starts or after an error
+        startCameraButton.style.display = 'block';
+        startCameraButton.disabled = false; // Always allow retrying start camera
+
+        invertCameraButton.style.display = 'none'; // No live feed to invert
+        fullscreenToggleBtn.style.display = 'none'; // No live feed for fullscreen
+        
+        // If there's no camera detected at all, disable selects
+        if (cameraSelect.options.length === 0 || state === 'error') {
+            setCaptureControlsEnabled(true); // Disable all controls
+        } else {
+            // If cameras are detected but not started yet, enable selects
+            cameraSelect.disabled = false;
+            resolutionSelect.disabled = false;
+            filterSelect.disabled = false;
+        }
 
     } else if (state === 'ready') {
         // Camera stream is active, ready to capture
-        hideCameraMessage(); // Hide the initial message
+        hideCameraMessage(); 
         setCaptureControlsEnabled(false); // Enable selects and general controls
         invertCameraButton.disabled = false;
-        backToLayoutBtn.disabled = false;
         fullscreenToggleBtn.disabled = false;
         
         if (isFullscreen) {
@@ -770,18 +782,19 @@ function updateButtonVisibility(state = 'initial') {
         
     } else if (state === 'capturing') {
         // During capture sequence (countdown, flash, processing)
-        setCaptureControlsEnabled(true); // Disable selects and other controls
+        setCaptureControlsEnabled(true); // Disable all controls
         invertCameraButton.style.display = 'none';
         backToLayoutBtn.style.display = 'none';
         fullscreenToggleBtn.style.display = 'none';
         captureBtnNormalMode.style.display = 'none';
         captureBtnFullscreen.style.display = 'none';
+
         nextBtn.disabled = true;
         retakePhotosBtn.disabled = true;
         retakeIndividualPhotoBtn.disabled = true;
 
-    } else if (state === 'captured' || allPhotosCaptured) {
-        // All photos captured
+    } else if (state === 'captured') {
+        // All photos captured (or individual retake completed)
         setCaptureControlsEnabled(false); // Enable selects
         invertCameraButton.style.display = 'none'; // Hide general controls
         backToLayoutBtn.style.display = 'none';
@@ -829,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateButtonVisibility('initial'); // Initial call to set button visibility
 
-    // Unlock audio on first user interaction (general fallback, main unlock in initiateCaptureSequence)
+    // This listener will only fire once, attempting to unlock audio
     const unlockAudio = () => {
         if (!userInteracted) {
             countdownBeep.muted = false;
@@ -851,28 +864,42 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchend', unlockAudio, { once: true });
 });
 
-startCameraButton.addEventListener('click', () => {
-    populateCameraList().then(() => {
-        if (selectedCameraDeviceId) {
-            // Once devices are enumerated and a camera is selected, start the stream
-            // This is called from populateCameraList now, so no need to call again here
-            // startCameraStream(selectedCameraDeviceId, selectedResolution);
-        }
-    });
-});
-
-cameraSelect.addEventListener('change', (event) => {
-    selectedCameraDeviceId = event.target.value;
-    if (cameraActive) { // Only restart if camera is already active
-        startCameraStream(selectedCameraDeviceId, selectedResolution);
+startCameraButton.addEventListener('click', async () => {
+    // Only populate camera list once if it hasn't been populated
+    if (cameraSelect.options.length === 0 || cameraSelect.options[0].value === '') {
+        await populateCameraList();
+    }
+    // Now actually start the camera stream based on selected options
+    if (selectedCameraDeviceId) {
+        initCamera(selectedCameraDeviceId, selectedResolution);
+    } else if (cameraSelect.options.length > 0) {
+        // If no specific camera was selected yet, use the first available one
+        initCamera(cameraSelect.value, selectedResolution);
+    } else {
+        displayCameraMessage(
+            'No camera available to start.',
+            'error',
+            'Please ensure your webcam is connected and allowed by your browser.',
+            true
+        );
     }
 });
 
-resolutionSelect.addEventListener('change', (event) => {
+
+cameraSelect.addEventListener('change', async (event) => {
+    selectedCameraDeviceId = event.target.value;
+    // Always restart camera when selection changes if camera was active or trying to start
+    if (cameraActive || (cameraSelect.options.length > 0 && cameraSelect.options[0].value !== '')) {
+         await initCamera(selectedCameraDeviceId, selectedResolution);
+    }
+});
+
+resolutionSelect.addEventListener('change', async (event) => {
     const [width, height] = event.target.value.split('x').map(Number);
     selectedResolution = { width, height };
-    if (cameraActive) { // Only restart if camera is already active
-        startCameraStream(selectedCameraDeviceId, selectedResolution);
+    // Only restart camera when selection changes if camera was active or trying to start
+    if (cameraActive || (cameraSelect.options.length > 0 && cameraSelect.options[0].value !== '')) {
+        await initCamera(selectedCameraDeviceId, selectedResolution);
     }
 });
 
@@ -896,17 +923,18 @@ captureBtnFullscreen.addEventListener('click', () => {
 });
 
 nextBtn.addEventListener('click', () => {
-    if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) { 
+    if (capturedPhotos.filter(p => p !== null).length > 0 && capturedPhotos.filter(p => p !== null).length === photosToCapture) { 
+        // Ensure all slots are filled before proceeding
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
-        const remaining = photosToCapture - capturedPhotos.length;
+        const remaining = photosToCapture - capturedPhotos.filter(p => p !== null).length;
         alert(`Please capture ${remaining} more photo(s) before proceeding!`); 
     }
 });
 
 retakePhotosBtn.addEventListener('click', retakeAllPhotos);
-retakeIndividualPhotoBtn.addEventListener('click', retakeSelectedPhoto); // New event listener
+retakeIndividualPhotoBtn.addEventListener('click', retakeSelectedPhoto); 
 
 photoGrid.addEventListener('click', handlePhotoSelection);
 
