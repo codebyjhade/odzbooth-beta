@@ -18,7 +18,6 @@ const countdownElement = document.getElementById('countdown');
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg');
 const subCameraMsg = document.getElementById('sub-camera-msg');
-const photoProgressText = document.getElementById('photoProgressText'); // Ensure this is defined
 
 const cameraLoadingSpinner = document.getElementById('camera-loading-spinner');
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner');
@@ -50,6 +49,9 @@ let photosToCapture = 0;
 let photosCapturedCount = 0;
 let photoFrameAspectRatio = 4 / 3;
 let selectedPhotoIndex = -1; // NEW: To store the index of the photo selected for retake
+
+// NEW: Flag to control when 'Start Capture' is active for retakes
+let isReadyForRetakeCapture = false;
 
 // NEW: Web Worker for image processing
 let imageProcessorWorker = null;
@@ -402,7 +404,7 @@ function initializeImageProcessorWorker() {
             };
             reader.readAsDataURL(blob);
         }
-    };
+    }
 
     imageProcessorWorker.onerror = (error) => {
         console.error('Main Thread: Web Worker error:', error);
@@ -589,6 +591,9 @@ async function initiateCaptureSequence() {
     setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle and invert camera
 
     if (selectedPhotoIndex !== -1) { // User clicked 'Start Capture' to retake a specific photo
+        // Reset the flag as we are now performing the capture
+        isReadyForRetakeCapture = false;
+
         // Perform a single capture for retake
         await runCountdown(3);
         flashOverlay.classList.add('active');
@@ -649,11 +654,14 @@ async function retakeSelectedPhoto() {
     // Hide the dedicated retake button, as "Start Capture" will be used
     retakePhotoBtn.style.display = 'none';
 
+    // Set the flag that allows 'Start Capture' to be visible/enabled for the retake
+    isReadyForRetakeCapture = true;
+
     // Update progress text to guide the user
     photoProgressText.textContent = `Photo ${selectedPhotoIndex + 1} selected for retake. Click 'Start Capture' to begin.`;
 
     // Make the "Start Capture" button visible and enabled for the user to click
-    // `toggleCaptureButtonVisibility` handles this by checking `selectedPhotoIndex`
+    // `toggleCaptureButtonVisibility` handles this by checking `isReadyForRetakeCapture`
     toggleCaptureButtonVisibility();
 }
 
@@ -676,6 +684,7 @@ function handlePhotoSelection(event) {
         }
         selectedPhotoIndex = -1; // No photo selected
         retakePhotoBtn.style.display = 'none'; // Hide retake button
+        isReadyForRetakeCapture = false; // Deselecting also cancels pending retake 'Start Capture'
         updatePhotoProgressText(); // Re-evaluate button visibility based on no selection
         return;
     }
@@ -689,6 +698,7 @@ function handlePhotoSelection(event) {
         clickedWrapper.classList.remove('selected');
         selectedPhotoIndex = -1;
         retakePhotoBtn.style.display = 'none'; // Hide retake button
+        isReadyForRetakeCapture = false; // Deselecting also cancels pending retake 'Start Capture'
     } else {
         // Deselect previous, select new
         if (currentlySelected) {
@@ -697,6 +707,8 @@ function handlePhotoSelection(event) {
         clickedWrapper.classList.add('selected');
         selectedPhotoIndex = index;
         retakePhotoBtn.style.display = 'block'; // Show retake button
+
+        isReadyForRetakeCapture = false; // Crucial: Selecting a photo does *not* immediately enable Start Capture
     }
     updatePhotoProgressText(); // Re-evaluate button visibility after selection change
 }
@@ -739,37 +751,38 @@ function toggleCaptureButtonVisibility() {
         return;
     }
 
-    let isVisible = true;
-    let isDisabled = false;
+    let isVisible = false; // Default to hidden
+    let isDisabled = true; // Default to disabled
 
-    // Condition 1: Controls are generally disabled (e.g., during camera loading or initial setup)
-    // This typically means the camera isn't ready.
+    // Condition A: Camera is loading or otherwise disabled (e.g., no stream)
     if (filterSelect.disabled) {
-        isVisible = false;
-        isDisabled = true;
+        // isVisible remains false, isDisabled remains true
+        // (This covers initial load, camera errors)
     }
-    // Condition 2: All photos are captured AND NO photo is selected for retake
-    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex === -1) {
-        isVisible = false; // Hide the "Start Capture" button
-        isDisabled = true; // And ensure it's disabled if it somehow shows
-    }
-    // Condition 3: A photo is selected for retake (should be visible and enabled)
-    // This takes precedence if the above conditions don't hide it.
-    else if (selectedPhotoIndex !== -1) {
+    // Condition B: Brand new capture sequence or continuing existing one (not all photos taken yet, no retake selected)
+    else if (photosToCapture === 0 || (capturedPhotos.length < photosToCapture && selectedPhotoIndex === -1)) {
         isVisible = true;
         isDisabled = false;
     }
-    // Default: visible and enabled for initial capture or continuing capture
-    // (This 'else' block implicitly sets isVisible = true, isDisabled = false if none above match)
+    // Condition C: All photos captured, AND a specific photo is selected for retake, AND 'Retake Photo' was clicked
+    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && isReadyForRetakeCapture) {
+        isVisible = true;
+        isDisabled = false;
+    }
+    // Condition D: All photos captured, and a specific photo is selected for retake, BUT 'Retake Photo' has NOT been clicked
+    // In this case, 'Start Capture' should remain hidden until 'Retake Photo' is clicked.
+    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && !isReadyForRetakeCapture) {
+        // isVisible remains false, isDisabled remains true (default values)
+    }
+    // Condition E: All photos captured, and NO photo selected for retake (the previous bug)
+    // This is implicitly covered by the default (isVisible = false, isDisabled = true) if none of the above match.
 
 
     if (document.fullscreenElement) {
         captureBtnNormalMode.style.display = 'none';
-        // FIX: Ensure 'display' property uses 'isVisible' correctly
         captureBtnFullscreen.style.display = isVisible ? 'block' : 'none';
         captureBtnFullscreen.disabled = isDisabled;
     } else {
-        // FIX: Ensure 'display' property uses 'isVisible' correctly
         captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
         captureBtnFullscreen.style.display = 'none';
         captureBtnNormalMode.disabled = isDisabled;
