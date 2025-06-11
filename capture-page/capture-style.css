@@ -94,7 +94,7 @@ video {
     border-radius: 5px; /* Slight inner border radius */
     object-fit: cover; /* Ensures video fills the area, cropping if aspect ratios differ */
     transform: scaleX(-1); 
-    transition: transform 0.3s ease; 
+    transition: transform 0.3s ease, filter 0.3s ease; /* Added filter transition */
 }
 
 video.inverted {
@@ -117,6 +117,64 @@ video.inverted {
     z-index: 10;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
 }
+
+/* New: Styling for "Get Ready!" message */
+#getReadyMessage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-fredoka);
+    font-size: 4em;
+    font-weight: bold;
+    color: var(--secondary-brand-color);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px 40px;
+    border-radius: 15px;
+    z-index: 15; /* Above video and countdown */
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    display: none; /* Controlled by JS */
+    animation: fadeInScale 0.5s ease-out forwards;
+}
+
+/* New: Styling for Post-Capture Preview */
+.post-capture-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+    z-index: 10;
+    display: none; /* Controlled by JS */
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* New: Styling for Fullscreen Hint Overlay */
+.fullscreen-hint-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--text-light);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    z-index: 20; /* Above everything else in video area */
+    white-space: nowrap; /* Prevent text wrap */
+    display: none; /* Controlled by JS */
+    animation: fadeInOut 5s forwards; /* For automatic fade out */
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 
 .message {
     position: absolute;
@@ -210,6 +268,17 @@ video.inverted {
     background-repeat: no-repeat;
     background-position: right 15px center;
     background-size: 12px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.controls-panel select:hover {
+    border-color: var(--primary-brand-color);
+}
+
+.controls-panel select:focus {
+    outline: none;
+    border-color: var(--primary-brand-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-brand-color), 0.3);
 }
 
 /* Container for middle/top buttons (Invert, Fullscreen) */
@@ -233,7 +302,6 @@ video.inverted {
     align-items: center; /* Center horizontally */
 }
 
-
 button {
     padding: 12px 25px;
     border: none;
@@ -250,7 +318,7 @@ button {
 }
 
 button:hover:enabled {
-    background: #2a8fb6; 
+    background: #2a8fb6;
     transform: translateY(-2px);
     box-shadow: 0 6px 15px var(--shadow-medium);
 }
@@ -268,7 +336,7 @@ button:disabled {
 }
 
 .secondary-btn:hover:enabled {
-    background: #e0b06b; 
+    background: #e0b06b;
     color: var(--text-dark);
 }
 
@@ -277,7 +345,7 @@ button:disabled {
     width: 100%;
     height: 100%;
     display: block;
-    will-change: transform, filter; 
+    will-change: transform, filter;
 }
 
 #captured-photos-display {
@@ -285,13 +353,13 @@ button:disabled {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 400px; 
+    max-width: 400px;
     background: var(--panel-bg-color);
     padding: 25px;
     border-radius: var(--border-radius-soft);
     box-shadow: 0 5px 20px var(--shadow-medium);
     box-sizing: border-box;
-    position: relative; 
+    position: relative;
 }
 
 #captured-photos-display h3 {
@@ -301,9 +369,59 @@ button:disabled {
     font-family: var(--font-fredoka);
 }
 
+/* New: Styling for Layout Preview Placeholder */
+.selected-layout-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px dashed var(--primary-brand-color);
+    border-radius: var(--border-radius-soft);
+    min-height: 50px; /* Ensure visibility even when empty */
+    gap: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.layout-box {
+    background-color: rgba(51, 164, 201, 0.2); /* Using primary brand color with transparency */
+    border: 1px solid var(--primary-brand-color);
+    border-radius: 3px;
+    flex-shrink: 0;
+    aspect-ratio: 3/4; /* Consistent aspect ratio for layout boxes */
+}
+
+/* Specific sizing for layout boxes based on photo count */
+.selected-layout-preview.layout-1 .layout-box { width: 60px; height: 80px; } /* Adjust height based on aspect ratio */
+.selected-layout-preview.layout-2 .layout-box { width: 45px; height: 60px; }
+.selected-layout-preview.layout-3 .layout-box { width: 35px; height: 46.67px; } /* Approx 3:4 ratio */
+.selected-layout-preview.layout-4 .layout-box { width: 28px; height: 37.33px; } /* Approx 3:4 ratio */
+
+
+/* New: Styling for Capture Progress Bar */
+.capture-progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-top: 5px; /* Space above text */
+    margin-bottom: 15px; /* Space below bar */
+    overflow: hidden;
+}
+
+.capture-progress-bar .progress-fill {
+    height: 100%;
+    width: 0%; /* Controlled by JS */
+    background-color: var(--primary-brand-color);
+    border-radius: 5px;
+    transition: width 0.3s ease-out;
+}
+
+
 #captured-photos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
     width: 100%;
     justify-content: center;
@@ -312,192 +430,79 @@ button:disabled {
 .captured-photo-item {
     width: 100%;
     aspect-ratio: var(--video-aspect-ratio); 
-    object-fit: cover; 
-    border: 3px solid var(--secondary-brand-color);
-    border-radius: 8px;
+    border: 3px solid var(--primary-brand-color);
+    border-radius: var(--border-radius-soft);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, opacity 0.3s ease-in; /* Added opacity for fade-in */
     box-shadow: 0 2px 8px var(--shadow-light);
-    transition: transform 0.2s ease;
+    display: flex; /* For centering image within item */
+    justify-content: center;
+    align-items: center;
 }
 
 .captured-photo-item:hover {
     transform: scale(1.03);
+    box-shadow: 0 5px 15px var(--shadow-medium);
 }
 
-.tool-tip {
-    font-size: 0.85em;
-    color: #777;
-    margin-top: 10px;
-    text-align: left;
-    line-height: 1.4;
+.captured-photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
-.visual-countdown {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-fredoka); 
-    font-size: 8em; 
-    color: var(--text-light); 
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
-    z-index: 10; 
-    opacity: 0; 
-    pointer-events: none; 
-    transition: opacity 0.3s ease-in-out; 
-}
-
-@keyframes countdownPulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.1);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1.5);
-        opacity: 0;
-    }
-}
-
-.visual-countdown.animate {
-    animation: countdownPulse 1s ease-out forwards; 
-}
-
+/* Flash Overlay */
 .flash-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 1); 
-    z-index: 20; 
-    opacity: 0; 
-    pointer-events: none; 
-    transition: opacity 0.1s ease-out; 
-}
-
-.flash-overlay.active {
-    opacity: 1; 
-    transition: none; 
-}
-
-#countdown {
+    background-color: rgba(255, 255, 255, 0.9);
+    opacity: 0;
     display: none;
+    z-index: 10;
+    transition: opacity 0.1s ease-in-out;
 }
 
-.photo-progress-text {
-    font-size: 1.1em;
-    color: var(--text-dark);
-    text-align: center;
-    margin-bottom: 15px;
-    font-weight: 600;
-}
-
-.captured-photo-wrapper {
-    position: relative;
-    cursor: pointer; 
-    border: 3px solid transparent; 
-    border-radius: var(--border-radius-soft);
-    overflow: hidden; 
-    transition: border-color 0.2s ease-in-out, transform 0.2s ease;
-}
-
-.captured-photo-wrapper:hover {
-    transform: scale(1.03);
-    border-color: var(--secondary-brand-color); 
-}
-
-.captured-photo-wrapper.selected {
-    border-color: var(--primary-brand-color); 
-    box-shadow: 0 0 0 4px rgba(51, 164, 201, 0.5); 
-    transform: scale(1.05); 
-}
-
-.captured-photo-wrapper.selected:hover {
-    border-color: var(--primary-brand-color); 
-}
-
-.captured-photo-wrapper img {
-    display: block; 
-    width: 100%;
-    height: 100%;
-    object-fit: cover; 
-    border-radius: var(--border-radius-soft); 
-}
-
-/* Fullscreen Styles */
-body.fullscreen-active {
-    padding: 0;
-    margin: 0;
-    overflow: hidden; 
-}
-
-body.fullscreen-active .logo-header,
-body.fullscreen-active .controls-panel,
-body.fullscreen-active #captured-photos-display,
-body.fullscreen-active .action-buttons, /* Hide this group in fullscreen */
-body.fullscreen-active .bottom-action-buttons /* Hide this group in fullscreen */ {
-    display: none !important;
-}
-
-body.fullscreen-active .photobooth-container {
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    background: #000; 
-    display: flex;
-    flex-direction: column; /* Ensure column layout for content alignment */
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-}
-
-/* The captureBtn is moved into video-preview-area in fullscreen, so it needs to be visible */
-body.fullscreen-active #captureBtn {
-    display: block !important;
-}
-
-body.fullscreen-active .video-preview-area {
-    width: 100vw;
-    height: 100vh; /* Takes full height in fullscreen */
-    max-width: none; 
-    margin-bottom: 0;
-    border: none;
-    border-radius: 0;
-    aspect-ratio: auto; 
-    display: flex; 
-    justify-content: center;
-    align-items: center;
-}
-
-body.fullscreen-active video {
-    width: auto; 
-    height: 100%; 
-    max-width: 100%; 
-    object-fit: contain; 
-    border-radius: 0;
-}
-
-/* Style for the capture button when it's in fullscreen mode */
-.fullscreen-bottom-btn {
+/* Visual Countdown */
+.visual-countdown {
     position: absolute;
-    bottom: 50px; /* Increased from 20px to give more space from the bottom */
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%); /* Centers the button horizontally */
-    z-index: 30; 
-    width: auto; 
-    min-width: 180px; 
-    font-size: 1.3em;
-    padding: 15px 30px;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-fredoka);
+    font-size: 6em; /* Larger countdown */
+    font-weight: bold;
+    color: var(--secondary-brand-color);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    opacity: 0;
+    z-index: 11;
+    display: none; /* Controlled by JS */
 }
+
+.visual-countdown.animate {
+    animation: countdownScale 0.9s ease-out forwards;
+}
+
+@keyframes countdownScale {
+    0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+}
+
+
+/* Spinner Overlays */
+#photo-processing-spinner {
+    padding: 20px;
+    border-radius: var(--border-radius-soft);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 5px 15px var(--shadow-medium);
+}
+
 
 /* Style for the capture button when it's at the top in normal mode */
 .photobooth-container > .normal-mode-capture-btn {
@@ -537,24 +542,52 @@ body.fullscreen-active video {
 
 @media (max-width: 480px) {
     .logo-header .title {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
     }
 
     .photobooth-container, #captured-photos-display {
         padding: 20px;
     }
 
-    .controls-panel select, .action-buttons button, .bottom-action-buttons button {
-        padding: 10px 15px;
+    button {
         font-size: 1em;
-    }
-
-    #countdown {
-        font-size: 4em;
         padding: 10px 20px;
     }
 
-    #captured-photos-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    .action-buttons, .bottom-action-buttons {
+        gap: 10px;
     }
+
+    .video-preview-area {
+        max-width: 100%;
+    }
+    
+    .visual-countdown {
+        font-size: 4em;
+    }
+    #getReadyMessage {
+        font-size: 3em;
+        padding: 15px 30px;
+    }
+}
+
+/* Adjustments for fullscreen capture button positioning */
+.fullscreen-bottom-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto; 
+    min-width: 180px; 
+    font-size: 1.3em;
+    padding: 15px 30px;
+}
+
+/* Style for the capture button when it's at the top in normal mode */
+.photobooth-container > .normal-mode-capture-btn {
+    margin-bottom: 25px; /* Space below the button */
+    /* Ensure it's not absolutely positioned */
+    position: relative; 
+    transform: none; 
+    /* Inherit default button styles for width/max-width */
 }
