@@ -139,9 +139,9 @@ function setCaptureControlsEnabled(disabled) {
     // captureBtn visibility/disabled state is now handled by toggleCaptureButtonPosition
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    invertCameraButton.disabled = disabled; 
-    backToLayoutBtn.disabled = disabled;
-    fullscreenToggleBtn.disabled = disabled;
+    // invertCameraButton.disabled = disabled; // Keep enabled for fullscreen
+    // backToLayoutBtn.disabled = disabled; // Keep enabled for fullscreen
+    // fullscreenToggleBtn.disabled = disabled; // Keep enabled for fullscreen
     nextBtn.disabled = disabled; 
     captureBtnNormalMode.disabled = disabled; // Disable normal mode capture button
     retakePhotoBtn.disabled = disabled; // NEW
@@ -174,13 +174,25 @@ function updatePhotoProgressText() {
         confirmPhotosBtn.style.display = 'block'; // Show Confirm button
         confirmPhotosBtn.disabled = false;
         nextBtn.style.display = 'none'; // Hide Go to Editor until confirmed
+
+        // Hide "Invert Camera" and "Back to Layout" when all photos are captured
+        invertCameraButton.style.display = 'none';
+        backToLayoutBtn.style.display = 'none';
+
     } else if (photosToCapture > 0 && capturedPhotos.length < photosToCapture) {
         photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
         nextBtn.style.display = 'none'; 
+
+        // Show "Invert Camera" and "Back to Layout" when more photos are needed
+        invertCameraButton.style.display = 'block';
+        backToLayoutBtn.style.display = 'block';
+
     } else {
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if no photos are expected yet
         nextBtn.style.display = 'none'; 
+        invertCameraButton.style.display = 'block'; // Ensure visible on start
+        backToLayoutBtn.style.display = 'block'; // Ensure visible on start
     }
 }
 
@@ -305,6 +317,7 @@ async function startCamera(deviceId) {
             showCameraLoadingSpinner(false); 
             initializeImageProcessorWorker();
             toggleCaptureButtonVisibility(); // Initial visibility of the capture button
+            updatePhotoProgressText(); // Ensure correct initial state for other buttons
         };
 
     } catch (error) {
@@ -489,19 +502,22 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         addPhotoToGrid(imgData, capturedPhotos.length - 1); 
     }
     updatePhotoProgressText(); 
-    setCaptureControlsEnabled(false); // Re-enable controls after capture
+    setCaptureControlsEnabled(false); // Re-enable controls after capture process completes
     // Ensure capture buttons are re-enabled if more photos are needed
     if (capturedPhotos.length < photosToCapture) {
         captureBtnNormalMode.disabled = false;
         captureBtnFullscreen.disabled = false;
+        // Show these if more photos are to be captured
+        invertCameraButton.style.display = 'block'; 
+        backToLayoutBtn.style.display = 'block'; 
     } else {
         captureBtnNormalMode.disabled = true; 
         captureBtnFullscreen.disabled = true;
+        // Hide these if all photos are captured
+        invertCameraButton.style.display = 'none'; 
+        backToLayoutBtn.style.display = 'none'; 
     }
     toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
-    backToLayoutBtn.style.display = 'block'; 
-    fullscreenToggleBtn.style.display = 'block';
-    invertCameraButton.style.display = 'block'; 
 }
 
 
@@ -557,9 +573,9 @@ async function initiateCaptureSequence() {
     nextBtn.style.display = 'none'; 
     confirmPhotosBtn.style.display = 'none'; // NEW
     retakePhotoBtn.style.display = 'none'; // NEW
-    backToLayoutBtn.style.display = 'none'; 
-    fullscreenToggleBtn.style.display = 'none';
-    invertCameraButton.style.display = 'none'; 
+    backToLayoutBtn.style.display = 'none'; // Temporarily hide during capture sequence
+    invertCameraButton.style.display = 'none'; // Temporarily hide during capture sequence
+    // fullscreenToggleBtn should remain visible and functional
 
     if (capturedPhotos.length === 0) {
         photoGrid.innerHTML = ''; 
@@ -581,10 +597,8 @@ async function initiateCaptureSequence() {
     }
 
     setCaptureControlsEnabled(false); // Disable controls until user interacts
-    backToLayoutBtn.style.display = 'block'; 
-    fullscreenToggleBtn.style.display = 'block';
-    invertCameraButton.style.display = 'block'; 
-    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn
+    // Note: invertCameraButton and backToLayoutBtn visibility is now handled by updatePhotoProgressText
+    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn and hiding other buttons
     toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
 }
 
@@ -627,9 +641,9 @@ async function retakeSelectedPhoto() {
     nextBtn.style.display = 'none'; 
     confirmPhotosBtn.style.display = 'none'; // NEW
     retakePhotoBtn.style.display = 'none'; 
-    backToLayoutBtn.style.display = 'none'; 
-    fullscreenToggleBtn.style.display = 'none';
-    invertCameraButton.style.display = 'none'; 
+    backToLayoutBtn.style.display = 'block'; // Show these during retake sequence
+    invertCameraButton.style.display = 'block'; // Show these during retake sequence
+    // fullscreenToggleBtn should remain visible and functional
 
     await runCountdown(3);
     flashOverlay.classList.add('active');
@@ -641,10 +655,8 @@ async function retakeSelectedPhoto() {
 
     // After retake, re-enable buttons and update progress
     setCaptureControlsEnabled(false); 
-    backToLayoutBtn.style.display = 'block'; 
-    fullscreenToggleBtn.style.display = 'block';
-    invertCameraButton.style.display = 'block'; 
-    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn
+    // invertCameraButton and backToLayoutBtn visibility is now handled by updatePhotoProgressText
+    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn and hiding other buttons
     toggleCaptureButtonVisibility(); // Update button visibility
 }
 
@@ -817,7 +829,7 @@ confirmPhotosBtn.addEventListener('click', () => {
         nextBtn.disabled = false;
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm button
         // Optional: Provide visual feedback that photos are confirmed
-        alert('Photos confirmed! You can now go to the editor or retake a photo.');
+        // alert('Photos confirmed! You can now go to the editor or retake a photo.');
     } else {
         alert('Please capture all photos before confirming.');
     }
