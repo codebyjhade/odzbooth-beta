@@ -661,6 +661,7 @@ async function retakeSelectedPhoto() {
     setCaptureControlsEnabled(true); // Disable select elements etc.
     setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle and invert camera
 
+    // Add countdown and flash effect for retake
     await runCountdown(3);
     flashOverlay.classList.add('active');
     setTimeout(() => {
