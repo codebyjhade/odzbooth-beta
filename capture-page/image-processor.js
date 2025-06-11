@@ -23,15 +23,17 @@ self.onmessage = async (event) => {
 
         case 'PROCESS_FRAME':
             // The main thread sends an ImageBitmap (frame from video) and other capture details
-            // Removed: indexToReplace since retake feature is removed
-            const { imageBitmap } = payload; 
-            console.log(`Worker: Received PROCESS_FRAME.`); // Simplified log
+            const { imageBitmap, filter, indexToReplace } = payload; // Extract filter and indexToReplace
+            console.log(`Worker: Received PROCESS_FRAME.`);
 
             if (!offscreenCanvas || !offscreenCtx) {
                 console.error('Worker: OffscreenCanvas not initialized.');
                 if (imageBitmap) imageBitmap.close(); // Prevent memory leak
                 return;
             }
+
+            // Apply filter received with the frame
+            filterToApply = filter;
 
             const videoActualWidth = imageBitmap.width;
             const videoActualHeight = imageBitmap.height;
@@ -44,22 +46,47 @@ self.onmessage = async (event) => {
 
             // Crop the video feed to match the desired photo frame aspect ratio
             if (videoActualAspectRatio > photoFrameAspectRatio) {
+                // Video is wider than desired aspect ratio, crop horizontally
                 sWidth = videoActualHeight * photoFrameAspectRatio;
                 sx = (videoActualWidth - sWidth) / 2;
             } else if (videoActualAspectRatio < photoFrameAspectRatio) {
+                // Video is taller than desired aspect ratio, crop vertically
                 sHeight = videoActualWidth / photoFrameAspectRatio;
                 sy = (videoActualHeight - sHeight) / 2;
             }
 
-            // Set offscreen canvas dimensions to the cropped area
-            offscreenCanvas.width = sWidth;
-            offscreenCanvas.height = sHeight;
+            // Calculate destination dimensions, respecting the requested aspect ratio for the output
+            // Max dimension for the output photo, e.g., 800px on the longest side
+            const maxOutputSize = 800; 
+            let dWidth, dHeight;
+
+            if (photoFrameAspectRatio >= 1) { // Landscape or square
+                dWidth = maxOutputSize;
+                dHeight = maxOutputSize / photoFrameAspectRatio;
+            } else { // Portrait
+                dHeight = maxOutputSize;
+                dWidth = maxOutputSize * photoFrameAspectRatio;
+            }
+
+            // Set canvas dimensions to the calculated output dimensions
+            offscreenCanvas.width = dWidth;
+            offscreenCanvas.height = dHeight;
+
+            // Clear the canvas
+            offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+            // Draw the cropped image to the offscreen canvas
+            offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
 
             // Apply filter
-            offscreenCtx.filter = filterToApply;
-
-            // Draw the ImageBitmap onto the OffscreenCanvas
-            offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            if (filterToApply && filterToApply !== 'none') {
+                offscreenCtx.filter = filterToApply;
+                // Re-draw to apply filter. Drawing over itself is a common pattern for filters.
+                // This might be less efficient than pixel manipulation for complex filters,
+                // but simpler for basic CSS-like filters.
+                offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
+                offscreenCtx.filter = 'none'; // Reset filter to avoid affecting subsequent draws
+            }
 
             // Encode to JPEG. This is the heavy part, now off the main thread!
             const blob = await offscreenCanvas.convertToBlob({
@@ -67,13 +94,11 @@ self.onmessage = async (event) => {
                 quality: 0.95
             });
 
-            // START OF FIX: Post the blob directly, as FileReader is not available in workers.
+            // Post the blob directly, and include indexToReplace
             self.postMessage({
                 type: 'FRAME_PROCESSED',
-                // Removed: indexToReplace as it's no longer needed for retake
-                payload: { blob, indexToReplace: -1 } // Always send -1 as there's no specific index to replace
+                payload: { blob, indexToReplace } // Send back the indexToReplace
             });
-            // END OF FIX
 
             imageBitmap.close(); // Release the ImageBitmap memory
             console.log('Worker: Frame processed and blob sent to main thread.');
