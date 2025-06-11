@@ -23,6 +23,8 @@
                 <video id="cameraFeed" autoplay playsinline></video>
                 <div id="flashOverlay" class="flash-overlay"></div>
                 <div id="visualCountdown" class="visual-countdown"></div>
+                <p id="getReadyMessage" class="message" style="display: none;">Get Ready!</p>
+                <img id="postCapturePreview" class="post-capture-preview" style="display: none;" alt="Last Captured Photo Preview">
                 <p id="countdown"></p> 
                 <div id="camera-access-message" class="message">
                     <p id="main-camera-msg">Attempting to access camera...</p>
@@ -33,6 +35,9 @@
                     <p>Loading Camera...</p>
                 </div>
                 <button id="captureBtn" class="fullscreen-bottom-btn" style="display: none;">Start Capture</button>
+                <div id="fullscreenHintOverlay" class="fullscreen-hint-overlay" style="display: none;">
+                    <p>Press ESC to Exit Fullscreen</p>
+                </div>
             </div>
 
             <div class="controls-panel">
@@ -41,42 +46,44 @@
                     <select id="cameraSelect"></select>
                     <p class="tool-tip">If you have multiple cameras, select one here.</p>
                 </div>
-
                 <div class="control-group">
                     <label for="filter">Apply Filter:</label>
                     <select id="filter">
                         <option value="none">None</option>
                         <option value="grayscale(100%)">Black & White</option>
                         <option value="sepia(100%)">Sepia</option>
-                        <option value="contrast(150%) brightness(80%)">Vintage</option>
-                        <option value="hue-rotate(90deg) saturate(150%)">Vibrant</option>
-                        <option value="invert(100%)">Negative</option>
-                        <option value="blur(3px)">Blur</option> 
-                        <option value="brightness(150%)">Bright</option> 
-                        <option value="saturate(200%)">Saturated</option> 
+                        <option value="invert(100%)">Invert</option>
+                        <option value="contrast(200%)">High Contrast</option>
+                        <option value="saturate(200%)">Vivid</option>
                     </select>
-                    <p class="tool-tip">See effects live on your camera feed!</p>
                 </div>
             </div>
 
             <div class="action-buttons">
-                <button id="captureBtnNormalMode">Start Capture</button> 
-                <button id="invertCameraButton" class="secondary-btn">
+                <button id="captureBtnNormalMode" aria-label="Start Capture">Start Capture</button> 
+                <button id="invertCameraButton" class="secondary-btn" aria-label="Invert Camera">
                     <i class="fas fa-sync-alt"></i> Invert Camera
                 </button>
-                <button id="fullscreenToggleBtn" class="secondary-btn">
+                <button id="fullscreenToggleBtn" class="secondary-btn" aria-label="Toggle Fullscreen">
                     <i class="fas fa-expand"></i> Fullscreen
+                </button>
+                <button id="retakeLastPhotoBtn" class="secondary-btn" style="display: none;" aria-label="Retake Last Photo">
+                    <i class="fas fa-undo"></i> Retake Last Photo
                 </button>
             </div>
             
             <div class="bottom-action-buttons">
-                <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button> 
-                <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
+                <button id="backToLayoutBtn" class="secondary-btn" aria-label="Back to Layout Selection">Back to Layout Selection</button> 
+                <button id="nextBtn" class="secondary-btn" style="display: none;" aria-label="Go to Editor">Go to Editor</button>
             </div>
         </div>
 
         <div id="captured-photos-display">
             <h3>Your Shots</h3>
+            <div id="selectedLayoutPreview" class="selected-layout-preview"></div>
+            <div id="captureProgressBar" class="capture-progress-bar">
+                <div class="progress-fill"></div>
+            </div>
             <p id="photoProgressText" class="photo-progress-text"></p> 
             <div id="photo-processing-spinner" class="spinner-overlay hidden-spinner">
                 <i class="fas fa-spinner fa-spin fa-2x"></i>
