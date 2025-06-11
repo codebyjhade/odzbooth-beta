@@ -598,8 +598,8 @@ async function initiateCaptureSequence() {
         await sendFrameToWorker(selectedPhotoIndex); // Send the index to replace
 
     } else { // User clicked 'Start Capture' to take new photos or continue sequence
-        if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
-            alert('All photos have already been captured. Click "Confirm Photos" to proceed.');
+        if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
+            alert('All photos have already been captured. Click "Confirm Photos" to proceed or select a photo to retake.');
             setCaptureControlsEnabled(false);
             setCaptureControlsDuringCapture(false);
             return;
@@ -739,38 +739,40 @@ function toggleCaptureButtonVisibility() {
         return;
     }
 
-    let shouldBeDisabled = false;
-    let shouldBeVisible = true;
+    let isVisible = true;
+    let isDisabled = false;
 
-    // Condition 1: All photos taken, and NO photo selected for retake
-    if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex === -1) {
-        shouldBeDisabled = true;
-        shouldBeVisible = false; // Hide "Start Capture" if all done and not retaking
+    // Condition 1: Controls are generally disabled (e.g., during camera loading or initial setup)
+    // This typically means the camera isn't ready.
+    if (filterSelect.disabled) {
+        isVisible = false;
+        isDisabled = true;
     }
-    // Condition 2: Controls are generally disabled (e.g., during camera loading)
-    else if (filterSelect.disabled) {
-        shouldBeDisabled = true;
+    // Condition 2: All photos are captured AND NO photo is selected for retake
+    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex === -1) {
+        isVisible = false; // Hide the "Start Capture" button
+        isDisabled = true; // And ensure it's disabled if it somehow shows
     }
     // Condition 3: A photo is selected for retake (should be visible and enabled)
+    // This takes precedence if the above conditions don't hide it.
     else if (selectedPhotoIndex !== -1) {
-        shouldBeDisabled = false;
-        shouldBeVisible = true;
+        isVisible = true;
+        isDisabled = false;
     }
-    // Condition 4: Default state (not capturing, not all photos taken, no retake selected)
-    else {
-        shouldBeDisabled = false;
-        shouldBeVisible = true;
-    }
+    // Default: visible and enabled for initial capture or continuing capture
+    // (This 'else' block implicitly sets isVisible = true, isDisabled = false if none above match)
 
 
     if (document.fullscreenElement) {
         captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = shouldBeVisible ? 'block' : 'none';
-        captureBtnFullscreen.disabled = shouldBeDisabled;
+        // FIX: Ensure 'display' property uses 'isVisible' correctly
+        captureBtnFullscreen.style.display = isVisible ? 'block' : 'none';
+        captureBtnFullscreen.disabled = isDisabled;
     } else {
-        captureBtnNormalMode.style.display = shouldBeVisible ? 'block' : 'none';
+        // FIX: Ensure 'display' property uses 'isVisible' correctly
+        captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
         captureBtnFullscreen.style.display = 'none';
-        captureBtnNormalMode.disabled = shouldBeDisabled;
+        captureBtnNormalMode.disabled = isDisabled;
     }
 }
 
