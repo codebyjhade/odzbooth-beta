@@ -500,7 +500,7 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         // Deselect photo after retake
         const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
         if (selectedWrapper) {
-            selectedWrapper.classList.remove('selected'); // FIX: Changed 'currentlySelected' to 'selectedWrapper'
+            selectedWrapper.classList.remove('selected');
         }
         selectedPhotoIndex = -1; // Reset selected photo index
         retakePhotoBtn.style.display = 'none'; // Hide retake button
@@ -510,22 +510,23 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         addPhotoToGrid(imgData, capturedPhotos.length - 1);
     }
     updatePhotoProgressText();
-    setCaptureControlsEnabled(false); // Re-enable controls after capture process completes
-    // Ensure capture buttons are re-enabled if more photos are needed
+    setCaptureControlsEnabled(false); // Re-enable controls, now disabled state is correctly handled by toggleCaptureButtonVisibility
+    toggleCaptureButtonVisibility(); // Ensures the correct capture button is visible and enabled/disabled based on fullscreen state and photo count
+
+    // Manual handling of other buttons (invert, back to layout, confirm, next)
+    // based on whether all photos are captured or more are needed.
     if (capturedPhotos.length < photosToCapture) {
-        captureBtnNormalMode.disabled = false;
-        captureBtnFullscreen.disabled = false;
-        // Show these if more photos are to be captured
         invertCameraButton.style.display = 'block';
         backToLayoutBtn.style.display = 'block';
+        confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
+        nextBtn.style.display = 'none';
     } else {
-        captureBtnNormalMode.disabled = true;
-        captureBtnFullscreen.disabled = true;
-        // Hide these if all photos are captured
         invertCameraButton.style.display = 'none';
         backToLayoutBtn.style.display = 'none';
+        confirmPhotosBtn.style.display = 'block'; // Show Confirm if all captured
+        confirmPhotosBtn.disabled = false; // Ensure it's enabled
+        nextBtn.style.display = 'none'; // Still hide next until confirmed
     }
-    toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
 }
 
 
