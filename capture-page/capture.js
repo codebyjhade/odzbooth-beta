@@ -38,9 +38,6 @@ const confirmPhotosBtn = document.getElementById('confirmPhotosBtn'); // NEW
 const visualCountdown = document.getElementById('visualCountdown');
 const flashOverlay = document.getElementById('flashOverlay');
 
-// Photo Progress Text Element
-const photoProgressText = document.getElementById('photoProgressText');
-
 // Audio Elements
 const countdownBeep = document.getElementById('countdownBeep');
 const cameraShutter = document.getElementById('cameraShutter');
@@ -533,7 +530,7 @@ function handleProcessedPhoto(imgData, indexToReplace) {
     }
     updatePhotoProgressText();
     setCaptureControlsEnabled(false); // Re-enable controls' disabled state
-    setCaptureControlsDuringCapture(false); // Re-evaluate and show correct buttons (display)
+    // setCaptureControlsDuringCapture(false); // REMOVED: This was prematurely showing buttons
 }
 
 
@@ -600,6 +597,7 @@ async function initiateCaptureSequence() {
         }
     }
 
+    // After the loop finishes (i.e., all photos are captured)
     setCaptureControlsEnabled(false); // Re-enable select elements etc.
     setCaptureControlsDuringCapture(false); // Restore button visibility based on photo count and fullscreen
 }
