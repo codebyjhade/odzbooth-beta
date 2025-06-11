@@ -148,17 +148,21 @@ function setCaptureControlsEnabled(disabled) {
  */
 function setCaptureControlsDuringCapture(isCapturing) {
     if (isCapturing) {
-        // Hide all buttons except fullscreenToggleBtn
-        captureBtnFullscreen.style.display = 'none';
-        captureBtnNormalMode.style.display = 'none';
+        // Hide all buttons except fullscreenToggleBtn and invertCameraButton
+        captureBtnFullscreen.style.display = 'none'; // Hide the fullscreen capture button
+        captureBtnNormalMode.style.display = 'none'; // Hide the normal mode capture button
         nextBtn.style.display = 'none';
         confirmPhotosBtn.style.display = 'none';
         retakePhotoBtn.style.display = 'none';
-        backToLayoutBtn.style.display = 'none'; // Ensure it's hidden
-        invertCameraButton.style.display = 'none';
+        backToLayoutBtn.style.display = 'none';
+
+        // Explicitly ensure these remain visible during capture
+        fullscreenToggleBtn.style.display = 'block';
+        invertCameraButton.style.display = 'block';
+
         // filterSelect and cameraSelect are handled by setCaptureControlsEnabled when capture starts
     } else {
-        // Restore visibility based on usual logic
+        // Restore visibility based on usual logic after capture is done
         updatePhotoProgressText(); // This handles visibility of confirm/next/invert/back based on photo count
         toggleCaptureButtonVisibility(); // This handles visibility of normal/fullscreen capture buttons based on fullscreen state
         // Retake button visibility is handled by selectedPhotoIndex and updatePhotoProgressText/handlePhotoSelection
@@ -578,7 +582,7 @@ async function initiateCaptureSequence() {
     }
 
     setCaptureControlsEnabled(true); // Disable select elements etc.
-    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle
+    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle and invert camera
 
     if (capturedPhotos.length === 0) {
         photoGrid.innerHTML = '';
@@ -647,7 +651,7 @@ async function retakeSelectedPhoto() {
     }
 
     setCaptureControlsEnabled(true); // Disable select elements etc.
-    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle
+    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle and invert camera
 
     await runCountdown(3);
     flashOverlay.classList.add('active');
@@ -780,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleCaptureButtonVisibility(); // Initial call to set button visibility
 
     // Unlock audio on first user interaction - this is a general fallback
-    // The main unlock will now happen in initiateCaptureSequence
+    // The main unlock will now happen in elicitCaptureSequence
     const unlockAudio = () => {
         // Only attempt if not already interacted via the capture button
         if (!userInteracted) {
