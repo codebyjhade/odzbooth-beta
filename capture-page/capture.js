@@ -18,6 +18,7 @@ const countdownElement = document.getElementById('countdown');
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg');
 const subCameraMsg = document.getElementById('sub-camera-msg');
+const photoProgressText = document.getElementById('photoProgressText'); // Ensure this is defined
 
 const cameraLoadingSpinner = document.getElementById('camera-loading-spinner');
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner');
@@ -56,6 +57,9 @@ let offscreenCanvasInstance = null;
 
 // Flag to track user interaction for audio autoplay
 let userInteracted = false;
+
+// NEW: Flag to indicate if a capture sequence is currently active
+let isCaptureActive = false;
 
 // --- Utility Functions ---
 
@@ -147,6 +151,8 @@ function setCaptureControlsEnabled(disabled) {
  * @param {boolean} isCapturing - True when a countdown/capture is active, false otherwise.
  */
 function setCaptureControlsDuringCapture(isCapturing) {
+    isCaptureActive = isCapturing; // Set the global flag
+
     if (isCapturing) {
         // Hide all buttons except fullscreenToggleBtn and invertCameraButton
         captureBtnFullscreen.style.display = 'none'; // Hide the fullscreen capture button
@@ -210,15 +216,17 @@ function updatePhotoProgressText() {
         photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
         nextBtn.style.display = 'none';
-
-        // Show "Invert Camera" and "Back to Layout" when more photos are needed
-        // Note: These might be temporarily hidden by setCaptureControlsDuringCapture(true)
-        // during an active capture sequence.
-        invertCameraButton.style.display = 'block';
-        backToLayoutBtn.style.display = 'block';
         retakePhotoBtn.style.display = 'none'; // Ensure retake is hidden if more photos are needed
-                                               // unless explicitly selected for retake
+
+        // ONLY show "Invert Camera" and "Back to Layout" if NOT in an active capture sequence
+        // (i.e., if setCaptureControlsDuringCapture(false) has been called, or before capture starts)
+        if (!isCaptureActive) {
+            invertCameraButton.style.display = 'block';
+            backToLayoutBtn.style.display = 'block';
+        }
+
     } else {
+        // This block runs on initial load or if photosToCapture is 0
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if no photos are expected yet
         nextBtn.style.display = 'none';
         invertCameraButton.style.display = 'block'; // Ensure visible on start
@@ -532,7 +540,7 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         photosCapturedCount++;
         addPhotoToGrid(imgData, capturedPhotos.length - 1);
     }
-    updatePhotoProgressText();
+    updatePhotoProgressText(); // Update progress text after each photo
     setCaptureControlsEnabled(false); // Re-enable controls' disabled state
 }
 
