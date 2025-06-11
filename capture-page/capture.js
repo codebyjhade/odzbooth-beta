@@ -748,6 +748,15 @@ function toggleFullScreen() {
  * Manages the visibility of the two capture buttons based on fullscreen mode.
  */
 function toggleCaptureButtonVisibility() {
+    // If a capture sequence is active, the capture buttons should be hidden,
+    // regardless of fullscreen state. Their visibility is managed by setCaptureControlsDuringCapture.
+    if (isCaptureActive) {
+        captureBtnNormalMode.style.display = 'none';
+        captureBtnFullscreen.style.display = 'none';
+        return; // Exit early
+    }
+
+    // Only proceed if capture is NOT active
     if (document.fullscreenElement) {
         // In fullscreen: hide normal mode button, show fullscreen button
         captureBtnNormalMode.style.display = 'none';
@@ -763,7 +772,8 @@ function toggleCaptureButtonVisibility() {
         captureBtnFullscreen.disabled = true;
     } else {
         // Only enable if controls are not currently disabled by setCaptureControlsEnabled(true)
-        if (!filterSelect.disabled) { // Check if general controls are not disabled
+        // (i.e., filterSelect.disabled is false, meaning controls are generally enabled)
+        if (!filterSelect.disabled) {
             captureBtnNormalMode.disabled = false;
             captureBtnFullscreen.disabled = false;
         }
