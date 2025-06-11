@@ -132,20 +132,40 @@ function showPhotoProcessingSpinner(show) {
 }
 
 /**
- * Disables/enables capture controls (buttons, selects).
+ * Disables/enables capture controls (buttons, selects). This primarily affects the 'disabled' attribute.
  * @param {boolean} disabled - True to disable, false to enable.
  */
 function setCaptureControlsEnabled(disabled) {
-    // captureBtn visibility/disabled state is now handled by toggleCaptureButtonPosition
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    // invertCameraButton.disabled = disabled; // Keep enabled for fullscreen
-    // backToLayoutBtn.disabled = disabled; // Keep enabled for fullscreen
-    // fullscreenToggleBtn.disabled = disabled; // Keep enabled for fullscreen
     nextBtn.disabled = disabled;
-    captureBtnNormalMode.disabled = disabled; // Disable normal mode capture button
-    retakePhotoBtn.disabled = disabled; // NEW
-    confirmPhotosBtn.disabled = disabled; // NEW
+    captureBtnNormalMode.disabled = disabled;
+    retakePhotoBtn.disabled = disabled;
+    confirmPhotosBtn.disabled = disabled;
+}
+
+/**
+ * Manages the display of main capture buttons and related controls during a capture sequence.
+ * This directly controls the 'display' style property.
+ * @param {boolean} isCapturing - True when a countdown/capture is active, false otherwise.
+ */
+function setCaptureControlsDuringCapture(isCapturing) {
+    if (isCapturing) {
+        // Hide all buttons except fullscreenToggleBtn
+        captureBtnFullscreen.style.display = 'none';
+        captureBtnNormalMode.style.display = 'none';
+        nextBtn.style.display = 'none';
+        confirmPhotosBtn.style.display = 'none';
+        retakePhotoBtn.style.display = 'none';
+        backToLayoutBtn.style.display = 'none';
+        invertCameraButton.style.display = 'none';
+        // filterSelect and cameraSelect are handled by setCaptureControlsEnabled when capture starts
+    } else {
+        // Restore visibility based on usual logic
+        updatePhotoProgressText(); // This handles visibility of confirm/next/invert/back based on photo count
+        toggleCaptureButtonVisibility(); // This handles visibility of normal/fullscreen capture buttons based on fullscreen state
+        // Retake button visibility is handled by selectedPhotoIndex and updatePhotoProgressText/handlePhotoSelection
+    }
 }
 
 /**
@@ -191,6 +211,8 @@ function updatePhotoProgressText() {
         nextBtn.style.display = 'none';
 
         // Show "Invert Camera" and "Back to Layout" when more photos are needed
+        // Note: These might be temporarily hidden by setCaptureControlsDuringCapture(true)
+        // during an active capture sequence.
         invertCameraButton.style.display = 'block';
         backToLayoutBtn.style.display = 'block';
         retakePhotoBtn.style.display = 'none'; // Ensure retake is hidden if more photos are needed
@@ -211,7 +233,7 @@ function updatePhotoProgressText() {
  */
 async function populateCameraList() {
     showCameraLoadingSpinner(true);
-    setCaptureControlsEnabled(true);
+    setCaptureControlsEnabled(true); // Enable select menus initially
 
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -321,7 +343,7 @@ async function startCamera(deviceId) {
         video.onloadedmetadata = () => {
             video.play();
             hideCameraMessage();
-            setCaptureControlsEnabled(false);
+            setCaptureControlsEnabled(false); // Enable selects and initial buttons
             showCameraLoadingSpinner(false);
             initializeImageProcessorWorker();
             toggleCaptureButtonVisibility(); // Initial visibility of the capture button
@@ -510,23 +532,8 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         addPhotoToGrid(imgData, capturedPhotos.length - 1);
     }
     updatePhotoProgressText();
-    setCaptureControlsEnabled(false); // Re-enable controls, now disabled state is correctly handled by toggleCaptureButtonVisibility
-    toggleCaptureButtonVisibility(); // Ensures the correct capture button is visible and enabled/disabled based on fullscreen state and photo count
-
-    // Manual handling of other buttons (invert, back to layout, confirm, next)
-    // based on whether all photos are captured or more are needed.
-    if (capturedPhotos.length < photosToCapture) {
-        invertCameraButton.style.display = 'block';
-        backToLayoutBtn.style.display = 'block';
-        confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
-        nextBtn.style.display = 'none';
-    } else {
-        invertCameraButton.style.display = 'none';
-        backToLayoutBtn.style.display = 'none';
-        confirmPhotosBtn.style.display = 'block'; // Show Confirm if all captured
-        confirmPhotosBtn.disabled = false; // Ensure it's enabled
-        nextBtn.style.display = 'none'; // Still hide next until confirmed
-    }
+    setCaptureControlsEnabled(false); // Re-enable controls' disabled state
+    setCaptureControlsDuringCapture(false); // Re-evaluate and show correct buttons (display)
 }
 
 
@@ -544,21 +551,17 @@ async function initiateCaptureSequence() {
     }
 
     // Crucial: Attempt to unlock audio context directly on this user interaction
-    // This will ensure the audio context is ready for the first beep.
     if (!userInteracted) {
         try {
             countdownBeep.muted = false;
             cameraShutter.muted = false;
-            // Play a very brief, silent sound to explicitly unlock the audio context
             await countdownBeep.play();
             countdownBeep.pause();
             countdownBeep.currentTime = 0;
-            userInteracted = true; // Mark as interacted
+            userInteracted = true;
             console.log("Audio context unlocked by Start Capture button click.");
         } catch (e) {
             console.warn("Audio autoplay blocked by explicit play attempt:", e);
-            // This could still happen in very strict environments, but less likely.
-            // Consider showing a UI message if audio is critical and fails here.
         }
     }
 
@@ -575,16 +578,8 @@ async function initiateCaptureSequence() {
         photosToCapture = 3;
     }
 
-    setCaptureControlsEnabled(true);
-    // Hide relevant buttons during capture sequence
-    captureBtnFullscreen.style.display = 'none'; // Ensure fullscreen button is hidden if visible
-    captureBtnNormalMode.style.display = 'none';
-    nextBtn.style.display = 'none';
-    confirmPhotosBtn.style.display = 'none'; // NEW
-    retakePhotoBtn.style.display = 'none'; // NEW
-    backToLayoutBtn.style.display = 'none'; // Temporarily hide during capture sequence
-    invertCameraButton.style.display = 'none'; // Temporarily hide during capture sequence
-    // fullscreenToggleBtn should remain visible and functional
+    setCaptureControlsEnabled(true); // Disable select elements etc.
+    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle
 
     if (capturedPhotos.length === 0) {
         photoGrid.innerHTML = '';
@@ -605,10 +600,8 @@ async function initiateCaptureSequence() {
         }
     }
 
-    setCaptureControlsEnabled(false); // Disable controls until user interacts
-    // Note: invertCameraButton and backToLayoutBtn visibility is now handled by updatePhotoProgressText
-    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn and hiding other buttons
-    toggleCaptureButtonVisibility(); // Update button visibility after capture sequence
+    setCaptureControlsEnabled(false); // Re-enable select elements etc.
+    setCaptureControlsDuringCapture(false); // Restore button visibility based on photo count and fullscreen
 }
 
 /**
@@ -650,15 +643,8 @@ async function retakeSelectedPhoto() {
         }
     }
 
-    setCaptureControlsEnabled(true);
-    captureBtnFullscreen.style.display = 'none';
-    captureBtnNormalMode.style.display = 'none';
-    nextBtn.style.display = 'none';
-    confirmPhotosBtn.style.display = 'none'; // NEW
-    retakePhotoBtn.style.display = 'none';
-    backToLayoutBtn.style.display = 'block'; // Show these during retake sequence
-    invertCameraButton.style.display = 'block'; // Show these during retake sequence
-    // fullscreenToggleBtn should remain visible and functional
+    setCaptureControlsEnabled(true); // Disable select elements etc.
+    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle
 
     await runCountdown(3);
     flashOverlay.classList.add('active');
@@ -668,11 +654,8 @@ async function retakeSelectedPhoto() {
 
     await sendFrameToWorker(selectedPhotoIndex); // Send the index to replace
 
-    // After retake, re-enable buttons and update progress
-    setCaptureControlsEnabled(false);
-    // invertCameraButton and backToLayoutBtn visibility is now handled by updatePhotoProgressText
-    updatePhotoProgressText(); // This will handle showing confirmPhotosBtn and hiding other buttons
-    toggleCaptureButtonVisibility(); // Update button visibility
+    setCaptureControlsEnabled(false); // Re-enable select elements etc.
+    setCaptureControlsDuringCapture(false); // Restore button visibility based on photo count and fullscreen
 }
 
 
@@ -760,12 +743,15 @@ function toggleCaptureButtonVisibility() {
         captureBtnFullscreen.style.display = 'none';
     }
     // Ensure both capture buttons' disabled state is correct based on photo count
-    if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
+    if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
         captureBtnNormalMode.disabled = true;
         captureBtnFullscreen.disabled = true;
     } else {
-        captureBtnNormalMode.disabled = false;
-        captureBtnFullscreen.disabled = false;
+        // Only enable if controls are not currently disabled by setCaptureControlsEnabled(true)
+        if (!filterSelect.disabled) { // Check if general controls are not disabled
+            captureBtnNormalMode.disabled = false;
+            captureBtnFullscreen.disabled = false;
+        }
     }
 }
 
@@ -870,8 +856,6 @@ nextBtn.addEventListener('click', () => {
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
         window.location.href = 'editing-page/editing-home.html';
     } else {
-        // This case should ideally not be hit if confirmPhotosBtn logic is correct,
-        // but it's a good fallback.
         const remaining = photosToCapture - capturedPhotos.length;
         alert(`Please capture ${remaining} more photo(s) before proceeding!`);
     }
