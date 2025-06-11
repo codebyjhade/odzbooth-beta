@@ -154,7 +154,7 @@ function setCaptureControlsDuringCapture(isCapturing) {
         nextBtn.style.display = 'none';
         confirmPhotosBtn.style.display = 'none';
         retakePhotoBtn.style.display = 'none';
-        backToLayoutBtn.style.display = 'none';
+        backToLayoutBtn.style.display = 'none'; // Ensure it's hidden
         invertCameraButton.style.display = 'none';
         // filterSelect and cameraSelect are handled by setCaptureControlsEnabled when capture starts
     } else {
@@ -530,7 +530,6 @@ function handleProcessedPhoto(imgData, indexToReplace) {
     }
     updatePhotoProgressText();
     setCaptureControlsEnabled(false); // Re-enable controls' disabled state
-    // setCaptureControlsDuringCapture(false); // REMOVED: This was prematurely showing buttons
 }
 
 
@@ -538,6 +537,9 @@ function handleProcessedPhoto(imgData, indexToReplace) {
  * Manages the initial photo capture sequence with countdowns and multiple shots.
  */
 async function initiateCaptureSequence() {
+    // Explicitly hide backToLayoutBtn immediately upon function call
+    backToLayoutBtn.style.display = 'none';
+
     if (!currentStream || video.srcObject === null || video.paused) {
         displayCameraMessage(
             'Camera not active or paused.',
@@ -606,6 +608,9 @@ async function initiateCaptureSequence() {
  * Allows the user to retake a previously captured photo.
  */
 async function retakeSelectedPhoto() {
+    // Explicitly hide backToLayoutBtn immediately upon function call
+    backToLayoutBtn.style.display = 'none';
+
     // Check if photos have been confirmed; if so, disallow retake.
     if (nextBtn.style.display === 'block' && confirmPhotosBtn.style.display === 'none') {
         alert('Photos have been confirmed. You cannot retake photos now. Please go to the editor.');
