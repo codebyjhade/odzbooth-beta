@@ -179,6 +179,12 @@ function updatePhotoProgressText() {
         invertCameraButton.style.display = 'none';
         backToLayoutBtn.style.display = 'none';
 
+        // Also hide retake button if not in retake process AND all photos are captured
+        if (selectedPhotoIndex === -1) { // Only hide if no photo is actively selected for retake
+            retakePhotoBtn.style.display = 'none';
+        }
+
+
     } else if (photosToCapture > 0 && capturedPhotos.length < photosToCapture) {
         photoProgressText.textContent += ` (${photosToCapture - capturedPhotos.length} remaining)`;
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
@@ -187,12 +193,14 @@ function updatePhotoProgressText() {
         // Show "Invert Camera" and "Back to Layout" when more photos are needed
         invertCameraButton.style.display = 'block';
         backToLayoutBtn.style.display = 'block';
-
+        retakePhotoBtn.style.display = 'none'; // Ensure retake is hidden if more photos are needed
+                                               // unless explicitly selected for retake
     } else {
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm if no photos are expected yet
         nextBtn.style.display = 'none'; 
         invertCameraButton.style.display = 'block'; // Ensure visible on start
         backToLayoutBtn.style.display = 'block'; // Ensure visible on start
+        retakePhotoBtn.style.display = 'none'; // Ensure retake is hidden on start
     }
 }
 
@@ -492,7 +500,7 @@ function handleProcessedPhoto(imgData, indexToReplace) {
         // Deselect photo after retake
         const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
         if (selectedWrapper) {
-            selectedWrapper.classList.remove('selected');
+            currentlySelected.classList.remove('selected');
         }
         selectedPhotoIndex = -1; // Reset selected photo index
         retakePhotoBtn.style.display = 'none'; // Hide retake button
@@ -606,6 +614,12 @@ async function initiateCaptureSequence() {
  * Allows the user to retake a previously captured photo.
  */
 async function retakeSelectedPhoto() {
+    // Check if photos have been confirmed; if so, disallow retake.
+    if (nextBtn.style.display === 'block' && confirmPhotosBtn.style.display === 'none') {
+        alert('Photos have been confirmed. You cannot retake photos now. Please go to the editor.');
+        return;
+    }
+
     if (selectedPhotoIndex === -1 || selectedPhotoIndex >= capturedPhotos.length) {
         alert('Please select a photo to retake first.');
         return;
@@ -666,6 +680,13 @@ async function retakeSelectedPhoto() {
  * @param {Event} event - The click event.
  */
 function handlePhotoSelection(event) {
+    // If photos have been confirmed, do not allow selection for retake.
+    if (nextBtn.style.display === 'block' && confirmPhotosBtn.style.display === 'none') {
+        // Optionally, give visual feedback that selection is disabled.
+        // event.preventDefault(); // Prevent default if any default action exists
+        return; 
+    }
+
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
     if (!clickedWrapper) {
         // If clicked outside any photo, deselect
@@ -828,8 +849,16 @@ confirmPhotosBtn.addEventListener('click', () => {
         nextBtn.style.display = 'block'; // Show Go to Editor button
         nextBtn.disabled = false;
         confirmPhotosBtn.style.display = 'none'; // Hide Confirm button
+        retakePhotoBtn.style.display = 'none'; // Permanently hide Retake button
+        // Deselect any currently selected photo if present
+        const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+        if (currentlySelected) {
+            currentlySelected.classList.remove('selected');
+        }
+        selectedPhotoIndex = -1; // Reset selected index
+        
         // Optional: Provide visual feedback that photos are confirmed
-        // alert('Photos confirmed! You can now go to the editor or retake a photo.');
+        // alert('Photos confirmed! You can now go to the editor.');
     } else {
         alert('Please capture all photos before confirming.');
     }
