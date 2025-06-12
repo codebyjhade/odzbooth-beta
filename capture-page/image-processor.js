@@ -22,9 +22,9 @@ self.onmessage = async (event) => {
             break;
 
         case 'PROCESS_FRAME':
-            // The main thread sends an ImageBitmap (frame from video) and other capture details
-            const { imageBitmap, indexToReplace } = payload; // Keep indexToReplace
-            console.log(`Worker: Received PROCESS_FRAME for index: ${indexToReplace}.`); // Updated log
+            // The main thread sends an ImageBitmap (frame from video) and the indexToReplace
+            const { imageBitmap, indexToReplace } = payload; // RETAINED: indexToReplace for retake functionality
+            console.log(`Worker: Received PROCESS_FRAME. Index to replace: ${indexToReplace}`);
 
             if (!offscreenCanvas || !offscreenCtx) {
                 console.error('Worker: OffscreenCanvas not initialized.');
@@ -66,10 +66,10 @@ self.onmessage = async (event) => {
                 quality: 0.95
             });
 
-            // Post the blob directly, and the indexToReplace
+            // Post the blob directly, along with the indexToReplace
             self.postMessage({
                 type: 'FRAME_PROCESSED',
-                payload: { blob, indexToReplace } // Send indexToReplace back
+                payload: { blob, indexToReplace: indexToReplace } // IMPORTANT: Pass the original indexToReplace back
             });
 
             imageBitmap.close(); // Release the ImageBitmap memory
