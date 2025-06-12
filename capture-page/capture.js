@@ -5,11 +5,8 @@
 
 // --- DOM Element References ---
 const video = document.getElementById('cameraFeed');
-// Renamed captureBtn to captureBtnFullscreen to reflect its primary role
-const captureBtnFullscreen = document.getElementById('captureBtn');
-// New reference for the button visible in normal mode
-const captureBtnNormalMode = document.getElementById('captureBtnNormalMode');
-
+const captureBtnFullscreen = document.getElementById('captureBtn'); // Fullscreen capture button
+const captureBtnNormalMode = document.getElementById('captureBtnNormalMode'); // Normal mode capture button
 const nextBtn = document.getElementById('nextBtn');
 const photoGrid = document.getElementById('captured-photos-grid');
 const filterSelect = document.getElementById('filter');
@@ -18,6 +15,7 @@ const countdownElement = document.getElementById('countdown');
 const cameraAccessMessage = document.getElementById('camera-access-message');
 const mainCameraMsg = document.getElementById('main-camera-msg');
 const subCameraMsg = document.getElementById('sub-camera-msg');
+const photoProgressText = document.getElementById('photoProgressText'); // Assuming you have this element in HTML
 
 const cameraLoadingSpinner = document.getElementById('camera-loading-spinner');
 const photoProcessingSpinner = document.getElementById('photo-processing-spinner');
@@ -27,12 +25,10 @@ const backToLayoutBtn = document.getElementById('backToLayoutBtn');
 const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
 const videoPreviewArea = document.querySelector('.video-preview-area');
 const photoboothContainer = document.querySelector('.photobooth-container');
-const actionButtonsDiv = document.querySelector('.action-buttons'); // New: Reference to the action-buttons div
+const actionButtonsDiv = document.querySelector('.action-buttons');
 
-// NEW: Retake and Confirm Buttons
-const retakePhotoBtn = document.getElementById('retakePhotoBtn'); // NEW
-const confirmPhotosBtn = document.getElementById('confirmPhotosBtn'); // NEW
-
+const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+const confirmPhotosBtn = document.getElementById('confirmPhotosBtn');
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -46,22 +42,124 @@ const cameraShutter = document.getElementById('cameraShutter');
 let currentStream = null;
 let capturedPhotos = [];
 let photosToCapture = 0;
-let photosCapturedCount = 0;
 let photoFrameAspectRatio = 4 / 3;
-let selectedPhotoIndex = -1; // NEW: To store the index of the photo selected for retake
+let selectedPhotoIndex = -1; // To store the index of the photo selected for retake
 
-// NEW: Flag to control when 'Start Capture' is active for retakes
-let isReadyForRetakeCapture = false;
-
-// NEW: Web Worker for image processing
 let imageProcessorWorker = null;
 let offscreenCanvasInstance = null;
+let userInteracted = false; // Flag to track user interaction for audio autoplay
 
-// Flag to track user interaction for audio autoplay
-let userInteracted = false;
+// --- UI State Object for better control ---
+const uiState = {
+    isCameraInitializing: true,
+    isCameraActive: false,
+    isCapturing: false, // True when countdown/capture sequence is active
+    isPhotoProcessing: false,
+    allPhotosCaptured: false,
+    photoSelectedForRetake: false,
+    isReadyForRetakeCapture: false, // True when 'Retake Photo' is clicked and user needs to click 'Start Capture'
+    isFullscreen: false,
+    cameraError: null // Stores error object if camera fails
+};
 
-// NEW: Flag to indicate if a capture sequence is currently active
-let isCaptureActive = false;
+/**
+ * Updates the UI based on the current `uiState`. This is the central function
+ * for managing visibility and enabled/disabled states of all relevant elements.
+ */
+function updateUI() {
+    // Spinners & Messages
+    cameraLoadingSpinner.classList.toggle('hidden-spinner', !uiState.isCameraInitializing);
+    photoProcessingSpinner.classList.toggle('hidden-spinner', !uiState.isPhotoProcessing);
+
+    if (uiState.cameraError) {
+        displayCameraMessage(
+            uiState.cameraError.mainMsg,
+            uiState.cameraError.type,
+            uiState.cameraError.subMsg
+        );
+    } else if (uiState.isCameraInitializing) {
+        // Message handled by spinner
+        cameraAccessMessage.style.display = 'none';
+        video.style.display = 'none';
+    } else if (!uiState.isCameraActive) {
+        displayCameraMessage(
+            'Camera not active.',
+            'info',
+            'Please select a camera to start the feed.'
+        );
+    } else {
+        hideCameraMessage();
+        video.style.display = 'block';
+    }
+
+    // Countdown Overlay
+    visualCountdown.style.opacity = 0;
+    visualCountdown.style.display = 'none';
+
+    // Core Controls (Selects, Next, Confirm, Retake)
+    filterSelect.disabled = uiState.isCapturing || uiState.isCameraInitializing;
+    cameraSelect.disabled = uiState.isCapturing || uiState.isCameraInitializing;
+
+    // Capture Buttons
+    captureBtnNormalMode.style.display = 'none';
+    captureBtnFullscreen.style.display = 'none';
+
+    let showCaptureButton = false;
+    let enableCaptureButton = false;
+
+    if (uiState.isCameraActive && !uiState.isCapturing && !uiState.isPhotoProcessing) {
+        if (uiState.isReadyForRetakeCapture) { // User clicked 'Retake Photo' and is awaiting 'Start Capture'
+            showCaptureButton = true;
+            enableCaptureButton = true;
+        } else if (!uiState.allPhotosCaptured) { // Still need to take initial photos
+            showCaptureButton = true;
+            enableCaptureButton = true;
+        }
+    }
+
+    if (showCaptureButton) {
+        if (uiState.isFullscreen) {
+            captureBtnFullscreen.style.display = 'block';
+            captureBtnFullscreen.disabled = !enableCaptureButton;
+        } else {
+            captureBtnNormalMode.style.display = 'block';
+            captureBtnNormalMode.disabled = !enableCaptureButton;
+        }
+    }
+
+    // "Go to Editor" (Next) Button
+    nextBtn.style.display = 'none'; // Initially hide, show only if confirm is clicked
+    nextBtn.disabled = true;
+
+    // "Confirm Photos" Button
+    confirmPhotosBtn.style.display = uiState.allPhotosCaptured && !uiState.isCapturing ? 'block' : 'none';
+    confirmPhotosBtn.disabled = !uiState.allPhotosCaptured || uiState.isCapturing;
+
+    // "Retake Photo" Button
+    retakePhotoBtn.style.display = (selectedPhotoIndex !== -1 && !uiState.isCapturing && uiState.allPhotosCaptured && !uiState.isReadyForRetakeCapture) ? 'block' : 'none';
+    retakePhotoBtn.disabled = uiState.isCapturing; // Disable if a capture is active
+
+    // "Invert Camera" and "Back to Layout" Buttons
+    invertCameraButton.style.display = uiState.isCapturing ? 'none' : 'block';
+    backToLayoutBtn.style.display = uiState.isCapturing ? 'none' : 'block';
+
+    // Update Photo Progress Text
+    let message = '';
+    if (photosToCapture > 0) {
+        message = `Captured: ${capturedPhotos.length} of ${photosToCapture}`;
+        if (uiState.allPhotosCaptured) {
+            message += ' - All photos captured!';
+            if (uiState.isReadyForRetakeCapture) {
+                message = `Photo ${selectedPhotoIndex + 1} selected for retake. Click 'Start Capture' to begin.`;
+            }
+        } else {
+            message += ` (${photosToCapture - capturedPhotos.length} remaining)`;
+        }
+    } else {
+        message = 'Select a layout to begin capturing photos.';
+    }
+    photoProgressText.textContent = message;
+}
 
 // --- Utility Functions ---
 
@@ -92,7 +190,6 @@ function displayCameraMessage(message, type = 'info', subMessage = '') {
     video.style.display = 'none';
     countdownElement.style.display = 'none';
     visualCountdown.style.display = 'none';
-    cameraLoadingSpinner.classList.add('hidden-spinner');
 }
 
 /**
@@ -100,8 +197,6 @@ function displayCameraMessage(message, type = 'info', subMessage = '') {
  */
 function hideCameraMessage() {
     cameraAccessMessage.style.display = 'none';
-    video.style.display = 'block';
-    cameraLoadingSpinner.classList.add('hidden-spinner');
 }
 
 /**
@@ -109,17 +204,8 @@ function hideCameraMessage() {
  * @param {boolean} show - True to show, false to hide.
  */
 function showCameraLoadingSpinner(show) {
-    if (show) {
-        cameraLoadingSpinner.classList.remove('hidden-spinner');
-        video.style.display = 'none';
-        cameraAccessMessage.style.display = 'none';
-        visualCountdown.style.opacity = 0;
-    } else {
-        cameraLoadingSpinner.classList.add('hidden-spinner');
-        if (cameraAccessMessage.style.display === 'none') {
-            video.style.display = 'block';
-        }
-    }
+    uiState.isCameraInitializing = show;
+    updateUI();
 }
 
 /**
@@ -127,54 +213,8 @@ function showCameraLoadingSpinner(show) {
  * @param {boolean} show - True to show, false to hide.
  */
 function showPhotoProcessingSpinner(show) {
-    if (show) {
-        photoProcessingSpinner.classList.remove('hidden-spinner');
-    } else {
-        photoProcessingSpinner.classList.add('hidden-spinner');
-    }
-}
-
-/**
- * Disables/enables capture controls (buttons, selects). This primarily affects the 'disabled' attribute.
- * @param {boolean} disabled - True to disable, false to enable.
- */
-function setCaptureControlsEnabled(disabled) {
-    filterSelect.disabled = disabled;
-    cameraSelect.disabled = disabled;
-    nextBtn.disabled = disabled;
-    // captureBtnNormalMode.disabled and captureBtnFullscreen.disabled are handled by toggleCaptureButtonVisibility
-    retakePhotoBtn.disabled = disabled;
-    confirmPhotosBtn.disabled = disabled;
-}
-
-/**
- * Manages the display of main capture buttons and related controls during a capture sequence.
- * This directly controls the 'display' style property.
- * @param {boolean} isCapturing - True when a countdown/capture is active, false otherwise.
- */
-function setCaptureControlsDuringCapture(isCapturing) {
-    isCaptureActive = isCapturing; // Set the global flag
-
-    if (isCapturing) {
-        // Hide all buttons except fullscreenToggleBtn and invertCameraButton
-        captureBtnFullscreen.style.display = 'none'; // Hide the fullscreen capture button
-        captureBtnNormalMode.style.display = 'none'; // Hide the normal mode capture button
-        nextBtn.style.display = 'none';
-        confirmPhotosBtn.style.display = 'none';
-        retakePhotoBtn.style.display = 'none';
-        backToLayoutBtn.style.display = 'none';
-
-        // Explicitly ensure these remain visible during capture
-        fullscreenToggleBtn.style.display = 'block';
-        invertCameraButton.style.display = 'block';
-
-        // filterSelect and cameraSelect are handled by setCaptureControlsEnabled when capture starts
-    } else {
-        // Restore visibility based on usual logic after capture is done
-        updatePhotoProgressText(); // This handles visibility of confirm/next/invert/back based on photo count
-        toggleCaptureButtonVisibility(); // This handles visibility of normal/fullscreen capture buttons based on fullscreen state
-        // Retake button visibility is handled by selectedPhotoIndex and updatePhotoProgressText/handlePhotoSelection
-    }
+    uiState.isPhotoProcessing = show;
+    updateUI();
 }
 
 /**
@@ -193,51 +233,6 @@ function updateVideoAspectRatio(aspectRatio) {
     }
 }
 
-/**
- * Updates the photo progress text (e.g., "Captured: 2 of 4").
- */
-function updatePhotoProgressText() {
-    let message = `Captured: ${capturedPhotos.length} of ${photosToCapture}`;
-
-    if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
-        message += ' - All photos captured!';
-        confirmPhotosBtn.style.display = 'block'; // Show Confirm button
-        confirmPhotosBtn.disabled = false;
-        nextBtn.style.display = 'none'; // Hide Go to Editor until confirmed
-
-        // Hide "Invert Camera" and "Back to Layout" when all photos are captured
-        invertCameraButton.style.display = 'none';
-        backToLayoutBtn.style.display = 'none';
-
-        // Retake button is handled by handlePhotoSelection,
-        // but if no photo is selected, ensure it's hidden here.
-        if (selectedPhotoIndex === -1) {
-            retakePhotoBtn.style.display = 'none';
-        }
-
-    } else if (photosToCapture > 0 && capturedPhotos.length < photosToCapture) {
-        message += ` (${photosToCapture - capturedPhotos.length} remaining)`;
-        confirmPhotosBtn.style.display = 'none'; // Hide Confirm if not all captured
-        nextBtn.style.display = 'none';
-        retakePhotoBtn.style.display = 'none'; // Ensure retake is hidden if more photos are needed
-
-        // ONLY show "Invert Camera" and "Back to Layout" if NOT in an active capture sequence
-        if (!isCaptureActive) {
-            invertCameraButton.style.display = 'block';
-            backToLayoutBtn.style.display = 'block';
-        }
-    } else {
-        // This block runs on initial load or if photosToCapture is 0
-        confirmPhotosBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
-        invertCameraButton.style.display = 'block';
-        backToLayoutBtn.style.display = 'block';
-        retakePhotoBtn.style.display = 'none';
-    }
-    photoProgressText.textContent = message;
-    toggleCaptureButtonVisibility(); // Re-evaluate capture button visibility after text update
-}
-
 // --- Camera Management ---
 
 /**
@@ -245,7 +240,8 @@ function updatePhotoProgressText() {
  */
 async function populateCameraList() {
     showCameraLoadingSpinner(true);
-    setCaptureControlsEnabled(true); // Enable select menus initially
+    uiState.isCameraActive = false; // Reset camera active state
+    updateUI();
 
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -254,12 +250,12 @@ async function populateCameraList() {
         const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
 
         if (videoInputDevices.length === 0) {
-            displayCameraMessage(
-                'No camera found.',
-                'error',
-                'Please ensure your webcam is connected and enabled, then refresh the page.'
-            );
-            setCaptureControlsEnabled(true);
+            uiState.cameraError = {
+                mainMsg: 'No camera found.',
+                subMsg: 'Please ensure your webcam is connected and enabled, then refresh the page.',
+                type: 'error'
+            };
+            updateUI();
             return;
         }
 
@@ -272,20 +268,20 @@ async function populateCameraList() {
 
         if (cameraSelect.options.length > 0) {
             cameraSelect.selectedIndex = 0;
-            startCamera(cameraSelect.value);
+            await startCamera(cameraSelect.value);
         } else {
-            displayCameraMessage(
-                'No selectable cameras.',
-                'error',
-                'Despite enumerating devices, no suitable camera could be selected.'
-            );
-            setCaptureControlsEnabled(true);
+            uiState.cameraError = {
+                mainMsg: 'No selectable cameras.',
+                subMsg: 'Despite enumerating devices, no suitable camera could be selected.',
+                type: 'error'
+            };
+            updateUI();
         }
 
     } catch (error) {
         console.error('Error enumerating devices or getting initial permission:', error);
         handleCameraError(error);
-        setCaptureControlsEnabled(true);
+    } finally {
         showCameraLoadingSpinner(false);
     }
 }
@@ -295,37 +291,28 @@ async function populateCameraList() {
  * @param {DOMException} error - The error object from navigator.mediaDevices.getUserMedia.
  */
 function handleCameraError(error) {
+    let mainMsg = 'Failed to access camera.';
+    let subMsg = `An unexpected error occurred: ${error.message}. Please check the browser console.`;
+    let type = 'error';
+
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        displayCameraMessage(
-            'Camera access denied.',
-            'error',
-            'Please enable camera permissions in your browser settings and refresh the page.'
-        );
+        mainMsg = 'Camera access denied.';
+        subMsg = 'Please enable camera permissions in your browser settings and refresh the page.';
     } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        displayCameraMessage(
-            'No camera detected.',
-            'error',
-            'Ensure your webcam is connected/enabled. Check if another app is using it.'
-        );
+        mainMsg = 'No camera detected.';
+        subMsg = 'Ensure your webcam is connected/enabled. Check if another app is using it.';
     } else if (error.name === 'NotReadableError') {
-        displayCameraMessage(
-            'Camera is busy.',
-            'warning',
-            'Your camera might be in use by another application. Please close other apps and refresh.'
-        );
+        mainMsg = 'Camera is busy.';
+        subMsg = 'Your camera might be in use by another application. Please close other apps and refresh.';
+        type = 'warning';
     } else if (error.name === 'SecurityError' && window.location.protocol === 'file:') {
-        displayCameraMessage(
-            'Camera access requires a secure context.',
-            'error',
-            'Please open this page using a local server (e.g., via VS Code Live Server) or HTTPS.'
-        );
-    } else {
-        displayCameraMessage(
-            'Failed to access camera.',
-            'error',
-            `An unexpected error occurred: ${error.message}. Please check the browser console.`
-        );
+        mainMsg = 'Camera access requires a secure context.';
+        subMsg = 'Please open this page using a local server (e.g., via VS Code Live Server) or HTTPS.';
     }
+
+    uiState.cameraError = { mainMsg, subMsg, type };
+    uiState.isCameraActive = false; // Camera is not active if there's an error
+    updateUI();
 }
 
 /**
@@ -338,13 +325,15 @@ async function startCamera(deviceId) {
     }
 
     showCameraLoadingSpinner(true);
+    uiState.cameraError = null; // Clear previous errors
+    updateUI();
 
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                width: { ideal: 640, min: 480 },
-                height: { ideal: 480, min: 360 }
+                width: { ideal: 1280, min: 640 }, // Increased ideal resolution for better quality
+                height: { ideal: 720, min: 480 }
             },
             audio: false
         };
@@ -354,18 +343,15 @@ async function startCamera(deviceId) {
 
         video.onloadedmetadata = () => {
             video.play();
-            hideCameraMessage();
-            setCaptureControlsEnabled(false); // Enable selects and initial buttons
+            uiState.isCameraActive = true;
             showCameraLoadingSpinner(false);
             initializeImageProcessorWorker();
-            toggleCaptureButtonVisibility(); // Initial visibility of the capture button
-            updatePhotoProgressText(); // Ensure correct initial state for other buttons
+            updateUI(); // Update UI after camera is active
         };
 
     } catch (error) {
         console.error('Error starting camera stream:', error);
         handleCameraError(error);
-        setCaptureControlsEnabled(true);
         showCameraLoadingSpinner(false);
     }
 }
@@ -409,11 +395,12 @@ function initializeImageProcessorWorker() {
     imageProcessorWorker.onerror = (error) => {
         console.error('Main Thread: Web Worker error:', error);
         showPhotoProcessingSpinner(false);
-        displayCameraMessage(
-            'Photo processing error.',
-            'error',
-            'A background process failed. Please refresh the page.'
-        );
+        uiState.cameraError = {
+            mainMsg: 'Photo processing error.',
+            subMsg: 'A background process failed. Please refresh the page.',
+            type: 'error'
+        };
+        updateUI();
     };
 
     imageProcessorWorker.postMessage({
@@ -469,19 +456,17 @@ function runCountdown(duration) {
     return new Promise(resolve => {
         let count = duration;
 
-        // Display the initial countdown number
         visualCountdown.style.opacity = 1;
         visualCountdown.style.display = 'block';
         visualCountdown.textContent = count;
         visualCountdown.classList.add('animate');
 
-        // Play the sound for the initial countdown number immediately (e.g., the '3')
         playSound(countdownBeep);
 
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
-                playSound(countdownBeep); // Play beep for subsequent numbers (e.g., 2, 1)
+                playSound(countdownBeep);
                 visualCountdown.textContent = count;
                 visualCountdown.classList.remove('animate');
                 void visualCountdown.offsetWidth; // Trigger reflow for animation reset
@@ -491,7 +476,7 @@ function runCountdown(duration) {
                 visualCountdown.classList.remove('animate');
                 visualCountdown.style.opacity = 0;
                 visualCountdown.style.display = 'none';
-                playSound(cameraShutter); // Play shutter sound right before capture
+                playSound(cameraShutter);
                 resolve();
             }
         }, 1000);
@@ -511,6 +496,12 @@ async function sendFrameToWorker(indexToReplace = -1) {
 
     showPhotoProcessingSpinner(true);
 
+    // Flash overlay effect
+    flashOverlay.classList.add('active');
+    setTimeout(() => {
+        flashOverlay.classList.remove('active');
+    }, 100);
+
     const imageBitmap = await createImageBitmap(video);
 
     imageProcessorWorker.postMessage({
@@ -526,25 +517,30 @@ async function sendFrameToWorker(indexToReplace = -1) {
  */
 function handleProcessedPhoto(imgData, indexToReplace) {
     if (indexToReplace !== -1 && indexToReplace < capturedPhotos.length) {
+        // Retake scenario
         capturedPhotos[indexToReplace] = imgData;
         const imgElementInDom = photoGrid.querySelector(`[data-index="${indexToReplace}"] img`);
         if (imgElementInDom) {
             imgElementInDom.src = imgData;
         }
-        // Deselect photo after retake (UI selection, not logical selectedPhotoIndex)
+        // Deselect photo and reset retake flags
         const selectedWrapper = photoGrid.querySelector('.captured-photo-wrapper.selected');
         if (selectedWrapper) {
             selectedWrapper.classList.remove('selected');
         }
-        selectedPhotoIndex = -1; // Reset logical selected photo index after retake
-        retakePhotoBtn.style.display = 'none'; // Hide retake button
+        selectedPhotoIndex = -1;
+        uiState.photoSelectedForRetake = false;
+        uiState.isReadyForRetakeCapture = false;
+
     } else {
+        // New photo capture scenario
         capturedPhotos.push(imgData);
-        photosCapturedCount++;
         addPhotoToGrid(imgData, capturedPhotos.length - 1);
     }
-    updatePhotoProgressText(); // Update progress text after each photo
-    setCaptureControlsEnabled(false); // Re-enable controls' disabled state
+
+    uiState.allPhotosCaptured = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+    uiState.isCapturing = false; // Capture sequence is now done
+    updateUI(); // Re-evaluate UI after photo is processed and state updated
 }
 
 
@@ -552,14 +548,13 @@ function handleProcessedPhoto(imgData, indexToReplace) {
  * Manages the initial photo capture sequence or a single retake sequence.
  */
 async function initiateCaptureSequence() {
-    backToLayoutBtn.style.display = 'none';
-
     if (!currentStream || video.srcObject === null || video.paused) {
-        displayCameraMessage(
-            'Camera not active or paused.',
-            'warning',
-            'Please ensure camera access is granted and the live feed is visible before starting.'
-        );
+        uiState.cameraError = {
+            mainMsg: 'Camera not active or paused.',
+            subMsg: 'Please ensure camera access is granted and the live feed is visible before starting.',
+            type: 'warning'
+        };
+        updateUI();
         return;
     }
 
@@ -583,63 +578,54 @@ async function initiateCaptureSequence() {
         const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
         photosToCapture = parseInt(storedPhotoCount, 10);
         if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture > 6 || photosToCapture === 5) {
-            photosToCapture = 3;
+            photosToCapture = 3; // Default to 3 if invalid
         }
     }
 
-    setCaptureControlsEnabled(true); // Disable select elements etc.
-    setCaptureControlsDuringCapture(true); // Hide all relevant buttons except fullscreen toggle and invert camera
+    uiState.isCapturing = true; // Set flag that a capture sequence is active
+    updateUI(); // Update UI to reflect capturing state (disable controls, hide buttons)
 
-    if (selectedPhotoIndex !== -1) { // User clicked 'Start Capture' to retake a specific photo
-        // Reset the flag as we are now performing the capture
-        isReadyForRetakeCapture = false;
-
-        // Perform a single capture for retake
+    if (selectedPhotoIndex !== -1 && uiState.isReadyForRetakeCapture) {
+        // Retake scenario
+        uiState.isReadyForRetakeCapture = false; // Reset the flag
         await runCountdown(3);
-        flashOverlay.classList.add('active');
-        setTimeout(() => {
-            flashOverlay.classList.remove('active');
-        }, 100);
         await sendFrameToWorker(selectedPhotoIndex); // Send the index to replace
-
-    } else { // User clicked 'Start Capture' to take new photos or continue sequence
-        if (photosToCapture > 0 && capturedPhotos.length === photosToCapture) {
-            alert('All photos have already been captured. Click "Confirm Photos" to proceed or select a photo to retake.');
-            setCaptureControlsEnabled(false);
-            setCaptureControlsDuringCapture(false);
-            return;
-        }
-
-        if (capturedPhotos.length === 0) { // Clear grid only if starting a brand new sequence
-            photoGrid.innerHTML = '';
+    } else {
+        // New capture sequence or continuing existing one
+        if (capturedPhotos.length === 0 && photosToCapture > 0) {
+            photoGrid.innerHTML = ''; // Clear grid only if starting a brand new sequence
             capturedPhotos = [];
+            selectedPhotoIndex = -1; // Ensure no photo is selected at start of new sequence
+            uiState.photoSelectedForRetake = false;
+            uiState.isReadyForRetakeCapture = false;
+        } else if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
+            alert('All photos have already been captured. Click "Confirm Photos" to proceed or select a photo to retake.');
+            uiState.isCapturing = false; // Reset capture flag
+            updateUI();
+            return;
         }
 
         while (capturedPhotos.length < photosToCapture) {
             await runCountdown(3);
-            flashOverlay.classList.add('active');
-            setTimeout(() => {
-                flashOverlay.classList.remove('active');
-            }, 100);
-
             await sendFrameToWorker();
 
-            if (capturedPhotos.length < photosToCapture) {
+            // Short pause between captures if more photos are needed
+            if (capturedPhotos.length < photosToapture) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
         }
     }
 
-    // After capture (either new or retake) finishes
-    setCaptureControlsEnabled(false); // Re-enable select elements etc.
-    setCaptureControlsDuringCapture(false); // Restore button visibility based on photo count and fullscreen
+    uiState.isCapturing = false; // Capture sequence finished
+    uiState.allPhotosCaptured = (capturedPhotos.length === photosToCapture && photosToCapture > 0);
+    updateUI(); // Update UI to reflect post-capture state
 }
 
 /**
  * Handles the user clicking the "Retake Photo" button.
  * Its main role is to prepare the UI for a retake, not to initiate capture directly.
  */
-async function retakeSelectedPhoto() {
+function retakeSelectedPhoto() {
     if (selectedPhotoIndex === -1 || selectedPhotoIndex >= capturedPhotos.length) {
         alert('Please select a photo to retake first.');
         return;
@@ -651,18 +637,8 @@ async function retakeSelectedPhoto() {
         selectedWrapper.classList.remove('selected');
     }
 
-    // Hide the dedicated retake button, as "Start Capture" will be used
-    retakePhotoBtn.style.display = 'none';
-
-    // Set the flag that allows 'Start Capture' to be visible/enabled for the retake
-    isReadyForRetakeCapture = true;
-
-    // Update progress text to guide the user
-    photoProgressText.textContent = `Photo ${selectedPhotoIndex + 1} selected for retake. Click 'Start Capture' to begin.`;
-
-    // Make the "Start Capture" button visible and enabled for the user to click
-    // `toggleCaptureButtonVisibility` handles this by checking `isReadyForRetakeCapture`
-    toggleCaptureButtonVisibility();
+    uiState.isReadyForRetakeCapture = true; // Set flag to allow 'Start Capture' for retake
+    updateUI(); // Re-evaluate button visibility and text
 }
 
 
@@ -671,46 +647,41 @@ async function retakeSelectedPhoto() {
  * @param {Event} event - The click event.
  */
 function handlePhotoSelection(event) {
-    if (nextBtn.style.display === 'block' && confirmPhotosBtn.style.display === 'none') {
+    // Prevent selection if capture is active or if next/confirm buttons are visible (meaning sequence is done)
+    if (uiState.isCapturing || uiState.allPhotosCaptured) {
         return;
     }
 
     const clickedWrapper = event.target.closest('.captured-photo-wrapper');
-    if (!clickedWrapper) {
-        // If clicked outside any photo, deselect current
-        const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+    const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
+
+    if (clickedWrapper === currentlySelected) {
+        // If the same photo is clicked again, deselect it
         if (currentlySelected) {
             currentlySelected.classList.remove('selected');
         }
-        selectedPhotoIndex = -1; // No photo selected
-        retakePhotoBtn.style.display = 'none'; // Hide retake button
-        isReadyForRetakeCapture = false; // Deselecting also cancels pending retake 'Start Capture'
-        updatePhotoProgressText(); // Re-evaluate button visibility based on no selection
-        return;
-    }
-
-    const index = parseInt(clickedWrapper.dataset.index, 10);
-
-    const currentlySelected = photoGrid.querySelector('.captured-photo-wrapper.selected');
-
-    if (currentlySelected === clickedWrapper) {
-        // If the same photo is clicked again, deselect it
-        clickedWrapper.classList.remove('selected');
         selectedPhotoIndex = -1;
-        retakePhotoBtn.style.display = 'none'; // Hide retake button
-        isReadyForRetakeCapture = false; // Deselecting also cancels pending retake 'Start Capture'
-    } else {
+        uiState.photoSelectedForRetake = false;
+        uiState.isReadyForRetakeCapture = false; // Deselecting also cancels pending retake 'Start Capture'
+    } else if (clickedWrapper) {
         // Deselect previous, select new
         if (currentlySelected) {
             currentlySelected.classList.remove('selected');
         }
         clickedWrapper.classList.add('selected');
-        selectedPhotoIndex = index;
-        retakePhotoBtn.style.display = 'block'; // Show retake button
-
-        isReadyForRetakeCapture = false; // Crucial: Selecting a photo does *not* immediately enable Start Capture
+        selectedPhotoIndex = parseInt(clickedWrapper.dataset.index, 10);
+        uiState.photoSelectedForRetake = true;
+        uiState.isReadyForRetakeCapture = false; // Selecting a photo does *not* immediately enable Start Capture
+    } else {
+        // Clicked outside any photo, deselect current
+        if (currentlySelected) {
+            currentlySelected.classList.remove('selected');
+        }
+        selectedPhotoIndex = -1;
+        uiState.photoSelectedForRetake = false;
+        uiState.isReadyForRetakeCapture = false;
     }
-    updatePhotoProgressText(); // Re-evaluate button visibility after selection change
+    updateUI();
 }
 
 
@@ -739,65 +710,18 @@ function toggleFullScreen() {
     }
 }
 
-/**
- * Manages the visibility and enabled state of the two capture buttons based on fullscreen mode
- * and the current state (capturing, all photos taken, photo selected for retake).
- */
-function toggleCaptureButtonVisibility() {
-    // If a capture sequence is active (countdown running), always hide capture buttons
-    if (isCaptureActive) {
-        captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = 'none';
-        return;
-    }
-
-    let isVisible = false; // Default to hidden
-    let isDisabled = true; // Default to disabled
-
-    // Condition A: Camera is loading or otherwise disabled (e.g., no stream)
-    if (filterSelect.disabled) {
-        // isVisible remains false, isDisabled remains true
-        // (This covers initial load, camera errors)
-    }
-    // Condition B: Brand new capture sequence or continuing existing one (not all photos taken yet, no retake selected)
-    else if (photosToCapture === 0 || (capturedPhotos.length < photosToCapture && selectedPhotoIndex === -1)) {
-        isVisible = true;
-        isDisabled = false;
-    }
-    // Condition C: All photos captured, AND a specific photo is selected for retake, AND 'Retake Photo' was clicked
-    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && isReadyForRetakeCapture) {
-        isVisible = true;
-        isDisabled = false;
-    }
-    // Condition D: All photos captured, and a specific photo is selected for retake, BUT 'Retake Photo' has NOT been clicked
-    // In this case, 'Start Capture' should remain hidden until 'Retake Photo' is clicked.
-    else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && !isReadyForRetakeCapture) {
-        // isVisible remains false, isDisabled remains true (default values)
-    }
-    // Condition E: All photos captured, and NO photo selected for retake (the previous bug)
-    // This is implicitly covered by the default (isVisible = false, isDisabled = true) if none of the above match.
-
-
-    if (document.fullscreenElement) {
-        captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = isVisible ? 'block' : 'none';
-        captureBtnFullscreen.disabled = isDisabled;
-    } else {
-        captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
-        captureBtnFullscreen.style.display = 'none';
-        captureBtnNormalMode.disabled = isDisabled;
-    }
-}
-
-
 // Listen for fullscreen change events to update UI
-document.addEventListener('fullscreenchange', toggleCaptureButtonVisibility);
+document.addEventListener('fullscreenchange', () => {
+    uiState.isFullscreen = !!document.fullscreenElement;
+    updateUI();
+});
 
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    localStorage.removeItem('capturedPhotos');
+    localStorage.removeItem('capturedPhotos'); // Clear previous photos
     photoGrid.innerHTML = '';
+    capturedPhotos = []; // Reset array
 
     const storedAspectRatio = localStorage.getItem('selectedFrameAspectRatio');
     if (storedAspectRatio) {
@@ -806,14 +730,18 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         updateVideoAspectRatio(4 / 3);
     }
-    populateCameraList();
-    updatePhotoProgressText();
-    toggleCaptureButtonVisibility(); // Initial call to set button visibility
+
+    const storedPhotoCount = localStorage.getItem('selectedPhotoCount');
+    photosToCapture = parseInt(storedPhotoCount, 10);
+    if (isNaN(photosToCapture) || photosToCapture < 1 || photosToCapture > 6 || photosToCapture === 5) {
+        photosToCapture = 3; // Default to 3 if invalid
+    }
+
+    populateCameraList(); // This will trigger the first UI update
+    updateUI(); // Initial UI update based on default state
 
     // Unlock audio on first user interaction - this is a general fallback
-    // The main unlock will now happen in initiateCaptureSequence
     const unlockAudio = () => {
-        // Only attempt if not already interacted via the capture button
         if (!userInteracted) {
             countdownBeep.muted = false;
             cameraShutter.muted = false;
@@ -850,21 +778,13 @@ filterSelect.addEventListener('change', () => {
 });
 
 // Use the normal mode capture button for clicks when not in fullscreen
-captureBtnNormalMode.addEventListener('click', () => {
-    initiateCaptureSequence();
-});
+captureBtnNormalMode.addEventListener('click', initiateCaptureSequence);
 
 // Use the fullscreen capture button for clicks when in fullscreen
-captureBtnFullscreen.addEventListener('click', () => {
-    initiateCaptureSequence();
-});
+captureBtnFullscreen.addEventListener('click', initiateCaptureSequence);
 
-// NEW: Event listener for Retake Photo button
-retakePhotoBtn.addEventListener('click', () => {
-    retakeSelectedPhoto();
-});
+retakePhotoBtn.addEventListener('click', retakeSelectedPhoto);
 
-// NEW: Event listener for Confirm Photos button
 confirmPhotosBtn.addEventListener('click', () => {
     if (capturedPhotos.length === photosToCapture && photosToCapture > 0) {
         localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
@@ -874,15 +794,14 @@ confirmPhotosBtn.addEventListener('click', () => {
     }
 });
 
+// Assuming 'nextBtn' is now the 'Go to Editor' after confirmation.
+// This button should only appear after confirmation for a cleaner flow.
 nextBtn.addEventListener('click', () => {
-    if (capturedPhotos.length > 0 && capturedPhotos.length === photosToCapture) {
-        localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
-        window.location.href = 'editing-page/editing-home.html';
-    } else {
-        const remaining = photosToCapture - capturedPhotos.length;
-        alert(`Please capture ${remaining} more photo(s) before proceeding!`);
-    }
+    // This button should only be active if confirmation has occurred.
+    localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+    window.location.href = 'editing-page/editing-home.html';
 });
+
 
 photoGrid.addEventListener('click', handlePhotoSelection);
 
