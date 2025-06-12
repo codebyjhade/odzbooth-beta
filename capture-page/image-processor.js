@@ -8,6 +8,76 @@ let offscreenCtx = null;
 let photoFrameAspectRatio = 4 / 3; // Default, will be updated by main thread
 let filterToApply = 'none'; // Default, will be updated by main thread
 
+// --- Filter Application Functions ---
+function applyGrayscale(imageData) {
+    const pixels = imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        // Luminosity method: (R + G + B) / 3 or 0.299*R + 0.587*G + 0.114*B
+        const gray = (r + g + b) / 3;
+        pixels[i] = gray;
+        pixels[i + 1] = gray;
+        pixels[i + 2] = gray;
+    }
+}
+
+function applySepia(imageData) {
+    const pixels = imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+
+        pixels[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189)); // Red
+        pixels[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168)); // Green
+        pixels[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131)); // Blue
+    }
+}
+
+function applyInvert(imageData) {
+    const pixels = imageData.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i] = 255 - pixels[i];     // Red
+        pixels[i + 1] = 255 - pixels[i + 1]; // Green
+        pixels[i + 2] = 255 - pixels[i + 2]; // Blue
+    }
+}
+
+function applyBrightness(imageData, value) {
+    const pixels = imageData.data;
+    const factor = value / 100; // Assuming value is percentage (e.g., 150 for 150%)
+    for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i] = Math.min(255, pixels[i] * factor);
+        pixels[i + 1] = Math.min(255, pixels[i + 1] * factor);
+        pixels[i + 2] = Math.min(255, pixels[i + 2] * factor);
+    }
+}
+
+function applySaturate(imageData, value) {
+    const pixels = imageData.data;
+    const factor = value / 100;
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+
+        pixels[i] = Math.min(255, gray + (r - gray) * factor);
+        pixels[i + 1] = Math.min(255, gray + (g - gray) * factor);
+        pixels[i + 2] = Math.min(255, gray + (b - gray) * factor);
+    }
+}
+
+// Note: More complex filters like contrast, hue-rotate, and blur are significantly
+// more involved to implement manually with pixel manipulation.
+// For now, I'm focusing on the simpler ones that might be failing.
+// If advanced filters are critical, a dedicated image processing library
+// (e.g., CamanJS, though that adds significant bundle size) or
+// investigating specific browser limitations on `offscreenCtx.filter`
+// would be necessary.
+
 // Listen for messages from the main thread
 self.onmessage = async (event) => {
     const { type, payload } = event.data;
@@ -22,13 +92,12 @@ self.onmessage = async (event) => {
             break;
 
         case 'PROCESS_FRAME':
-            // The main thread sends an ImageBitmap (frame from video) and other capture details
-            const { imageBitmap, indexToReplace } = payload; // Keep indexToReplace
-            console.log(`Worker: Received PROCESS_FRAME for index: ${indexToReplace}.`); // Updated log
+            const { imageBitmap, indexToReplace } = payload;
+            console.log(`Worker: Received PROCESS_FRAME for index: ${indexToReplace}.`);
 
             if (!offscreenCanvas || !offscreenCtx) {
                 console.error('Worker: OffscreenCanvas not initialized.');
-                if (imageBitmap) imageBitmap.close(); // Prevent memory leak
+                if (imageBitmap) imageBitmap.close();
                 return;
             }
 
@@ -54,42 +123,65 @@ self.onmessage = async (event) => {
             offscreenCanvas.width = sWidth;
             offscreenCanvas.height = sHeight;
 
-            // Apply filter
-            offscreenCtx.filter = filterToApply;
+            // Clear any previous CSS filters applied directly to the canvas context
+            // as we are now doing pixel manipulation.
+            offscreenCtx.filter = 'none'; 
 
             // Draw the ImageBitmap onto the OffscreenCanvas
             offscreenCtx.drawImage(imageBitmap, sx, sy, sWidth, sHeight, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-            // Encode to JPEG. This is the heavy part, now off the main thread!
+            // --- Apply Filter Manually ---
+            if (filterToApply !== 'none') {
+                const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+                if (filterToApply === 'grayscale(100%)') {
+                    applyGrayscale(imageData);
+                } else if (filterToApply === 'sepia(100%)') {
+                    applySepia(imageData);
+                } else if (filterToApply === 'invert(100%)') {
+                    applyInvert(imageData);
+                } else if (filterToApply === 'brightness(150%)') {
+                    applyBrightness(imageData, 150); // Assuming 150% brightness
+                } else if (filterToApply === 'saturate(200%)') {
+                    applySaturate(imageData, 200); // Assuming 200% saturation
+                }
+                // Complex filters like contrast, hue-rotate, blur are omitted for manual implementation
+                // as they are significantly more complex. If needed, you might need
+                // to evaluate if browser support for `offscreenCtx.filter` is truly the issue
+                // or if specific filter values are invalid.
+
+                offscreenCtx.putImageData(imageData, 0, 0);
+                console.log(`Worker: Manually applied filter: ${filterToApply}`);
+            }
+
+            // Encode to JPEG.
             const blob = await offscreenCanvas.convertToBlob({
                 type: 'image/jpeg',
                 quality: 0.95
             });
 
-            // Post the blob directly, and the indexToReplace
             self.postMessage({
                 type: 'FRAME_PROCESSED',
-                payload: { blob, indexToReplace } // Send indexToReplace back
+                payload: { blob, indexToReplace }
             });
 
-            imageBitmap.close(); // Release the ImageBitmap memory
+            imageBitmap.close();
             console.log('Worker: Frame processed and blob sent to main thread.');
             break;
 
         case 'UPDATE_SETTINGS':
-            // Update settings like aspect ratio or filter from the main thread
             if (payload.aspectRatio) {
                 photoFrameAspectRatio = payload.aspectRatio;
                 console.log(`Worker: Aspect ratio updated to ${photoFrameAspectRatio}.`);
             }
-            if (payload.filter) {
+            if (payload.filter !== undefined) { // Check for undefined, not just truthy
                 filterToApply = payload.filter;
                 console.log(`Worker: Filter updated to ${filterToApply}.`);
             }
             break;
 
         case 'CLOSE_WORKER':
-            self.close(); // Terminate the worker
+            self.close();
             console.log('Worker: Worker closed.');
             break;
     }
