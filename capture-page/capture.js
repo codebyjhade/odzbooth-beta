@@ -511,14 +511,23 @@ async function sendFrameToWorker(indexToReplace = -1) {
 
     showPhotoProcessingSpinner(true);
 
+    // Determine if the final image should be flipped horizontally.
+    // The video preview is flipped by default (like a mirror). The '.inverted' class makes it non-flipped.
+    // The raw imageBitmap is always non-flipped.
+    // To make the photo match the preview, we must flip it if the preview is flipped (i.e., when the '.inverted' class is NOT present).
+    const shouldFlip = !video.classList.contains('inverted');
+
     const imageBitmap = await createImageBitmap(video);
 
     imageProcessorWorker.postMessage({
         type: 'PROCESS_FRAME',
-        payload: { imageBitmap, indexToReplace }
+        payload: {
+            imageBitmap,
+            indexToReplace,
+            shouldFlip // Pass the flip status to the worker
+        }
     }, [imageBitmap]);
 }
-
 /**
  * Handles the photo data received back from the worker.
  * @param {string} imgData - Base64 data URL of the processed image.
