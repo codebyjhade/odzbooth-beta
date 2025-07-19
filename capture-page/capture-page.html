@@ -36,8 +36,6 @@
 
             <button id="captureBtnNormalMode" class="primary-btn normal-mode-capture-btn" style="display: none;">Start Capture</button>
 
-            <button id="captureBtn" class="primary-btn fullscreen-capture-btn" style="display: none;">Start Capture</button>
-
             <div class="controls-panel">
                 <div class="control-group">
                     <label for="cameraSelect">Select Camera:</label>
@@ -98,6 +96,10 @@
             </div>
             <div id="captured-photos-grid"></div>
         </div>
+    </div>
+
+    <div id="fullscreen-capture-button-container" style="display: none;">
+        <button id="captureBtn" class="primary-btn fullscreen-capture-btn">Start Capture</button>
     </div>
 
     <audio id="countdownBeep" src="assets/sound/countdown beep.mp3" preload="auto" muted></audio>
