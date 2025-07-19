@@ -106,4 +106,112 @@
     <audio id="cameraShutter" src="assets/sound/camera shutter.mp3" preload="auto" muted></audio>
 
 </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODZ Booth - Capture Photos</title>
+    <base href="/odzbooth-beta/"> 
+
+    <link rel="stylesheet" href="capture-page/capture-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script defer src="capture-page/capture.js"></script>
+</head>
+<body>
+
+    <div class="logo-header">
+        <h1 class="title">ODZ <span class="booth">BOOTH</span></h1>
+    </div>
+
+    <div class="photo-booth-wrapper">
+        <div class="photobooth-container">
+           <div class="video-preview-area">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <div id="flashOverlay" class="flash-overlay"></div>
+                <div id="visualCountdown" class="visual-countdown"></div>
+                <p id="countdown"></p> 
+                <div id="camera-loading-spinner" class="spinner-overlay">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading Camera...</p>
+                </div>
+                <div id="camera-access-message" class="message">
+                    <p id="main-camera-msg"></p>
+                    <p id="sub-camera-msg"></p>
+                </div>
+            </div>
+
+            <button id="captureBtnNormalMode" class="primary-btn normal-mode-capture-btn" style="display: none;">Start Capture</button>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label for="cameraSelect">Select Camera:</label>
+                    <select id="cameraSelect"></select>
+                    <p class="tool-tip">If you have multiple cameras, select one here.</p>
+                </div>
+
+                <div class="control-group">
+                    <label for="resolutionSelect">Select Resolution:</label>
+                    <select id="resolutionSelect">
+                        <option value="default">Default (640x480)</option>
+                        <option value="hd">HD (1280x720)</option>
+                        <option value="fullhd">Full HD (1920x1080)</option>
+                    </select>
+                    <p class="tool-tip">Choose your preferred camera resolution.</p>
+                </div>
+
+                <div class="control-group">
+                    <label for="filter">Apply Filter:</label>
+                    <select id="filter">
+                        <option value="none">None</option>
+                        <option value="grayscale(100%)">Black & White</option>
+                        <option value="sepia(100%)">Sepia</option>
+                        <option value="contrast(150%) brightness(80%)">Vintage</option>
+                        <option value="hue-rotate(90deg) saturate(150%)">Vibrant</option>
+                        <option value="invert(100%)">Negative</option>
+                        <option value="blur(3px)">Blur</option>
+                        <option value="brightness(150%)">Bright</option>
+                        <option value="saturate(200%)">Saturated</option>
+                    </select>
+                    <p class="tool-tip">See effects live on your camera feed!</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="retakePhotoBtn" class="secondary-btn" style="display: none;">Retake Selected Photo</button>
+                <button id="invertCameraButton" class="secondary-btn">
+                    <i class="fas fa-sync-alt"></i> Invert Camera
+                </button>
+                <button id="fullscreenToggleBtn" class="secondary-btn">
+                    <i class="fas fa-expand"></i> Fullscreen
+                </button>
+            </div>
+            
+            <div class="bottom-action-buttons">
+                <button id="backToLayoutBtn" class="secondary-btn">Back to Layout Selection</button>
+                <button id="confirmPhotosBtn" class="primary-btn" style="display: none;">Confirm Photos</button>
+                <button id="nextBtn" class="secondary-btn" style="display: none;">Go to Editor</button>
+            </div>
+        </div>
+
+        <div id="captured-photos-display">
+            <h3>Your Shots</h3>
+            <p id="photoProgressText" class="photo-progress-text"></p>
+            <div id="photo-processing-spinner" class="spinner-overlay hidden-spinner">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Processing Photo...</p>
+            </div>
+            <div id="captured-photos-grid"></div>
+        </div>
+    </div>
+
+    <div id="fullscreen-capture-button-container" style="display: none;">
+        <button id="captureBtn" class="primary-btn fullscreen-capture-btn">Start Capture</button>
+    </div>
+
+    <audio id="countdownBeep" src="assets/sound/countdown beep.mp3" preload="auto" muted></audio>
+    <audio id="cameraShutter" src="assets/sound/camera shutter.mp3" preload="auto" muted></audio>
+
+</body>
 </html>
