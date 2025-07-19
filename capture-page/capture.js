@@ -44,6 +44,10 @@ const flashOverlay = document.getElementById('flashOverlay');
 const countdownBeep = document.getElementById('countdownBeep');
 const cameraShutter = document.getElementById('cameraShutter');
 
+// NEW: Reference to the new fullscreen button container
+const fullscreenCaptureButtonContainer = document.getElementById('fullscreen-capture-button-container');
+
+
 // --- Global State Variables ---
 let currentStream = null;
 let capturedPhotos = [];
@@ -146,7 +150,7 @@ function showPhotoProcessingSpinner(show) {
 function setCaptureControlsEnabled(disabled) {
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    resolutionSelect.disabled = disabled; // NEW: Disable resolution select
+    resolutionSelect.disabled = disabled; // Disable resolution select
     nextBtn.disabled = disabled;
     // captureBtnNormalMode.disabled and captureBtnFullscreen.disabled are handled by toggleCaptureButtonVisibility
     retakePhotoBtn.disabled = disabled;
@@ -165,6 +169,7 @@ function setCaptureControlsDuringCapture(isCapturing) {
         // Hide all buttons except fullscreenToggleBtn and invertCameraButton
         captureBtnFullscreen.style.display = 'none'; // Hide the fullscreen capture button
         captureBtnNormalMode.style.display = 'none'; // Hide the normal mode capture button
+        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide the container too
         nextBtn.style.display = 'none';
         confirmPhotosBtn.style.display = 'none';
         retakePhotoBtn.style.display = 'none';
@@ -778,7 +783,7 @@ function toggleCaptureButtonVisibility() {
     // If a capture sequence is active (countdown running), always hide capture buttons
     if (isCaptureActive) {
         captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = 'none';
+        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
         return;
     }
 
@@ -811,11 +816,11 @@ function toggleCaptureButtonVisibility() {
 
     if (document.fullscreenElement) {
         captureBtnNormalMode.style.display = 'none';
-        captureBtnFullscreen.style.display = isVisible ? 'block' : 'none';
-        captureBtnFullscreen.disabled = isDisabled;
+        fullscreenCaptureButtonContainer.style.display = isVisible ? 'block' : 'none'; // Show/hide container
+        captureBtnFullscreen.disabled = isDisabled; // Apply disabled state to button inside
     } else {
         captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
-        captureBtnFullscreen.style.display = 'none';
+        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
         captureBtnNormalMode.disabled = isDisabled;
     }
 }
