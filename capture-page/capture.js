@@ -33,6 +33,8 @@ const actionButtonsDiv = document.querySelector('.action-buttons'); // New: Refe
 const retakePhotoBtn = document.getElementById('retakePhotoBtn'); // NEW
 const confirmPhotosBtn = document.getElementById('confirmPhotosBtn'); // NEW
 
+// NEW: Resolution Select
+const resolutionSelect = document.getElementById('resolutionSelect'); // NEW
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -62,6 +64,9 @@ let userInteracted = false;
 
 // NEW: Flag to indicate if a capture sequence is currently active
 let isCaptureActive = false;
+
+// NEW: Selected Resolution
+let selectedResolution = { width: 640, height: 480 }; // Default resolution
 
 // --- Utility Functions ---
 
@@ -141,6 +146,7 @@ function showPhotoProcessingSpinner(show) {
 function setCaptureControlsEnabled(disabled) {
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
+    resolutionSelect.disabled = disabled; // NEW: Disable resolution select
     nextBtn.disabled = disabled;
     // captureBtnNormalMode.disabled and captureBtnFullscreen.disabled are handled by toggleCaptureButtonVisibility
     retakePhotoBtn.disabled = disabled;
@@ -339,12 +345,28 @@ async function startCamera(deviceId) {
 
     showCameraLoadingSpinner(true);
 
+    // Get selected resolution
+    const resolutionValue = resolutionSelect.value;
+    switch (resolutionValue) {
+        case 'default':
+            selectedResolution = { width: 640, height: 480 };
+            break;
+        case 'hd':
+            selectedResolution = { width: 1280, height: 720 };
+            break;
+        case 'fullhd':
+            selectedResolution = { width: 1920, height: 1080 };
+            break;
+        default:
+            selectedResolution = { width: 640, height: 480 };
+    }
+
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                width: { ideal: 640, min: 480 },
-                height: { ideal: 480, min: 360 }
+                width: { ideal: selectedResolution.width, min: 320 }, // Use selected width
+                height: { ideal: selectedResolution.height, min: 240 } // Use selected height
             },
             audio: false
         };
@@ -845,6 +867,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 cameraSelect.addEventListener('change', (event) => {
     startCamera(event.target.value);
+});
+
+// NEW: Event listener for resolution select
+resolutionSelect.addEventListener('change', () => {
+    // Restart camera with the newly selected resolution
+    startCamera(cameraSelect.value);
 });
 
 filterSelect.addEventListener('change', () => {
