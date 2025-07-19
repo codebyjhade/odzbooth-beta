@@ -558,3 +558,17 @@ body.fullscreen-active video {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
     }
 }
+/* TEMPORARY DEBUGGING STYLES - REMOVE AFTER TESTING */
+#fullscreen-capture-button-container {
+    background-color: red !important; /* Make it bright red */
+    border: 5px solid yellow !important; /* Give it a thick yellow border */
+    z-index: 999999 !important; /* Make sure it's on top of EVERYTHING */
+    opacity: 1 !important; /* Ensure it's fully opaque */
+    visibility: visible !important; /* Ensure it's visible */
+    top: 50% !important; /* Force it to the vertical center */
+    left: 50% !important; /* Force it to the horizontal center */
+    transform: translate(-50%, -50%) !important; /* Center it precisely */
+    width: 300px !important; /* Give it a fixed, noticeable size */
+    height: 100px !important; /* Give it a fixed, noticeable size */
+}
+/* END TEMPORARY DEBUGGING STYLES */
