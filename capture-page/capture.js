@@ -33,8 +33,6 @@ const actionButtonsDiv = document.querySelector('.action-buttons'); // New: Refe
 const retakePhotoBtn = document.getElementById('retakePhotoBtn'); // NEW
 const confirmPhotosBtn = document.getElementById('confirmPhotosBtn'); // NEW
 
-// NEW: Resolution Select
-const resolutionSelect = document.getElementById('resolutionSelect'); // NEW
 
 // Visual Countdown and Flash Overlay Elements
 const visualCountdown = document.getElementById('visualCountdown');
@@ -43,10 +41,6 @@ const flashOverlay = document.getElementById('flashOverlay');
 // Audio Elements
 const countdownBeep = document.getElementById('countdownBeep');
 const cameraShutter = document.getElementById('cameraShutter');
-
-// NEW: Reference to the new fullscreen button container
-const fullscreenCaptureButtonContainer = document.getElementById('fullscreen-capture-button-container');
-
 
 // --- Global State Variables ---
 let currentStream = null;
@@ -68,9 +62,6 @@ let userInteracted = false;
 
 // NEW: Flag to indicate if a capture sequence is currently active
 let isCaptureActive = false;
-
-// NEW: Selected Resolution
-let selectedResolution = { width: 640, height: 480 }; // Default resolution
 
 // --- Utility Functions ---
 
@@ -150,7 +141,6 @@ function showPhotoProcessingSpinner(show) {
 function setCaptureControlsEnabled(disabled) {
     filterSelect.disabled = disabled;
     cameraSelect.disabled = disabled;
-    resolutionSelect.disabled = disabled; // Disable resolution select
     nextBtn.disabled = disabled;
     // captureBtnNormalMode.disabled and captureBtnFullscreen.disabled are handled by toggleCaptureButtonVisibility
     retakePhotoBtn.disabled = disabled;
@@ -169,7 +159,6 @@ function setCaptureControlsDuringCapture(isCapturing) {
         // Hide all buttons except fullscreenToggleBtn and invertCameraButton
         captureBtnFullscreen.style.display = 'none'; // Hide the fullscreen capture button
         captureBtnNormalMode.style.display = 'none'; // Hide the normal mode capture button
-        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide the container too
         nextBtn.style.display = 'none';
         confirmPhotosBtn.style.display = 'none';
         retakePhotoBtn.style.display = 'none';
@@ -350,28 +339,12 @@ async function startCamera(deviceId) {
 
     showCameraLoadingSpinner(true);
 
-    // Get selected resolution
-    const resolutionValue = resolutionSelect.value;
-    switch (resolutionValue) {
-        case 'default':
-            selectedResolution = { width: 640, height: 480 };
-            break;
-        case 'hd':
-            selectedResolution = { width: 1280, height: 720 };
-            break;
-        case 'fullhd':
-            selectedResolution = { width: 1920, height: 1080 };
-            break;
-        default:
-            selectedResolution = { width: 640, height: 480 };
-    }
-
     try {
         const constraints = {
             video: {
                 deviceId: deviceId ? { exact: deviceId } : undefined,
-                width: { ideal: selectedResolution.width, min: 320 }, // Use selected width
-                height: { ideal: selectedResolution.height, min: 240 } // Use selected height
+                width: { ideal: 640, min: 480 },
+                height: { ideal: 480, min: 360 }
             },
             audio: false
         };
@@ -783,7 +756,7 @@ function toggleCaptureButtonVisibility() {
     // If a capture sequence is active (countdown running), always hide capture buttons
     if (isCaptureActive) {
         captureBtnNormalMode.style.display = 'none';
-        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
+        captureBtnFullscreen.style.display = 'none';
         return;
     }
 
@@ -816,11 +789,11 @@ function toggleCaptureButtonVisibility() {
 
     if (document.fullscreenElement) {
         captureBtnNormalMode.style.display = 'none';
-        fullscreenCaptureButtonContainer.style.display = isVisible ? 'block' : 'none'; // Show/hide container
-        captureBtnFullscreen.disabled = isDisabled; // Apply disabled state to button inside
+        captureBtnFullscreen.style.display = isVisible ? 'block' : 'none';
+        captureBtnFullscreen.disabled = isDisabled;
     } else {
         captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
-        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
+        captureBtnFullscreen.style.display = 'none';
         captureBtnNormalMode.disabled = isDisabled;
     }
 }
@@ -872,12 +845,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 cameraSelect.addEventListener('change', (event) => {
     startCamera(event.target.value);
-});
-
-// NEW: Event listener for resolution select
-resolutionSelect.addEventListener('change', () => {
-    // Restart camera with the newly selected resolution
-    startCamera(cameraSelect.value);
 });
 
 filterSelect.addEventListener('change', () => {
