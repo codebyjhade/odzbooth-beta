@@ -844,25 +844,24 @@ function drawStripTitleToCanvas() {
     // Center text horizontally
     const textX = canvas.width / 2;
 
-    // Position text 66px from the bottom of the strip
-    const textY = canvas.height - 66;
+    // Position text 75px from the bottom of the strip
+    const textY = canvas.height - 75;
 
     ctx.save();
-    ctx.font = "30px 'Bebas Neue'";
-    ctx.fillStyle = '#FFFFFF';
+    ctx.font = "50px 'Bebas Neue'";
+    ctx.fillStyle = '#000000'; // Set text color to black
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     // Add a subtle text shadow for better readability on varied backgrounds
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'; // Adjusted shadow to be light
     ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
 
     ctx.fillText(appState.selectedTitle, textX, textY);
     ctx.restore();
 }
-
 /**
  * Handles the title selection change, updating the app state and re-drawing the canvas.
  */
