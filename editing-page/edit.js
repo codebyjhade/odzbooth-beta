@@ -551,11 +551,11 @@ async function renderCanvas() {
     // Draw all user drawings
     drawDrawingsOnCanvas(DOMElements.ctx, appState.drawings);
     
-    // Draw the date on the canvas
+   // Draw the date on the canvas
     drawDateOnCanvas(DOMElements.ctx);
 
     // Draw the selected title
-    drawStripTitleToCanvas();
+    drawStripTitleToCanvas(DOMElements.ctx); // Pass the context here
 
     // Draw selection handles for the currently selected draggable object
     if (appState.selectedDraggable && !appState.isDrawMode) {
@@ -831,15 +831,15 @@ function drawDateOnCanvas(targetCtx) {
 
 /**
  * Draws the photo strip title onto the canvas based on the selected title.
+ * @param {CanvasRenderingContext2D} targetCtx - The canvas context to draw on.
  */
-function drawStripTitleToCanvas() {
+function drawStripTitleToCanvas(targetCtx) {
     if (!appState.selectedTitle) {
         return;
     }
 
-    const ctx = DOMElements.ctx;
-    const canvas = DOMElements.photoCanvas;
-    const stripConfig = appState.currentStripConfig;
+    const ctx = targetCtx; // Use the provided context
+    const canvas = targetCtx.canvas; // Get canvas from the context
 
     // Center text horizontally
     const textX = canvas.width / 2;
@@ -862,15 +862,6 @@ function drawStripTitleToCanvas() {
     ctx.fillText(appState.selectedTitle, textX, textY);
     ctx.restore();
 }
-/**
- * Handles the title selection change, updating the app state and re-drawing the canvas.
- */
-function handleTitleSelection(event) {
-    appState.selectedTitle = event.target.value;
-    logAnalytics("Title_Selected", { title: appState.selectedTitle });
-    renderCanvas();
-}
-
 
 // --- Draggable Object Management ---
 
@@ -1392,15 +1383,16 @@ async function createFinalStripCanvas() {
 
     // Draw all active stickers, text elements, and user drawings on the final canvas.
     // These functions also draw to any provided context.
-    drawDraggableObjectsOnCanvas(finalCtx, appState.stickers);
     drawDraggableObjectsOnCanvas(finalCtx, appState.texts);
     drawDrawingsOnCanvas(finalCtx, appState.drawings);
     
     // Draw the date on the final canvas
     drawDateOnCanvas(finalCtx);
+    
+    // Add this line to draw the title on the final canvas
+    drawStripTitleToCanvas(finalCtx);
 
     // Restore the selection on the main editing canvas after the final image is created.
-    // This is important so the user's current selection state is not lost.
     appState.selectedDraggable = tempSelected;
     renderCanvas(); // Re-render the main canvas to bring back selection handles if any.
 
