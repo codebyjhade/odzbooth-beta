@@ -780,8 +780,18 @@ function toggleFullScreen() {
  * and the current state (capturing, all photos taken, photo selected for retake).
  */
 function toggleCaptureButtonVisibility() {
+    // --- ADD THESE console.log STATEMENTS AT THE TOP OF THIS FUNCTION ---
+    console.log("--- toggleCaptureButtonVisibility called ---");
+    console.log("  document.fullscreenElement:", document.fullscreenElement);
+    console.log("  isCaptureActive:", isCaptureActive); // Should be false for the button to appear
+    console.log("  photosToCapture:", photosToCapture); // Set by layout selection (e.g., 3, 4, 6)
+    console.log("  capturedPhotos.length:", capturedPhotos.length); // How many photos you've taken
+    console.log("  selectedPhotoIndex:", selectedPhotoIndex); // -1 unless a photo is selected for retake
+    console.log("  isReadyForRetakeCapture:", isReadyForRetakeCapture); // True if 'Retake Photo' was clicked
+
     // If a capture sequence is active (countdown running), always hide capture buttons
     if (isCaptureActive) {
+        console.log("  Reason for hiding: isCaptureActive is true.");
         captureBtnNormalMode.style.display = 'none';
         fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
         return;
@@ -790,38 +800,43 @@ function toggleCaptureButtonVisibility() {
     let isVisible = false; // Default to hidden
     let isDisabled = true; // Default to disabled
 
-    // Condition A: Camera is loading or otherwise disabled (e.g., no stream)
-    if (filterSelect.disabled) {
-        // isVisible remains false, isDisabled remains true
-        // (This covers initial load, camera errors)
+    if (filterSelect.disabled) { // This state is usually true when camera is loading or has issues
+        console.log("  Reason for hiding/disabling: filterSelect is disabled (camera not ready or error).");
     }
-    // Condition B: Brand new capture sequence or continuing existing one (not all photos taken yet, no retake selected)
+    // Condition B: Brand new capture sequence or continuing existing one
     else if (photosToCapture === 0 || (capturedPhotos.length < photosToCapture && selectedPhotoIndex === -1)) {
         isVisible = true;
         isDisabled = false;
+        console.log("  Condition Met (B): Ready for new/continue capture. isVisible=true, isDisabled=false.");
     }
     // Condition C: All photos captured, AND a specific photo is selected for retake, AND 'Retake Photo' was clicked
     else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && isReadyForRetakeCapture) {
         isVisible = true;
         isDisabled = false;
+        console.log("  Condition Met (C): Ready for retake capture. isVisible=true, isDisabled=false.");
     }
-    // Condition D: All photos captured, and a specific photo is selected for retake, BUT 'Retake Photo' has NOT been clicked
-    // In this case, 'Start Capture' should remain hidden until 'Retake Photo' is clicked.
+    // Condition D: All photos captured, AND a specific photo is selected for retake, BUT 'Retake Photo' has NOT been clicked
     else if (photosToCapture > 0 && capturedPhotos.length === photosToCapture && selectedPhotoIndex !== -1 && !isReadyForRetakeCapture) {
-        // isVisible remains false, isDisabled remains true (default values)
+        console.log("  Condition Met (D): Photo selected for retake, but 'Retake Photo' button not clicked yet. Button hidden.");
+    } else {
+        console.log("  No 'isVisible' condition met. Button will remain hidden/disabled by default.");
     }
-    // Condition E: All photos captured, and NO photo selected for retake (the previous bug)
-    // This is implicitly covered by the default (isVisible = false, isDisabled = true) if none of the above match.
 
 
     if (document.fullscreenElement) {
-        captureBtnNormalMode.style.display = 'none';
-        fullscreenCaptureButtonContainer.style.display = isVisible ? 'block' : 'none'; // Show/hide container
-        captureBtnFullscreen.disabled = isDisabled; // Apply disabled state to button inside
+        console.log("  Applying FULLSCREEN button visibility rules.");
+        captureBtnNormalMode.style.display = 'none'; // Ensure normal button is hidden
+        fullscreenCaptureButtonContainer.style.display = isVisible ? 'block' : 'none'; // Set fullscreen button container display
+        captureBtnFullscreen.disabled = isDisabled; // Set fullscreen button disabled state
+        console.log(`  Fullscreen Button Container Display: ${fullscreenCaptureButtonContainer.style.display}`);
+        console.log(`  Fullscreen Button Disabled State: ${captureBtnFullscreen.disabled}`);
     } else {
-        captureBtnNormalMode.style.display = isVisible ? 'block' : 'none';
-        fullscreenCaptureButtonContainer.style.display = 'none'; // Hide fullscreen container
-        captureBtnNormalMode.disabled = isDisabled;
+        console.log("  Applying NORMAL (non-fullscreen) button visibility rules.");
+        captureBtnNormalMode.style.display = isVisible ? 'block' : 'none'; // Set normal button display
+        fullscreenCaptureButtonContainer.style.display = 'none'; // Ensure fullscreen button container is hidden
+        captureBtnNormalMode.disabled = isDisabled; // Set normal button disabled state
+        console.log(`  Normal Button Display: ${captureBtnNormalMode.style.display}`);
+        console.log(`  Normal Button Disabled State: ${captureBtnNormalMode.disabled}`);
     }
 }
 
@@ -1014,3 +1029,19 @@ function toggleCaptureButtonVisibility() {
     }
 }
 // ... (rest of your existing code) ...
+
+
+// NEW: Keyboard shortcut for the capture button
+document.addEventListener('keyup', (event) => {
+    // Check if the 'Enter' or 'Space' key was pressed
+    if (event.key === 'Enter' || event.key === ' ') {
+        // Check if the normal mode button is visible and not disabled
+        if (window.getComputedStyle(captureBtnNormalMode).display !== 'none' && !captureBtnNormalMode.disabled) {
+            captureBtnNormalMode.click();
+        } 
+        // Otherwise, check if the fullscreen button is visible and not disabled
+        else if (window.getComputedStyle(fullscreenCaptureButtonContainer).display !== 'none' && !captureBtnFullscreen.disabled) {
+            captureBtnFullscreen.click();
+        }
+    }
+});
