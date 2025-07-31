@@ -845,10 +845,10 @@ function drawStripTitleToCanvas() {
     const textX = canvas.width / 2;
 
     // Position text 75px from the bottom of the strip
-    const textY = canvas.height - 75;
+    const textY = canvas.height - 85;
 
     ctx.save();
-    ctx.font = "50px 'Bebas Neue'";
+    ctx.font = "35px 'Bebas Neue'";
     ctx.fillStyle = '#000000'; // Set text color to black
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
